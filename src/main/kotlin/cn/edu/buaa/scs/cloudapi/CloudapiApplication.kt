@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.cloudapi
 
-import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -12,7 +11,7 @@ import org.springframework.core.env.Environment
 class CloudapiApplication {
     @Bean
     fun applicationRunner(environment: Environment): ApplicationRunner {
-        return ApplicationRunner { args: ApplicationArguments? ->
+        return ApplicationRunner {
             EnvInitialHelper.env = environment
         }
     }
