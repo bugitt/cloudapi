@@ -13,6 +13,10 @@ class AuthenticationController {
 
     @GetMapping("")
     fun getUserIdByToken(@RequestParam("token") token: String): List<Authentication> {
-        return listOf(Authentication(AuthRedis.getId(token), token))
+        return AuthRedis
+            .getId(token)
+            ?.let { Authentication(it, token) }
+            ?.let { listOf(it) }
+            ?: listOf()
     }
 }

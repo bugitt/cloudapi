@@ -9,7 +9,7 @@ internal class AuthenticationTest {
 
     @Test
     fun getString() {
-        val v = AuthRedis.getString("b8f27eb8-4edd-4611-8570-25207032d388")
+        val v = AuthRedis.getId("b8f27eb8-4edd-4611-8570-25207032d388") ?: ""
         println(v)
         println(v.length)
         assert(v.isNotEmpty())

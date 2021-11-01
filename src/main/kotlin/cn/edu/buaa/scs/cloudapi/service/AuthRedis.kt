@@ -1,11 +1,11 @@
 package cn.edu.buaa.scs.cloudapi.service
 
 import cn.edu.buaa.scs.cloudapi.Config
-import cn.edu.buaa.scs.cloudapi.Jedis
+import cn.edu.buaa.scs.cloudapi.Redis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 
-object AuthRedis : Jedis({
+object AuthRedis : Redis({
     JedisPool(
         JedisPoolConfig(),
         Config.getString("redis.host"),
@@ -14,5 +14,5 @@ object AuthRedis : Jedis({
         Config.getString("redis.password")
     )
 }) {
-    fun getId(token: String) = getString(token).trim('"').lowercase()
+    fun getId(token: String) = getString(token)?.trim('"')?.lowercase()
 }

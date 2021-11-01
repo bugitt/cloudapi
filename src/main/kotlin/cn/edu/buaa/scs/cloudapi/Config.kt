@@ -26,8 +26,13 @@ object Config {
     fun getInt(key: String) = getEnvVal<Int>(key)
 }
 
-open class Jedis(val initializer: () -> JedisPool) {
+open class Redis(val initializer: () -> JedisPool) {
     private val pool: JedisPool by lazy { initializer() }
-    fun getString(key: String): String = pool.resource.get(key)
+    fun getString(key: String): String? {
+        val jedis = pool.resource
+        val result = jedis.get(key)
+        pool.returnResource(jedis)
+        return result
+    }
 }
 
