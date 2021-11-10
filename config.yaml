@@ -1,0 +1,6 @@
+db:
+  host: 10.251.0.57
+  port: 3307
+  name: softcloud
+  user: cloud
+  password: SOFT_cloud123
