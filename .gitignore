@@ -37,3 +37,7 @@ out/
 .vscode/
 
 src/main/resources/application.yaml
+
+logs
+
+config.yaml
