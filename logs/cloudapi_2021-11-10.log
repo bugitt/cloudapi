@@ -1,9 +1,0 @@
-[[32mINFO [m] 2021-11-10 22:58:42,609 Base.main() - -c, /Users/loheagn/workspace/scs/cloudapi/config.yaml
-[[32mINFO [m] 2021-11-10 22:58:42,675 Base.main() - Config(db=DBConfig(host=10.251.0.57, port=3307, name=softcloud, user=cloud, password=SOFT_cloud123))
-[[32mINFO [m] 2021-11-10 22:58:42,688 HikariDataSource.<init>() - HikariPool-1 - Starting...
-[[32mINFO [m] 2021-11-10 22:58:43,433 HikariPool.checkFailFast() - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7c56e013
-[[32mINFO [m] 2021-11-10 22:58:43,436 HikariDataSource.<init>() - HikariPool-1 - Start completed.
-[[32mINFO [m] 2021-11-10 22:58:43,465 Base.info() - Connected to jdbc:mysql://10.251.0.57:3307/softcloud, productName: MySQL, productVersion: 5.7.31, logger: org.ktorm.logging.Slf4jLoggerAdapter@649725e3, dialect: org.ktorm.database.SqlDialectKt$detectDialectImplementation$1@3c0fae6c
-[[32mINFO [m] 2021-11-10 22:58:43,465 Base.main() - softcloud
-[[32mINFO [m] 2021-11-10 22:58:44,076 Base.start$lambda-3() - HTTP server started on port 8888
-[[32mINFO [m] 2021-11-10 22:58:46,544 Base.log() - get it
