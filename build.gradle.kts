@@ -51,9 +51,8 @@ dependencies {
     // log
     implementation("io.github.microutils:kotlin-logging:1.6.22")
     implementation("org.slf4j:slf4j-api:1.7.25")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.9.1")
-    implementation("org.apache.logging.log4j:log4j-api:2.9.1")
-    implementation("org.apache.logging.log4j:log4j-core:2.9.1")
+    implementation("ch.qos.logback:logback-core:1.2.6")
+    implementation("ch.qos.logback:logback-classic:1.2.6")
 
     // test
     testImplementation("io.vertx:vertx-junit5")
