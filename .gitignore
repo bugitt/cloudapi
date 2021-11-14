@@ -36,8 +36,10 @@ out/
 ### VS Code ###
 .vscode/
 
-src/main/resources/application.yaml
+src/main/resources/application.conf
 
 logs
 
 config.yaml
+
+.DS_Store

@@ -1,78 +1,56 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.gradle.api.tasks.testing.logging.TestLogEvent.*
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val ktor_version: String by project
+val kotlin_version: String by project
+val logback_version: String by project
 
 plugins {
-    kotlin("jvm") version "1.5.10"
     application
-    id("com.github.johnrengelman.shadow") version "7.0.0"
-    kotlin("plugin.serialization") version "1.5.10"
+    kotlin("jvm") version "1.5.31"
+    kotlin("plugin.serialization") version "1.5.31"
 }
 
-group = "cn.edu.buaa.scs"
-version = "1.0.0-SNAPSHOT"
+group = "scs.buaa.edu.cn"
+version = "0.0.1"
+application {
+    mainClass.set("io.ktor.server.netty.EngineMain")
+}
 
 repositories {
     mavenCentral()
 }
 
-val vertxVersion = "4.2.1"
-val junitJupiterVersion = "5.7.0"
-
-val mainVerticleName = "cn.edu.buaa.scs.cloudapi.MainVerticle"
-val launcherClassName = "cn.edu.buaa.scs.cloudapi.LauncherKt"
-
-val watchForChange = "src/**/*"
-val doOnChange = "${projectDir}/gradlew classes"
-
-application {
-    mainClass.set(launcherClassName)
-}
-
 dependencies {
-    implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
-    implementation("io.vertx:vertx-web-client")
-    implementation("io.vertx:vertx-web")
-    implementation("io.vertx:vertx-lang-kotlin")
-    implementation("io.vertx:vertx-redis-client")
-    implementation(kotlin("stdlib-jdk8"))
+    implementation("io.ktor:ktor-server-core:$ktor_version")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
 
-    // kotlin coroutines
-    val coroutinesVersion = "1.5.10"
+    // coroutine
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    // yaml
-    implementation("com.charleskorn.kaml:kaml:0.36.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.5.2")
+
+    // kotlin-log
+    implementation("io.github.microutils:kotlin-logging:2.0.11")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+
+    // auth
+    implementation("io.ktor:ktor-auth:$ktor_version")
+
+    // serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
+    implementation("io.ktor:ktor-jackson:$ktor_version")
+
+    // Redis
+    implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
 
     // database
+    val ktorm_version = "3.4.1"
     implementation("com.zaxxer:HikariCP:5.0.0")
-    implementation("org.ktorm:ktorm-core:3.4.1")
+    implementation("org.ktorm:ktorm-core:$ktorm_version")
+    implementation("org.ktorm:ktorm-jackson:$ktorm_version")
+    implementation("org.ktorm:ktorm-support-mysql:$ktorm_version")
+    implementation("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.25")
 
-    // log
-    implementation("io.github.microutils:kotlin-logging:1.6.22")
-    implementation("org.slf4j:slf4j-api:1.7.25")
-    implementation("ch.qos.logback:logback-core:1.2.6")
-    implementation("ch.qos.logback:logback-classic:1.2.6")
 
     // test
-    testImplementation("io.vertx:vertx-junit5")
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
-}
-
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions.jvmTarget = "11"
-
-tasks.withType<ShadowJar> {
-    archiveClassifier.set("fat")
-    manifest {
-        attributes(mapOf("Main-Verticle" to mainVerticleName))
-    }
-    mergeServiceFiles()
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events = setOf(PASSED, SKIPPED, FAILED)
-    }
+    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
