@@ -19,25 +19,25 @@ val ApplicationCall.baseURLName: String
 
 @Suppress("unused")
 fun ApplicationCall.trance(msg: String) {
-    logger(baseURLName)().trace { "[$callId] - \t$msg" }
+    logger(baseURLName)().trace { "[${request.uri}] -  [$callId] - \t$msg" }
 }
 
 @Suppress("unused")
 fun ApplicationCall.info(msg: String) {
-    logger(baseURLName)().info { "[$callId] - \t$msg" }
+    logger(baseURLName)().info { "[${request.uri}] -  [$callId] - \t$msg" }
 }
 
 @Suppress("unused")
 fun ApplicationCall.debug(msg: String) {
-    logger(baseURLName)().debug { "[$callId] - \t$msg" }
+    logger(baseURLName)().debug { "[${request.uri}] -  [$callId] - \t$msg" }
 }
 
 @Suppress("unused")
 fun ApplicationCall.warn(msg: String) {
-    logger(baseURLName)().warn { "[$callId] - \t$msg" }
+    logger(baseURLName)().warn { "[${request.uri}] -  [$callId] - \t$msg" }
 }
 
 @Suppress("unused")
 fun ApplicationCall.error(msg: String) {
-    logger(baseURLName)().error { "[$callId] - \t$msg" }
+    logger(baseURLName)().error { "[${request.uri}] -  [$callId] - \t$msg" }
 }
