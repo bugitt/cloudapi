@@ -6,6 +6,9 @@ plugins {
     application
     kotlin("jvm") version "1.5.31"
     kotlin("plugin.serialization") version "1.5.31"
+
+    // 打包用的插件
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 group = "scs.buaa.edu.cn"
@@ -56,4 +59,12 @@ dependencies {
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+}
+
+tasks {
+    shadowJar {
+        manifest {
+            attributes(Pair("Main-Class", "cn.edu.buaa.scs.ApplicationKt"))
+        }
+    }
 }
