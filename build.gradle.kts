@@ -49,6 +49,9 @@ dependencies {
     implementation("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.25")
 
+    // common utils
+    implementation("com.google.guava:guava:31.0.1-jre")
+
 
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
