@@ -43,3 +43,6 @@ logs
 config.yaml
 
 .DS_Store
+
+kubeconfig.yaml
+kubeconfig.yml
