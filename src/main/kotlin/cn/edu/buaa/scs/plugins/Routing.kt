@@ -1,16 +1,15 @@
 package cn.edu.buaa.scs.plugins
 
+import cn.edu.buaa.scs.auth.authRoute
 import cn.edu.buaa.scs.authRedis
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.extensions.checkToken
 import cn.edu.buaa.scs.model.Users
-import cn.edu.buaa.scs.routes.authRoute
 import cn.edu.buaa.scs.utils.TOKEN_KEY
 import cn.edu.buaa.scs.utils.USER_KEY
 import io.ktor.application.*
 import io.ktor.routing.*
-import io.ktor.util.pipeline.*
 
 fun Application.configureRouting() {
 
@@ -19,7 +18,7 @@ fun Application.configureRouting() {
      * 并给出身份识别
      * 目前仅兼容旧平台的用法
      */
-    fun fetchToken(context: PipelineContext<Unit, ApplicationCall>, call: ApplicationCall) {
+    fun fetchToken(call: ApplicationCall) {
         // TODO 后续兼容JWT校验
         val token: String = call.request.queryParameters.let { params ->
             params["authentication"] ?: params["Authentication"]
@@ -42,7 +41,7 @@ fun Application.configureRouting() {
     }
 
     intercept(ApplicationCallPipeline.Call) {
-        fetchToken(this, call)
+        fetchToken(call)
     }
 
     routing {

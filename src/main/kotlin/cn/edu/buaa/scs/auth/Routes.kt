@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.routes
+package cn.edu.buaa.scs.auth
 
 import cn.edu.buaa.scs.extensions.token
 import cn.edu.buaa.scs.extensions.user
