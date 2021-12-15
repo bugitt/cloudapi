@@ -54,7 +54,7 @@ object Users : Table<User>("user") {
     val acceptTime = varchar("accept_time").bindTo { it.acceptTime }
 
     fun getByID(id: String): User? =
-        db.users.find { it.id eq id }
+        db.users.find { Users.id eq id }
 }
 
 private val Database.users get() = this.sequenceOf(Users)
