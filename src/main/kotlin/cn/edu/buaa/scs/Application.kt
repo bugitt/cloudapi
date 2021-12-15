@@ -27,12 +27,6 @@ fun Application.webModule() {
     configureRouting()
 }
 
-fun Application.getConfig(name: String, default: String = ""): String =
-    this.environment.config.propertyOrNull(name)?.getString() ?: default
-
-fun Application.getFile(filename: String): File =
-    File(this.javaClass.getResource(filename)?.toURI()!!)
-
 lateinit var authRedis: RedisClient
 
 @Suppress("unused")
@@ -74,3 +68,9 @@ fun Application.kubeModule() {
         return DefaultKubernetesClient.fromConfig(configString)
     }
 }
+
+fun Application.getConfig(name: String, default: String = ""): String =
+    this.environment.config.propertyOrNull(name)?.getString() ?: default
+
+fun Application.getFile(filename: String): File =
+    File(this.javaClass.getResource(filename)?.toURI()!!)
