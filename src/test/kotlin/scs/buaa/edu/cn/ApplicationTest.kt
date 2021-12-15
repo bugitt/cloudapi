@@ -1,15 +1,18 @@
 package scs.buaa.edu.cn
 
-import io.ktor.features.*
-import org.slf4j.event.*
-import io.ktor.routing.*
-import io.ktor.http.*
+import cn.edu.buaa.scs.kubeClient
+import cn.edu.buaa.scs.kubeModule
 import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
-import kotlin.test.*
 import io.ktor.server.testing.*
-import scs.buaa.edu.cn.plugins.*
+import kotlin.test.Test
 
 class ApplicationTest {
+    @Test
+    fun testKubernetesInit() {
+        withTestApplication(Application::kubeModule) {
+            val client = kubeClient()
+            println(client.kubernetesVersion.gitVersion)
+            assert(client.kubernetesVersion.gitVersion.isNotBlank())
+        }
+    }
 }

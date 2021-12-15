@@ -19,6 +19,7 @@ application {
 
 repositories {
     mavenCentral()
+    maven(url = "https://jitpack.io")
 }
 
 dependencies {
@@ -55,6 +56,10 @@ dependencies {
     // common utils
     implementation("com.google.guava:guava:31.0.1-jre")
 
+    // kuberentes
+    implementation("io.fabric8:kubernetes-model:5.10.1")
+    implementation("io.fabric8:kubernetes-client:5.10.1")
+    implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.0.1")
 
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
