@@ -56,7 +56,7 @@ dependencies {
     // common utils
     implementation("com.google.guava:guava:31.0.1-jre")
 
-    // kuberentes
+    // kubernetes
     implementation("io.fabric8:kubernetes-model:5.10.1")
     implementation("io.fabric8:kubernetes-client:5.10.1")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.0.1")
