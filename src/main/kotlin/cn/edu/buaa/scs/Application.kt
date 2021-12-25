@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs
 
+import cn.edu.buaa.scs.kube.KubeOpScheduler
 import cn.edu.buaa.scs.plugins.*
 import cn.edu.buaa.scs.utils.logger
 import com.zaxxer.hikari.HikariConfig
@@ -67,6 +68,7 @@ fun Application.kubeModule() {
     kubeClient = fun(): KubernetesClient {
         return DefaultKubernetesClient.fromConfig(configString)
     }
+    KubeOpScheduler.launch()
 }
 
 fun Application.getConfig(name: String, default: String = ""): String =
