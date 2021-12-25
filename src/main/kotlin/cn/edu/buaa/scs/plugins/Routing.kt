@@ -5,10 +5,13 @@ import cn.edu.buaa.scs.authRedis
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.extensions.checkToken
+import cn.edu.buaa.scs.extensions.info
 import cn.edu.buaa.scs.model.Users
 import cn.edu.buaa.scs.utils.TOKEN_KEY
 import cn.edu.buaa.scs.utils.USER_KEY
+import cn.edu.buaa.scs.utils.test.test
 import io.ktor.application.*
+import io.ktor.request.*
 import io.ktor.routing.*
 
 fun Application.configureRouting() {
@@ -26,7 +29,13 @@ fun Application.configureRouting() {
             headers["authorization"] ?: headers["Authorization"]
         }?.let { auth -> auth.split(" ").let { if (it.size > 1 && it[0] == "Bearer") it[1] else auth } } ?: ""
 
-        // TODO 添加不需要token例外情况
+        // just for test
+        call.info(call.request.path())
+        if (call.request.path() == "/test") {
+            return
+        }
+
+        // TODO 添加其他不需要token例外情况
         if (token.isEmpty()) {
             throw AuthenticationException()
         }
@@ -49,5 +58,8 @@ fun Application.configureRouting() {
             authRoute()
             // 添加其他的 route
         }
+
+        // just for test
+        test()
     }
 }
