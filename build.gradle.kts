@@ -27,8 +27,10 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor_version")
 
     // coroutine
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.5.2")
+    val coroutine_version = "1.6.0"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jvm:$coroutine_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutine_version")
 
     // kotlin-log
     implementation("io.github.microutils:kotlin-logging:2.0.11")
