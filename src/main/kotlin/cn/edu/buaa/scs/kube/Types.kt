@@ -1,5 +1,10 @@
 package cn.edu.buaa.scs.kube
 
+data class BuildOption(
+    // TODO
+    val name: String,
+)
+
 data class DeployOption(
     val name: String,
     val namespace: String,
