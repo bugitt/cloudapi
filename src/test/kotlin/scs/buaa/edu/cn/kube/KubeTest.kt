@@ -2,7 +2,7 @@ package scs.buaa.edu.cn.kube
 
 import cn.edu.buaa.scs.kubeClient
 import cn.edu.buaa.scs.kubeModule
-import io.fabric8.kubernetes.api.model.events.v1.Event
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.client.Watcher
 import io.fabric8.kubernetes.client.WatcherException
 import io.ktor.application.*
@@ -24,14 +24,16 @@ class KubeTest {
     fun testKubernetesEventWatch() {
         withTestApplication(Application::kubeModule) {
             kubeClient().use { client ->
-                client.events().v1().events().inAnyNamespace().watch(object : Watcher<Event> {
-                    override fun eventReceived(action: Watcher.Action, resource: Event) {
-                        println("event: ${action.name}, resource: $resource")
+                client.batch().v1().jobs()
+                client.apps().deployments().inAnyNamespace().watch(object : Watcher<Deployment> {
+                    override fun eventReceived(action: Watcher.Action?, resource: Deployment?) {
+                        println("$action, $resource")
                     }
 
                     override fun onClose(cause: WatcherException?) {
-                        println("close cause: $cause")
+                        println(cause.toString())
                     }
+
                 }).use {
                     Thread.sleep(100000L)
                 }

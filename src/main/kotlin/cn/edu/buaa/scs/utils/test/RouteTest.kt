@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.extensions.info
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -11,10 +12,11 @@ fun Route.test() {
     // just for test
     route("/test") {
         get {
-            launch {
-                delay(10000L)
-                call.info("log in launch")
-                throw Exception("just for fun")
+            repeat(1000) {
+                launch(Dispatchers.Default) {
+                    delay(1000L)
+                    call.info("log in launch ${Thread.currentThread().name}")
+                }
             }
             call.info("before respond")
             call.respond("ok")

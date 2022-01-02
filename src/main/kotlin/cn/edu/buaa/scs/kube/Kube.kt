@@ -7,6 +7,7 @@ import io.fabric8.kubernetes.api.model.apps.DaemonSet
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.StatefulSet
 import io.fabric8.kubernetes.api.model.batch.v1.JobSpec
+import kotlinx.coroutines.coroutineScope
 import java.util.*
 
 object Kube {
@@ -201,7 +202,8 @@ object Kube {
         )
     }
 
-    suspend fun syncDeploy(opt: DeployOption): Result<DeployResult> {
+    suspend fun syncDeploy(opt: DeployOption): Result<DeployResult> = coroutineScope {
+        
         TODO()
     }
 }
