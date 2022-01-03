@@ -75,6 +75,9 @@ fun Application.kubeModule() {
         return DefaultKubernetesClient.fromConfig(configString)
     }
     KubeOpScheduler.launch()
+    kubeClient().use {
+        logger("kube")().info { "connected to kubernetes-appserver successfully: ${it.kubernetesVersion.gitVersion}" }
+    }
 }
 
 fun Application.getConfigString(name: String, default: String = ""): String =
