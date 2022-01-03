@@ -1,7 +1,7 @@
 package scs.buaa.edu.cn.kube
 
-import cn.edu.buaa.scs.kubeClient
-import cn.edu.buaa.scs.kubeModule
+import cn.edu.buaa.scs.kube.kubeClient
+import cn.edu.buaa.scs.kube.kubeModule
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.client.Watcher
 import io.fabric8.kubernetes.client.WatcherException

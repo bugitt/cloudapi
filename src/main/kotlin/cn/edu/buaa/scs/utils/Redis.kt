@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.extensions
+package cn.edu.buaa.scs.utils
 
 import io.lettuce.core.RedisClient
 

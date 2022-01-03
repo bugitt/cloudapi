@@ -1,3 +1,3 @@
-package cn.edu.buaa.scs.utils
+package cn.edu.buaa.scs.error
 
 class BusinessException(msg: String) : Exception(msg)

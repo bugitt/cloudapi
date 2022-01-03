@@ -1,10 +1,10 @@
 package cn.edu.buaa.scs.auth
 
-import cn.edu.buaa.scs.db
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.assistants
 import cn.edu.buaa.scs.model.courses
 import cn.edu.buaa.scs.model.experiments
+import cn.edu.buaa.scs.storage.db
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find

@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.plugins
+package cn.edu.buaa.scs.web.plugins
 
 import cn.edu.buaa.scs.auth.authRoute
 import cn.edu.buaa.scs.auth.fetchToken
