@@ -31,6 +31,6 @@ object Assistants : Table<Assistant>("assistant") {
 }
 
 @Suppress("unused")
-private val Database.assistants
+val Database.assistants
     get() = this.sequenceOf(Assistants)
 

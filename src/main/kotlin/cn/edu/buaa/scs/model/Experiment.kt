@@ -96,5 +96,5 @@ object Experiments : Table<Experiment>("experiment") {
 }
 
 @Suppress("unused")
-private val Database.experiments
+val Database.experiments
     get() = this.sequenceOf(Experiments)
