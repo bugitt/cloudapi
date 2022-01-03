@@ -43,5 +43,5 @@ object Courses : Table<Course>("course") {
 }
 
 @Suppress("unused")
-private val Database.courses
+val Database.courses
     get() = this.sequenceOf(Courses)

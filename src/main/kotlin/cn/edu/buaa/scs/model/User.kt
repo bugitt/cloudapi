@@ -57,4 +57,4 @@ object Users : Table<User>("user") {
         db.users.find { Users.id eq id }
 }
 
-private val Database.users get() = this.sequenceOf(Users)
+val Database.users get() = this.sequenceOf(Users)
