@@ -4,7 +4,6 @@ import cn.edu.buaa.scs.authRedis
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.extensions.checkToken
-import cn.edu.buaa.scs.extensions.info
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.model.Users
 import cn.edu.buaa.scs.utils.TOKEN_KEY
@@ -46,7 +45,6 @@ fun fetchToken(call: ApplicationCall) {
     }
 
     // just for test
-    call.info(call.request.path())
     if (call.request.path() == "/test") {
         return
     }
