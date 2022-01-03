@@ -4,7 +4,7 @@ import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.assistants
 import cn.edu.buaa.scs.model.courses
 import cn.edu.buaa.scs.model.experiments
-import cn.edu.buaa.scs.storage.db
+import cn.edu.buaa.scs.storage.mysql
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
@@ -26,9 +26,9 @@ fun authCourse(userId: String, courseId: Int): Boolean {
     if (isAdmin(userId)) {
         return true
     }
-    val checkTeacher = fun() = db.courses.find { it.id eq courseId }?.let { it.teacherId == userId } ?: false
+    val checkTeacher = fun() = mysql.courses.find { it.id eq courseId }?.let { it.teacherId == userId } ?: false
 
-    val checkAssistant = fun() = db.assistants.find {
+    val checkAssistant = fun() = mysql.assistants.find {
         (it.courseId eq courseId.toString()) and (it.studentId eq userId)
     }?.let { true } ?: false
 
@@ -50,7 +50,7 @@ fun authExperiment(userId: String, experimentId: Int): Boolean {
     if (isAdmin(userId)) {
         return true
     }
-    val courseId = db.experiments.find { it.id eq experimentId }?.courseId ?: return false
+    val courseId = mysql.experiments.find { it.id eq experimentId }?.courseId ?: return false
     return authCourse(userId, courseId)
 }
 

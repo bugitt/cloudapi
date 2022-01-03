@@ -8,14 +8,14 @@ import io.ktor.application.*
 import org.ktorm.database.Database
 import org.ktorm.logging.Slf4jLoggerAdapter
 
-lateinit var db: Database
+lateinit var mysql: Database
 fun Application.dbModule() {
     val mainDBHost = getConfigString("db.main.host", "localhost")
     val mainDBPort = getConfigString("db.main.port", "3306")
     val mainDBName = getConfigString("db.main.name")
     val mainDBUser = getConfigString("db.main.username", "root")
     val mainDBPassword = getConfigString("db.main.password")
-    db = Database.connect(
+    mysql = Database.connect(
         dataSource = HikariDataSource(HikariConfig().apply {
             jdbcUrl = "jdbc:mysql://$mainDBHost:$mainDBPort/$mainDBName"
             username = mainDBUser

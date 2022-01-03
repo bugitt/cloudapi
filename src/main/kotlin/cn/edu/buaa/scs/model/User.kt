@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.model
 
-import cn.edu.buaa.scs.storage.db
+import cn.edu.buaa.scs.storage.mysql
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
@@ -54,7 +54,7 @@ object Users : Table<User>("user") {
     val acceptTime = varchar("accept_time").bindTo { it.acceptTime }
 
     fun getByID(id: String): User? =
-        db.users.find { Users.id eq id }
+        mysql.users.find { Users.id eq id }
 }
 
 val Database.users get() = this.sequenceOf(Users)
