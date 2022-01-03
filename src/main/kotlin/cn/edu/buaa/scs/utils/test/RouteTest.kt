@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.utils.test
 
-import cn.edu.buaa.scs.extensions.info
+import cn.edu.buaa.scs.utils.info
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*

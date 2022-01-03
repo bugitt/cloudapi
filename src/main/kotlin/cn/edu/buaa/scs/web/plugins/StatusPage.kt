@@ -1,8 +1,8 @@
-package cn.edu.buaa.scs.plugins
+package cn.edu.buaa.scs.web.plugins
 
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
-import cn.edu.buaa.scs.extensions.error
+import cn.edu.buaa.scs.utils.error
 import com.google.common.base.Throwables
 import io.ktor.application.*
 import io.ktor.features.*

@@ -1,9 +1,6 @@
-package cn.edu.buaa.scs.extensions
+package cn.edu.buaa.scs.utils
 
 import cn.edu.buaa.scs.model.User
-import cn.edu.buaa.scs.utils.TOKEN_KEY
-import cn.edu.buaa.scs.utils.USER_KEY
-import cn.edu.buaa.scs.utils.logger
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.request.*

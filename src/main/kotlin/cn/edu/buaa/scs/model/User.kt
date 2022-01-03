@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.model
 
-import cn.edu.buaa.scs.db
+import cn.edu.buaa.scs.storage.db
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
