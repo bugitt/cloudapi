@@ -14,7 +14,9 @@ import org.ktorm.entity.sequenceOf
 import org.ktorm.logging.Slf4jLoggerAdapter
 
 lateinit var mysql: Database
-fun Application.dbModule() {
+
+@Suppress("unused")
+fun Application.mysqlModule() {
     val mainDBHost = getConfigString("db.main.host", "localhost")
     val mainDBPort = getConfigString("db.main.port", "3306")
     val mainDBName = getConfigString("db.main.name")
