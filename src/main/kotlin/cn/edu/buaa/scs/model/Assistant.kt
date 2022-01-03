@@ -1,8 +1,6 @@
 package cn.edu.buaa.scs.model
 
-import org.ktorm.database.Database
 import org.ktorm.entity.Entity
-import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
@@ -29,8 +27,3 @@ object Assistants : Table<Assistant>("assistant") {
     @Suppress("unused")
     val createTime = varchar("create_time").bindTo { it.createTime }
 }
-
-@Suppress("unused")
-val Database.assistants
-    get() = this.sequenceOf(Assistants)
-

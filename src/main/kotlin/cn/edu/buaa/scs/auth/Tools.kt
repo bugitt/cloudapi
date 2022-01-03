@@ -1,9 +1,9 @@
 package cn.edu.buaa.scs.auth
 
 import cn.edu.buaa.scs.error.AuthorizationException
-import cn.edu.buaa.scs.model.assistants
-import cn.edu.buaa.scs.model.courses
-import cn.edu.buaa.scs.model.experiments
+import cn.edu.buaa.scs.storage.assistants
+import cn.edu.buaa.scs.storage.courses
+import cn.edu.buaa.scs.storage.experiments
 import cn.edu.buaa.scs.storage.mysql
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq

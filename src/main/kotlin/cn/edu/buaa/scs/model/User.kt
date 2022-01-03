@@ -1,11 +1,10 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.storage.mysql
-import org.ktorm.database.Database
+import cn.edu.buaa.scs.storage.users
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
 import org.ktorm.entity.find
-import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.boolean
 import org.ktorm.schema.int
@@ -56,5 +55,3 @@ object Users : Table<User>("user") {
     fun getByID(id: String): User? =
         mysql.users.find { Users.id eq id }
 }
-
-val Database.users get() = this.sequenceOf(Users)

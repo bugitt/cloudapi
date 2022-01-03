@@ -1,8 +1,6 @@
 package cn.edu.buaa.scs.model
 
-import org.ktorm.database.Database
 import org.ktorm.entity.Entity
-import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.boolean
 import org.ktorm.schema.int
@@ -94,7 +92,3 @@ object Experiments : Table<Experiment>("experiment") {
     @Suppress("unused")
     val sentEmail = boolean("send_email").bindTo { it.sentEmail }
 }
-
-@Suppress("unused")
-val Database.experiments
-    get() = this.sequenceOf(Experiments)
