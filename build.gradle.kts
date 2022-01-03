@@ -55,6 +55,9 @@ dependencies {
     implementation("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.25")
 
+    // minio
+    implementation("io.minio:minio:8.3.4")
+
     // common utils
     implementation("com.google.guava:guava:31.0.1-jre")
 
