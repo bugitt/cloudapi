@@ -45,3 +45,7 @@ val Database.experiments
 val Database.users get() = this.sequenceOf(Users)
 
 val Database.files get() = this.sequenceOf(Files)
+
+@Suppress("unused")
+val Database.assignments
+    get() = this.sequenceOf(Assignments)
