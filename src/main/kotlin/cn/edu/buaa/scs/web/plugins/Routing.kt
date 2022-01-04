@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.web.plugins
 
 import cn.edu.buaa.scs.auth.authRoute
 import cn.edu.buaa.scs.auth.fetchToken
+import cn.edu.buaa.scs.experiment.experimentRoute
 import cn.edu.buaa.scs.utils.test.test
 import io.ktor.application.*
 import io.ktor.routing.*
@@ -15,6 +16,7 @@ fun Application.configureRouting() {
     routing {
         route("/api/v2") {
             authRoute()
+            experimentRoute()
             // 添加其他的 route
         }
 
