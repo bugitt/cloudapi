@@ -24,6 +24,7 @@ interface File : Entity<File> {
     var storePath: String
     var uploadTime: LocalDateTime
     var fileType: FileType
+    var involvedId: Int
     var size: Long
     var uploader: String
 }
@@ -49,6 +50,9 @@ object Files : Table<File>("file_v2") {
 
     @Suppress("unused")
     val fileType = varchar("file_type").transform({ FileType.valueOf(it) }, { it.name }).bindTo { it.fileType }
+
+    @Suppress("unused")
+    val involvedId = int("involved_id").bindTo { it.involvedId }
 
     @Suppress("unused")
     val size = long("size").bindTo { it.size }
