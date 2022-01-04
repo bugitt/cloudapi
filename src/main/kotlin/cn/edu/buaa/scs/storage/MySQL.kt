@@ -1,9 +1,6 @@
 package cn.edu.buaa.scs.storage
 
-import cn.edu.buaa.scs.model.Assistants
-import cn.edu.buaa.scs.model.Courses
-import cn.edu.buaa.scs.model.Experiments
-import cn.edu.buaa.scs.model.Users
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
 import com.zaxxer.hikari.HikariConfig
@@ -46,3 +43,5 @@ val Database.experiments
     get() = this.sequenceOf(Experiments)
 
 val Database.users get() = this.sequenceOf(Users)
+
+val Database.files get() = this.sequenceOf(Files)
