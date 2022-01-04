@@ -18,7 +18,7 @@ fun uploadFile(
     filename: String,
     inputStream: InputStream,
     contentType: ContentType = OctetStream
-) {
+): StatObjectResponse {
     ensureBucketExists(bucket)
     PutObjectArgs
         .builder()
@@ -28,8 +28,17 @@ fun uploadFile(
         .contentType(contentType.value)
         .build()
         .let { minioClient.putObject(it) }
-
+    return inspectFile(bucket, filename)
 }
+
+fun inspectFile(bucket: String, filename: String): StatObjectResponse =
+    StatObjectArgs
+        .builder()
+        .bucket(bucket)
+        .`object`(filename)
+        .build()
+        .let { minioClient.statObject(it) }
+
 
 fun deleteFile(bucket: String, filename: String) {
     RemoveObjectArgs
