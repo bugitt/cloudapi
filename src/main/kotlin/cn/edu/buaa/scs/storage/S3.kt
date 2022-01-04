@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.storage
 
-import cn.edu.buaa.scs.getConfigString
+import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.utils.value
 import io.ktor.application.*

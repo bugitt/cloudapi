@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.kube
 
-import cn.edu.buaa.scs.getFile
+import cn.edu.buaa.scs.utils.getFile
 import cn.edu.buaa.scs.utils.logger
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient

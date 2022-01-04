@@ -1,10 +1,10 @@
 package cn.edu.buaa.scs.storage
 
-import cn.edu.buaa.scs.getConfigString
 import cn.edu.buaa.scs.model.Assistants
 import cn.edu.buaa.scs.model.Courses
 import cn.edu.buaa.scs.model.Experiments
 import cn.edu.buaa.scs.model.Users
+import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
