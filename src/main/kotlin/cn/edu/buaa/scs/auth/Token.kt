@@ -3,13 +3,9 @@ package cn.edu.buaa.scs.auth
 import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
-import cn.edu.buaa.scs.getConfigList
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.model.Users
-import cn.edu.buaa.scs.utils.TOKEN_KEY
-import cn.edu.buaa.scs.utils.USER_ID_KEY
-import cn.edu.buaa.scs.utils.USER_KEY
-import cn.edu.buaa.scs.utils.checkToken
+import cn.edu.buaa.scs.utils.*
 import io.ktor.application.*
 import io.ktor.request.*
 
