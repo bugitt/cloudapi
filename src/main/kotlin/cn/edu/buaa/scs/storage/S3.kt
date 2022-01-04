@@ -73,9 +73,7 @@ fun Application.s3Module() {
     val endPoint = getConfigString("s3.endPoint")
     val accessKey = getConfigString("s3.accessKey")
     val secretKey = getConfigString("s3.secretKey")
-    println(endPoint)
-    println(accessKey)
-    println(secretKey)
+
     minioPartSize = getConfigString("s3.partSize").toLong()
     minioClient = MinioClient.builder()
         .endpoint(endPoint)
