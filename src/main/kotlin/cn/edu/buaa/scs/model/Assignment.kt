@@ -1,10 +1,8 @@
 package cn.edu.buaa.scs.model
 
 import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.float
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
+import java.time.LocalDateTime
 
 interface Assignment : Entity<Assignment> {
     companion object : Entity.Factory<Assignment>()
@@ -14,6 +12,9 @@ interface Assignment : Entity<Assignment> {
     var fileId: Int
     var expId: Int
     var score: Float
+
+    var createdAt: LocalDateTime
+    var updatedAt: LocalDateTime
 }
 
 object Assignments : Table<Assignment>("assignment_v2") {
@@ -31,4 +32,10 @@ object Assignments : Table<Assignment>("assignment_v2") {
 
     @Suppress("unused")
     val score = float("score").bindTo { it.score }
+
+    @Suppress("unused")
+    val createdAt = datetime("created_at").bindTo { it.createdAt }
+
+    @Suppress("unused")
+    val updatedAt = datetime("updated_at").bindTo { it.updatedAt }
 }

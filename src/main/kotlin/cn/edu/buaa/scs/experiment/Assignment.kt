@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.experiment
 
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.File
+import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.model.StoreType
 import cn.edu.buaa.scs.storage.assignments
 import cn.edu.buaa.scs.storage.files
@@ -38,6 +39,7 @@ fun createAssignment(
             storeName = storeFileName
             storePath = "$bucket/$storeFileName"
             uploadTime = fileResp.lastModified().toLocalDateTime()
+            fileType = FileType.Assignment
             size = fileResp.size()
             uploader = fileUploader
             involvedId = assignment.id

@@ -27,6 +27,9 @@ interface File : Entity<File> {
     var involvedId: Int
     var size: Long
     var uploader: String
+
+    var createdAt: LocalDateTime
+    var updatedAt: LocalDateTime
 }
 
 object Files : Table<File>("file_v2") {
@@ -59,4 +62,10 @@ object Files : Table<File>("file_v2") {
 
     @Suppress("unused")
     val uploader = varchar("uploader").bindTo { it.uploader }
+
+    @Suppress("unused")
+    val createdAt = datetime("created_at").bindTo { it.createdAt }
+
+    @Suppress("unused")
+    val updatedAt = datetime("updated_at").bindTo { it.updatedAt }
 }

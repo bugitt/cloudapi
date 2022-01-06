@@ -26,7 +26,7 @@ fun Route.experimentRoute() {
 
                     // check permission
                     call.assertPermission(userId == call.userId()) {
-                        assertExperiment(userId, experimentId)
+                        assertExperiment(call.userId(), experimentId)
                     }
 
                     val fileItem = getFormItem<PartData.FileItem>(partDataList, "file")
