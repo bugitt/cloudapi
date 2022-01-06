@@ -43,13 +43,15 @@ class S3TEst {
             val fullFilePath = "${getBaseFilePath()}/$filename"
 
             // upload
-            fullFilePath
+            val fileInfo = fullFilePath
                 .let { File(it).apply { writeText(content) } }
                 .let { FileInputStream(it) }
                 .use { uploadFile(bucket, filename, it) }
 
+            assert(fileInfo.size() == 5L)
+
             // get
-            assert(String(getFile(bucket, filename).readAllBytes()) == content)
+            assert(String(getFile(bucket, filename).readBytes()) == content)
 
             // download
             val newFilepath = "${getBaseFilePath()}/$filename-2"
