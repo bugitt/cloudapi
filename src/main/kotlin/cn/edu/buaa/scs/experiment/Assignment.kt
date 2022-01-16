@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.model.StoreType
 import cn.edu.buaa.scs.storage.assignments
 import cn.edu.buaa.scs.storage.files
+import cn.edu.buaa.scs.storage.getFile
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
 import org.ktorm.dsl.and
@@ -14,10 +15,16 @@ import org.ktorm.dsl.eq
 import org.ktorm.entity.add
 import org.ktorm.entity.update
 import java.io.InputStream
+import java.io.OutputStream
 import java.util.*
 import cn.edu.buaa.scs.storage.uploadFile as s3UploadFile
 
 const val bucket = "scs-assignment"
+
+fun getAssignmentFile(storeName: String): suspend OutputStream.() -> Unit {
+    val inputStream = getFile(bucket, storeName)
+    return { inputStream.copyTo(this) }
+}
 
 private fun uploadFile(
     owner: String,
