@@ -12,7 +12,6 @@ enum class StoreType {
 }
 
 enum class FileType {
-    @Suppress("unused")
     Assignment
 }
 

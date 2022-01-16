@@ -1,10 +1,7 @@
 package cn.edu.buaa.scs.auth
 
 import cn.edu.buaa.scs.error.AuthorizationException
-import cn.edu.buaa.scs.storage.assistants
-import cn.edu.buaa.scs.storage.courses
-import cn.edu.buaa.scs.storage.experiments
-import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.storage.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
@@ -45,7 +42,6 @@ fun assertCourse(userId: String, courseId: Int) {
 /**
  * 检查用户是否有对该实验(作业)的所有资源的管理权限
  */
-@Suppress("unused")
 fun authExperiment(userId: String, experimentId: Int): Boolean {
     if (isAdmin(userId)) {
         return true
@@ -56,7 +52,27 @@ fun authExperiment(userId: String, experimentId: Int): Boolean {
 
 @Suppress("unused")
 fun assertExperiment(userId: String, experimentId: Int) {
-    if (!authCourse(userId, experimentId)) {
+    if (!authExperiment(userId, experimentId)) {
         throw AuthorizationException("用户对该实验(作业)没有管理权限")
+    }
+}
+
+/**
+ * 检查用户是否有对该实验(作业)的所有资源的管理权限
+ */
+@Suppress("unused")
+fun authAssignment(userId: String, assignmentId: Int): Boolean {
+    if (isAdmin(userId)) {
+        return true
+    }
+    val assignment = mysql.assignments.find { it.id eq assignmentId } ?: return false
+    if (userId == assignment.studentId) return true
+    return authExperiment(userId, assignment.expId)
+}
+
+@Suppress("unused")
+fun assertAssignment(userId: String, experimentId: Int) {
+    if (!authAssignment(userId, experimentId)) {
+        throw AuthorizationException("用户对该作业没有权限")
     }
 }
