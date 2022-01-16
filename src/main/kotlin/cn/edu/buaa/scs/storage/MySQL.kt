@@ -26,8 +26,6 @@ fun Application.mysqlModule() {
             password = mainDBPassword
             addDataSourceProperty("useUnicode", "true")
             addDataSourceProperty("characterEncoding", "utf8")
-            addDataSourceProperty("serverTimezone", "UTC")
-            addDataSourceProperty("useLegacyDatetimeCode", "false")
         }),
         logger = Slf4jLoggerAdapter(logger("mainDB")().underlyingLogger)
     )

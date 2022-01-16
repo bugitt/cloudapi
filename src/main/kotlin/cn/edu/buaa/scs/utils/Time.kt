@@ -3,16 +3,15 @@ package cn.edu.buaa.scs.utils
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
-import java.time.LocalDateTime
+import java.time.Instant
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 
-fun LocalDateTime.format(): Long =
-    this.toInstant(ZoneOffset.ofHours(8)).toEpochMilli()
-
-
-class LocalDateTimeSerializer : StdSerializer<LocalDateTime>(LocalDateTime::class.java) {
-    override fun serialize(value: LocalDateTime?, gen: JsonGenerator?, provider: SerializerProvider?) {
-        gen?.writeNumber(value?.format() ?: 0)
+class InstantSerializer : StdSerializer<Instant>(Instant::class.java) {
+    override fun serialize(value: Instant?, gen: JsonGenerator?, provider: SerializerProvider?) {
+        val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+            .withZone(ZoneOffset.ofHours(8))
+        gen?.writeString(value?.let { formatter.format(it) })
     }
 }

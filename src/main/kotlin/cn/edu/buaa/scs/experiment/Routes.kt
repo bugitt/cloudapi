@@ -24,7 +24,7 @@ fun Route.experimentRoute() {
             suspend fun ApplicationCall.parseUserAndFile(): Triple<String, String, InputStream> {
                 val experimentId = getExpIdFromPath()
                 return receiveMultipart().readAllParts().let { partDataList ->
-                    val userId = getFormItem<PartData.FormItem>(partDataList, "userId")?.value ?: userId()
+                    val userId = getFormItem<PartData.FormItem>(partDataList, "owner")?.value ?: userId()
 
                     // check permission
                     assertPermission(userId == userId()) {
@@ -84,6 +84,7 @@ fun Route.experimentRoute() {
 
                             updateAssigmentFile(
                                 assignmentId,
+                                userId,
                                 call.userId(),
                                 filename,
                                 inputStream
