@@ -1,8 +1,10 @@
 package cn.edu.buaa.scs.model
 
 import org.ktorm.entity.Entity
-import org.ktorm.schema.*
-import java.time.LocalDateTime
+import org.ktorm.schema.Table
+import org.ktorm.schema.int
+import org.ktorm.schema.long
+import org.ktorm.schema.varchar
 
 enum class StoreType {
     @Suppress("unused")
@@ -22,14 +24,15 @@ interface File : Entity<File> {
     var storeType: StoreType
     var storeName: String
     var storePath: String
-    var uploadTime: LocalDateTime
+    var uploadTime: Long
     var fileType: FileType
     var involvedId: Int
     var size: Long
     var uploader: String
+    var owner: String
 
-    var createdAt: LocalDateTime
-    var updatedAt: LocalDateTime
+    var createdAt: Long
+    var updatedAt: Long
 }
 
 object Files : Table<File>("file_v2") {
@@ -49,7 +52,7 @@ object Files : Table<File>("file_v2") {
     val storePath = varchar("store_path").bindTo { it.storePath }
 
     @Suppress("unused")
-    val uploadTime = datetime("upload_time").bindTo { it.uploadTime }
+    val uploadTime = long("upload_time").bindTo { it.uploadTime }
 
     @Suppress("unused")
     val fileType = varchar("file_type").transform({ FileType.valueOf(it) }, { it.name }).bindTo { it.fileType }
@@ -64,8 +67,11 @@ object Files : Table<File>("file_v2") {
     val uploader = varchar("uploader").bindTo { it.uploader }
 
     @Suppress("unused")
-    val createdAt = datetime("created_at").bindTo { it.createdAt }
+    val owner = varchar("owner").bindTo { it.owner }
 
     @Suppress("unused")
-    val updatedAt = datetime("updated_at").bindTo { it.updatedAt }
+    val createdAt = long("created_at").bindTo { it.createdAt }
+
+    @Suppress("unused")
+    val updatedAt = long("updated_at").bindTo { it.updatedAt }
 }
