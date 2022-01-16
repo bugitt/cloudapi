@@ -24,6 +24,10 @@ fun Application.mysqlModule() {
             jdbcUrl = "jdbc:mysql://$mainDBHost:$mainDBPort/$mainDBName"
             username = mainDBUser
             password = mainDBPassword
+            addDataSourceProperty("useUnicode", "true")
+            addDataSourceProperty("characterEncoding", "utf8")
+            addDataSourceProperty("serverTimezone", "UTC")
+            addDataSourceProperty("useLegacyDatetimeCode", "false")
         }),
         logger = Slf4jLoggerAdapter(logger("mainDB")().underlyingLogger)
     )
