@@ -12,7 +12,6 @@ import cn.edu.buaa.scs.utils.exists
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.add
-import org.ktorm.entity.find
 import org.ktorm.entity.update
 import java.io.InputStream
 import java.util.*
@@ -71,19 +70,16 @@ fun createAssignment(
 }
 
 fun updateAssigmentFile(
-    assignmentId: Int,
-    owner: String,
+    assignment: Assignment,
     uploader: String,
     originalName: String,
     inputStream: InputStream
 ): Assignment {
-    val file = uploadFile(owner, uploader, originalName, inputStream)
-    return mysql.useTransaction {
-        val assignment = mysql.assignments
-            .find { it.id eq assignmentId } ?: throw BusinessException("experiment with expId($assignmentId) not found")
+    val file = uploadFile(assignment.studentId, uploader, originalName, inputStream)
+    mysql.useTransaction {
         updateAssigmentFile(assignment, file)
-        assignment
     }
+    return assignment
 }
 
 private fun updateAssigmentFile(
