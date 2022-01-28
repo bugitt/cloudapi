@@ -1,10 +1,13 @@
 package cn.edu.buaa.scs.experiment
 
+import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.assignments
 import cn.edu.buaa.scs.service.assignment
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.getFormItem
+import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
 import io.ktor.http.content.*
@@ -77,6 +80,14 @@ fun Route.experimentRoute() {
 
                         }
                         .let { call.respond(it) }
+                }
+
+                get {
+                    val assignmentId = call.getAssignmentIdFromPath()
+                    val assignment = mysql.assignments.find { it.id eq assignmentId }
+                        ?: throw NotFoundException("assignment with assignmentId($assignmentId) not found")
+                    call.user().assertRead(assignment)
+                    call.respond(assignment)
                 }
             }
         }

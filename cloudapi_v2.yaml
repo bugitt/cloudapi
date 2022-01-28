@@ -77,6 +77,17 @@ paths:
         - 作业
       requestBody:
         $ref: '#/components/requestBodies/FileFormDataRequest'
+    get:
+      summary: 查看作业
+      operationId: get-experiment-experimentId-assignment-assignmentId
+      responses:
+        '200':
+          $ref: '#/components/responses/Assignment'
+      security:
+        - Authorization: []
+      description: 查看某次作业的详细信息
+      tags:
+        - 作业
   '/file/{fileId}':
     parameters:
       - schema:
@@ -96,8 +107,8 @@ paths:
         '200':
           $ref: '#/components/responses/RawFile'
     patch:
-      summary: '修改文件'
-      description: '修改文件'
+      summary: 修改文件
+      description: 修改文件
       operationId: patch-file-fileId
       responses:
         '200':
