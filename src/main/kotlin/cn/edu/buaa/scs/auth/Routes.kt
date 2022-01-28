@@ -10,7 +10,7 @@ import io.ktor.routing.*
 fun Route.authRoute() {
     route("/authentications") {
         get {
-            call.respond(listOf(Authentication(call.user().id, call.token())))
+            call.respond(listOf(Authentication(call.user().id.lowercase(), call.token())))
         }
     }
 }

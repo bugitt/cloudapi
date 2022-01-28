@@ -25,7 +25,7 @@ val adminUser = User {
 fun fetchToken(call: ApplicationCall) {
     // TODO 后续兼容JWT校验
     val token: String = call.request.queryParameters.let { params ->
-        params["authentication"] ?: params["Authentication"]
+        params["token"] ?: params["authentication"] ?: params["Authentication"]
     } ?: call.request.headers.let { headers ->
         headers["authorization"] ?: headers["Authorization"]
     }?.let { auth -> auth.split(" ").let { if (it.size > 1 && it[0] == "Bearer") it[1] else auth } } ?: ""
