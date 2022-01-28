@@ -7,7 +7,6 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
@@ -41,7 +40,7 @@ class AssignmentService(val call: ApplicationCall) {
 
         call.user().assertAdmin(assignment)
 
-        val file = File.upload(owner, call.userId(), originalName, inputStream)
+        val file = call.file.create(owner, originalName, FileType.Assignment, inputStream)
         mysql.useTransaction {
             // create assignment
             mysql.assignments.add(assignment)
@@ -56,7 +55,7 @@ class AssignmentService(val call: ApplicationCall) {
         inputStream: InputStream
     ): Assignment {
         call.user().assertWrite(assignment)
-        val file = File.upload(assignment.studentId, call.userId(), originalName, inputStream)
+        val file = call.file.create(assignment.studentId, originalName, FileType.Assignment, inputStream)
         mysql.useTransaction {
             updateAssignmentFile(assignment, file)
         }
