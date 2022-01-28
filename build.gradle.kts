@@ -45,7 +45,7 @@ dependencies {
     implementation("io.ktor:ktor-jackson:$ktor_version")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jackson_version")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
-    
+
     // Redis
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
 
@@ -72,6 +72,7 @@ dependencies {
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    implementation("org.junit.jupiter:junit-jupiter:5.8.1")
 }
 
 tasks {
@@ -79,5 +80,9 @@ tasks {
         manifest {
             attributes(Pair("Main-Class", "cn.edu.buaa.scs.ApplicationKt"))
         }
+    }
+    
+    "test"(Test::class) {
+        useJUnitPlatform()
     }
 }
