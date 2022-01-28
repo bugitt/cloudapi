@@ -10,7 +10,7 @@ lateinit var kubeClient: () -> KubernetesClient
 
 @Suppress("unused")
 fun Application.kubeModule() {
-    val configString = getFile("/kubeconfig.yaml").readText()
+    val configString = String(getFile("/kubeconfig.yaml").readAllBytes())
     kubeClient = fun(): KubernetesClient {
         return DefaultKubernetesClient.fromConfig(configString)
     }
