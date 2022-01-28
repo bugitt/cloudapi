@@ -131,13 +131,12 @@ paths:
       summary: 下载文件
       tags:
         - 文件
-      responses:
-        '200':
-          $ref: '#/components/responses/RawFile'
       operationId: get-file-fileId-content
       description: |-
         下载文件
         文件的一些元信息（名称、format-type）等展示在相应的header中
+
+        该接口的相应是一个二进制字节流，即为文件的内容
       security:
         - Authorization: []
       parameters:
