@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
+import cn.edu.buaa.scs.utils.getFileExtension
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
 import org.ktorm.dsl.and
@@ -40,7 +41,7 @@ class AssignmentService(val call: ApplicationCall) {
 
         call.user().assertAdmin(assignment)
 
-        val file = call.file.create(owner, originalName, FileType.Assignment, inputStream)
+        val file = call.file.create(owner, buildFilename(expId, owner, originalName), FileType.Assignment, inputStream)
         mysql.useTransaction {
             // create assignment
             mysql.assignments.add(assignment)
@@ -55,17 +56,28 @@ class AssignmentService(val call: ApplicationCall) {
         inputStream: InputStream
     ): Assignment {
         call.user().assertWrite(assignment)
-        val file = call.file.create(assignment.studentId, originalName, FileType.Assignment, inputStream)
+        val file = call.file.create(
+            assignment.studentId,
+            buildFilename(assignment.expId, assignment.studentId, originalName),
+            FileType.Assignment,
+            inputStream
+        )
         mysql.useTransaction {
             updateAssignmentFile(assignment, file)
         }
         return assignment
     }
 
+    private fun buildFilename(expId: Int, ownerId: String, originalName: String): String {
+        val owner = User.id(ownerId)
+        return "${owner.name}_${owner.id}_${Experiment.id(expId).name}.${originalName.getFileExtension()}"
+    }
+
     private fun updateAssignmentFile(
         assignment: Assignment,
         file: File
     ) {
+        file.involvedId = assignment.id
         mysql.files.add(file)
         assignment.fileId = file.id
         assignment.updatedAt = System.currentTimeMillis()

@@ -96,16 +96,16 @@ paths:
         in: path
         required: true
     get:
-      summary: 下载文件
+      summary: 获取文件元信息
       tags:
         - 文件
       operationId: get-file-fileId
       security:
         - Authorization: []
-      description: 下载文件，response是一个 content-type 为 application/octet-stream 的 二进制流
+      description: 获取文件的元信息
       responses:
         '200':
-          $ref: '#/components/responses/RawFile'
+          $ref: '#/components/responses/File'
     patch:
       summary: 修改文件
       description: 修改文件
@@ -119,6 +119,41 @@ paths:
         - Authorization: []
       requestBody:
         $ref: '#/components/requestBodies/FileFormDataRequest'
+  '/file/{fileId}/content':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: fileId
+        in: path
+        required: true
+    get:
+      summary: 下载文件
+      tags: []
+      responses:
+        '200':
+          $ref: '#/components/responses/RawFile'
+      operationId: get-file-fileId-content
+      description: |-
+        下载文件
+        文件的一些元信息（名称、format-type）等展示在相应的header中
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: string
+            example: attachment; filename=%E6%9D%8E%E6%A5%A0_15131049_%E6%B5%8B%E8%AF%95%E4%BD%9C%E4%B8%9A02.doc
+          in: header
+          name: content-disposition
+          description: 可以从该header中检出文件名。从示例中可以看出，filename之后的内容为文件名（未防止乱码，文件名使用了URL编码，使用时可以重新解码）
+          required: true
+        - schema:
+            type: string
+            example: application/msword
+          in: header
+          name: content-type
+          description: 描述了文件的mimetype
+          required: true
 components:
   schemas: {}
   securitySchemes:

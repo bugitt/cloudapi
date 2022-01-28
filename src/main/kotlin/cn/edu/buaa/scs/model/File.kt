@@ -30,6 +30,7 @@ interface File : Entity<File>, IEntity {
     var involvedId: Int
     var size: Long
     var uploader: String
+    var contentType: String
     var owner: String
 
     var createdAt: Long
@@ -63,6 +64,9 @@ object Files : Table<File>("file_v2") {
 
     @Suppress("unused")
     val size = long("size").bindTo { it.size }
+
+    @Suppress("unused")
+    val contentType = varchar("content_type").bindTo { it.contentType }
 
     @Suppress("unused")
     val uploader = varchar("uploader").bindTo { it.uploader }

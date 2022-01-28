@@ -10,6 +10,8 @@ import cn.edu.buaa.scs.storage.uploadFile
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
+import org.apache.tika.Tika
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
@@ -30,16 +32,17 @@ class FileService(val call: ApplicationCall) {
         fileType: FileType,
         inputStream: InputStream
     ): File {
-        val fileResp = File.upload(fileType, inputStream)
+        val fileResp = File.upload(originalName, fileType, inputStream)
         return File {
             name = originalName
             storeType = StoreType.S3
             storeName = fileResp.storeName
             storePath = Assignment.bucket
             uploadTime = fileResp.uploadTime
+            this.contentType = fileResp.contentType
             this.fileType = fileType
             size = fileResp.size
-            this.uploader = uploader
+            this.uploader = call.userId()
             this.owner = owner
             this.createdAt = System.currentTimeMillis()
             this.updatedAt = System.currentTimeMillis()
@@ -47,10 +50,11 @@ class FileService(val call: ApplicationCall) {
     }
 
     fun update(file: File, inputStream: InputStream): File {
-        File.upload(file.fileType, inputStream).let {
+        File.upload(file.name, file.fileType, inputStream).let {
             file.storeName = it.storeName
             file.uploadTime = it.uploadTime
             file.size = it.size
+            file.contentType = it.contentType
             file.uploader = call.userId()
             file.updatedAt = System.currentTimeMillis()
 
@@ -61,19 +65,28 @@ class FileService(val call: ApplicationCall) {
 }
 
 fun File.Companion.upload(
+    originalName: String,
     fileType: FileType,
     inputStream: InputStream
 ): FileResp {
+    // detect file type
+    val bytes = ByteArrayOutputStream().use { output ->
+        inputStream.copyTo(output)
+        output.toByteArray()
+    }
+    val contentType = Tika().detect(bytes.inputStream(), originalName)
+
     val storeFileName = UUID.randomUUID().toString()
     return when (fileType) {
-        FileType.Assignment -> uploadFile(Assignment.bucket, storeFileName, inputStream)
+        FileType.Assignment -> uploadFile(Assignment.bucket, storeFileName, bytes.inputStream(), contentType)
     }.let {
-        FileResp(storeFileName, it.size(), it.lastModified().toInstant().toEpochMilli())
+        FileResp(storeFileName, it.size(), it.contentType(), it.lastModified().toInstant().toEpochMilli())
     }
 }
 
 data class FileResp(
     val storeName: String,
     val size: Long,
+    val contentType: String,
     val uploadTime: Long,
 )
