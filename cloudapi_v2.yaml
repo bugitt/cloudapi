@@ -34,7 +34,7 @@ paths:
         '200':
           $ref: '#/components/responses/Assignment'
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           multipart/form-data:
@@ -49,7 +49,7 @@ paths:
               required:
                 - owner
                 - file
-            examples: { }
+            examples: {}
         description: ''
       description: 第一次上传作业
   '/experiment/{experimentId}/assignment/{assignmentId}':
@@ -71,23 +71,12 @@ paths:
         '200':
           $ref: '#/components/responses/Assignment'
       security:
-        - Authorization: [ ]
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-              required:
-                - file
-            examples: { }
-        description: ''
+        - Authorization: []
       description: 重复上传作业，直接覆盖之前的作业
       tags:
         - 作业
+      requestBody:
+        $ref: '#/components/requestBodies/FileFormDataRequest'
   '/file/{fileId}':
     parameters:
       - schema:
@@ -101,13 +90,26 @@ paths:
         - 文件
       operationId: get-file-fileId
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 下载文件，response是一个 content-type 为 application/octet-stream 的 二进制流
       responses:
         '200':
+          $ref: '#/components/responses/RawFile'
+    patch:
+      summary: '修改文件'
+      description: '修改文件'
+      operationId: patch-file-fileId
+      responses:
+        '200':
           $ref: '#/components/responses/File'
+      tags:
+        - 文件
+      security:
+        - Authorization: []
+      requestBody:
+        $ref: '#/components/requestBodies/FileFormDataRequest'
 components:
-  schemas: { }
+  schemas: {}
   securitySchemes:
     Authorization:
       type: apiKey
@@ -170,9 +172,108 @@ components:
                 courseId: 438
                 createdAt: 1643361519220
                 updatedAt: 1643363133061
-    File:
-      description: 文件相关的响应
+    RawFile:
+      description: 文件二进制流
       content:
         application/octet-stream:
           schema:
             type: object
+    File:
+      description: 文件在数据库中的描述
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            x-examples:
+              example-1:
+                id: 39
+                name: example.png
+                storeType: S3
+                storeName: 0e17e5b6-4bd0-480c-9ea7-256adbd6fd9b
+                storePath: bucket
+                uploadTime: 1643366839000
+                fileType: Assignment
+                size: 880188
+                uploader: admin
+                owner: '15131049'
+                createdAt: 1643361520223
+                updatedAt: 1643366839703
+            properties:
+              id:
+                type: integer
+                format: int32
+              name:
+                type: string
+                minLength: 1
+              storeType:
+                type: string
+                minLength: 1
+              storeName:
+                type: string
+                minLength: 1
+              storePath:
+                type: string
+                minLength: 1
+              uploadTime:
+                type: integer
+                format: int64
+                description: 时间戳
+              fileType:
+                type: string
+                minLength: 1
+              size:
+                type: integer
+                format: int64
+              uploader:
+                type: string
+                minLength: 1
+              owner:
+                type: string
+                minLength: 1
+              createdAt:
+                type: integer
+                format: int64
+                description: 时间戳
+              updatedAt:
+                type: integer
+                format: int64
+                description: 时间戳
+            required:
+              - id
+              - name
+              - storeType
+              - storeName
+              - storePath
+              - uploadTime
+              - fileType
+              - size
+              - uploader
+              - owner
+              - createdAt
+              - updatedAt
+          examples:
+            example-1:
+              value:
+                id: 39
+                name: example.png
+                storeType: S3
+                storeName: 0e17e5b6-4bd0-480c-9ea7-256adbd6fd9b
+                storePath: bucket
+                uploadTime: 1643366839000
+                fileType: Assignment
+                size: 880188
+                uploader: admin
+                owner: '15131049'
+                createdAt: 1643361520223
+                updatedAt: 1643366839703
+  requestBodies:
+    FileFormDataRequest:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
