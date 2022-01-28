@@ -129,7 +129,8 @@ paths:
         required: true
     get:
       summary: 下载文件
-      tags: []
+      tags:
+        - 文件
       responses:
         '200':
           $ref: '#/components/responses/RawFile'
