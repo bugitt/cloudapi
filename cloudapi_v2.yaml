@@ -139,21 +139,20 @@ paths:
         该接口的response是一个二进制字节流，即为文件的内容
       security:
         - Authorization: []
-      parameters:
-        - schema:
-            type: string
-            example: attachment; filename=%E6%9D%8E%E6%A5%A0_15131049_%E6%B5%8B%E8%AF%95%E4%BD%9C%E4%B8%9A02.doc
-          in: header
-          name: content-disposition
-          description: 可以从该header中检出文件名。从示例中可以看出，filename之后的内容为文件名（未防止乱码，文件名使用了URL编码，使用时可以重新解码）
-          required: true
-        - schema:
-            type: string
-            example: application/msword
-          in: header
-          name: content-type
-          description: 描述了文件的mimetype
-          required: true
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            content-disposition:
+              schema:
+                type: string
+                example: attachment; filename=%E6%9D%8E%E6%A5%A0_15131049_%E6%B5%8B%E8%AF%95%E4%BD%9C%E4%B8%9A02.doc
+              description: 可以从该header中检出文件名。从示例中可以看出，filename之后的内容为文件名（未防止乱码，文件名使用了URL编码，使用时可以重新解码）
+            content-type:
+              schema:
+                type: string
+              description: 描述了文件的mimetype
 components:
   schemas: {}
   securitySchemes:
