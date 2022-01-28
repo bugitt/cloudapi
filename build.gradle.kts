@@ -61,6 +61,10 @@ dependencies {
     // minio
     implementation("io.minio:minio:8.3.4")
 
+    // tika
+    implementation("org.apache.tika:tika-core:2.2.1")
+    implementation("org.apache.tika:tika-parsers-standard-package:2.2.1")
+
     // common utils
     implementation("com.google.guava:guava:31.0.1-jre")
 
@@ -81,7 +85,7 @@ tasks {
             attributes(Pair("Main-Class", "cn.edu.buaa.scs.ApplicationKt"))
         }
     }
-    
+
     "test"(Test::class) {
         useJUnitPlatform()
     }
