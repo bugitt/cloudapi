@@ -1,0 +1,178 @@
+openapi: 3.0.0
+info:
+  title: cloudapi_v2
+  version: '2.0'
+  description: buaa scs cloud api v2
+  license:
+    name: MIT
+  contact:
+    name: loheagn
+    url: loheagn.com
+    email: loheagn@icloud.com
+  termsOfService: 'https://scs.buaa.edu.cn'
+tags:
+  - name: 作业
+    description: 作业相关
+  - name: 文件
+    description: 文件相关
+servers:
+  - url: 'https://scs.buaa.edu.cn/api/v2'
+paths:
+  '/experiment/{experimentId}/assignment':
+    parameters:
+      - schema:
+          type: string
+        name: experimentId
+        in: path
+        required: true
+    post:
+      summary: 创建作业
+      tags:
+        - 作业
+      operationId: post-experiment-experimentId-assignment
+      responses:
+        '200':
+          $ref: '#/components/responses/Assignment'
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                owner:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+              required:
+                - owner
+                - file
+            examples: { }
+        description: ''
+      description: 第一次上传作业
+  '/experiment/{experimentId}/assignment/{assignmentId}':
+    parameters:
+      - schema:
+          type: integer
+        name: experimentId
+        in: path
+        required: true
+      - schema:
+          type: integer
+        name: assignmentId
+        in: path
+        required: true
+    patch:
+      summary: 重新上传作业
+      operationId: patch-experiment-experimentId-assignment
+      responses:
+        '200':
+          $ref: '#/components/responses/Assignment'
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+            examples: { }
+        description: ''
+      description: 重复上传作业，直接覆盖之前的作业
+      tags:
+        - 作业
+  '/file/{fileId}':
+    parameters:
+      - schema:
+          type: integer
+        name: fileId
+        in: path
+        required: true
+    get:
+      summary: 下载文件
+      tags:
+        - 文件
+      operationId: get-file-fileId
+      security:
+        - Authorization: [ ]
+      description: 下载文件，response是一个 content-type 为 application/octet-stream 的 二进制流
+      responses:
+        '200':
+          $ref: '#/components/responses/File'
+components:
+  schemas: { }
+  securitySchemes:
+    Authorization:
+      type: apiKey
+      in: header
+      description: ''
+      name: Authorization
+  responses:
+    Assignment:
+      description: 作业相关的相应
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            x-examples:
+              example-1:
+                id: 0
+                studentId: string
+                expId: 0
+                courseId: 0
+                fileId: 0
+                createdAt: 0
+                updatedAt: 0
+            properties:
+              id:
+                type: integer
+              studentId:
+                type: string
+                minLength: 4
+                maxLength: 9
+              expId:
+                type: integer
+              courseId:
+                type: integer
+              fileId:
+                type: integer
+              createdAt:
+                type: integer
+                description: 长整型时间戳
+                format: int64
+              updatedAt:
+                type: integer
+                description: 长整型时间戳
+                format: int64
+            required:
+              - id
+              - studentId
+              - expId
+              - courseId
+              - fileId
+              - createdAt
+              - updatedAt
+          examples:
+            example-1:
+              value:
+                id: 22
+                studentId: '15131049'
+                fileId: 40
+                expId: 1062
+                courseId: 438
+                createdAt: 1643361519220
+                updatedAt: 1643363133061
+    File:
+      description: 文件相关的响应
+      content:
+        application/octet-stream:
+          schema:
+            type: object
