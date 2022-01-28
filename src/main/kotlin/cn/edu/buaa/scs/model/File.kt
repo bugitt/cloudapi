@@ -1,6 +1,8 @@
 package cn.edu.buaa.scs.model
 
+import org.ktorm.database.Database
 import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.int
 import org.ktorm.schema.long
@@ -15,7 +17,7 @@ enum class FileType {
     Assignment
 }
 
-interface File : Entity<File> {
+interface File : Entity<File>, IEntity {
     companion object : Entity.Factory<File>()
 
     var id: Int
@@ -74,3 +76,5 @@ object Files : Table<File>("file_v2") {
     @Suppress("unused")
     val updatedAt = long("updated_at").bindTo { it.updatedAt }
 }
+
+val Database.files get() = this.sequenceOf(Files)

@@ -1,11 +1,13 @@
 package cn.edu.buaa.scs.model
 
+import org.ktorm.database.Database
 import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 
-interface Course : Entity<Course> {
+interface Course : Entity<Course>, IEntity {
     companion object : Entity.Factory<Course>()
 
     var id: Int
@@ -39,3 +41,7 @@ object Courses : Table<Course>("course") {
     @Suppress("unused")
     val resourceFolder = varchar("resource_folder").bindTo { it.resourceFolder }
 }
+
+@Suppress("unused")
+val Database.courses
+    get() = this.sequenceOf(Courses)

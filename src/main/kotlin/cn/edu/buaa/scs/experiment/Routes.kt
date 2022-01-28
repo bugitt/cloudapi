@@ -1,10 +1,9 @@
 package cn.edu.buaa.scs.experiment
 
-import cn.edu.buaa.scs.auth.assertExperiment
 import cn.edu.buaa.scs.error.BadRequestException
-import cn.edu.buaa.scs.storage.assignments
+import cn.edu.buaa.scs.model.assignments
+import cn.edu.buaa.scs.service.assignment
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.assertPermission
 import cn.edu.buaa.scs.utils.getFormItem
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
@@ -26,14 +25,8 @@ fun Route.experimentRoute() {
         route("/assignment") {
 
             suspend fun ApplicationCall.parseUserAndFile(): Triple<String, String, InputStream> {
-                val experimentId = getExpIdFromPath()
                 return receiveMultipart().readAllParts().let { partDataList ->
                     val userId = getFormItem<PartData.FormItem>(partDataList, "owner")?.value ?: userId()
-
-                    // check permission
-                    assertPermission(userId == userId()) {
-                        assertExperiment(userId(), experimentId)
-                    }
 
                     val fileItem = getFormItem<PartData.FileItem>(partDataList, "file")
                         ?: throw BadRequestException("can not parse file item")
@@ -48,16 +41,9 @@ fun Route.experimentRoute() {
                 val experimentId = call.getExpIdFromPath()
                 call.parseUserAndFile()
                     .let { (userId, filename, inputStream) ->
-
-                        // check permission
-                        call.assertPermission(userId == call.userId()) {
-                            assertExperiment(call.userId(), experimentId)
-                        }
-
-                        createAssignment(
+                        call.assignment.create(
                             experimentId,
                             userId,
-                            call.userId(),
                             filename,
                             inputStream
                         )
@@ -83,14 +69,8 @@ fun Route.experimentRoute() {
                     call.parseUserAndFile()
                         .let { (_, filename, inputStream) ->
 
-                            // check permission
-                            call.assertPermission(assignment.studentId == call.userId()) {
-                                assertExperiment(call.userId(), experimentId)
-                            }
-
-                            updateAssigmentFile(
+                            call.assignment.update(
                                 assignment,
-                                call.userId(),
                                 filename,
                                 inputStream
                             )

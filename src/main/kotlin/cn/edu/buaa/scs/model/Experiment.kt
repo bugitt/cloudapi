@@ -1,12 +1,14 @@
 package cn.edu.buaa.scs.model
 
+import org.ktorm.database.Database
 import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.boolean
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 
-interface Experiment : Entity<Experiment> {
+interface Experiment : Entity<Experiment>, IEntity {
     companion object : Entity.Factory<Experiment>()
 
     var id: Int
@@ -84,11 +86,15 @@ object Experiments : Table<Experiment>("experiment") {
     val appealDeadline = varchar("appeal_deadline").bindTo { it.appealDeadline }
 
     @Suppress("unused")
-    val peerAssessmentRules = varchar("peer_assessment_start").bindTo { it.peerAssessmentRules }
+    val peerAssessmentRules = varchar("peer_assessment_rules").bindTo { it.peerAssessmentRules }
 
     @Suppress("unused")
     val peerAssessmentStart = boolean("peer_assessment_start").bindTo { it.peerAssessmentStart }
 
     @Suppress("unused")
-    val sentEmail = boolean("send_email").bindTo { it.sentEmail }
+    val sentEmail = boolean("sent_email").bindTo { it.sentEmail }
 }
+
+@Suppress("unused")
+val Database.experiments
+    get() = this.sequenceOf(Experiments)
