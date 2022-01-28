@@ -79,7 +79,7 @@ fun Assignment.Companion.id(id: Int): Assignment {
 }
 
 val Assignment.Companion.bucket: String
-    get() = "bucket"
+    get() = "scs-assignment"
 
 fun Assignment.getCourse(): Course = Course.id(this.courseId)
 
