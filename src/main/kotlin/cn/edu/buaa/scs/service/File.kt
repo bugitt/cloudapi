@@ -23,7 +23,7 @@ class FileService(val call: ApplicationCall) {
     fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
         val inputStream = getFile(file.storePath, file.storeName)
-        return { inputStream.copyTo(this) }
+        return { inputStream.use { it.copyTo(this) } }
     }
 
     fun create(
@@ -74,13 +74,23 @@ fun File.Companion.upload(
         inputStream.copyTo(output)
         output.toByteArray()
     }
-    val contentType = Tika().detect(bytes.inputStream(), originalName)
+    val contentType = bytes.inputStream().use { input ->
+        Tika().detect(input, originalName)
+    }
 
     val storeFileName = UUID.randomUUID().toString()
-    return when (fileType) {
-        FileType.Assignment -> uploadFile(Assignment.bucket, storeFileName, bytes.inputStream(), contentType)
+    // 上传文件
+    return bytes.inputStream().use { input ->
+        when (fileType) {
+            FileType.Assignment -> uploadFile(Assignment.bucket, storeFileName, input, contentType)
+        }
     }.let {
-        FileResp(storeFileName, it.size(), it.contentType(), it.lastModified().toInstant().toEpochMilli())
+        FileResp(
+            storeFileName,
+            it.size(),
+            it.contentType(),
+            it.lastModified().toInstant().toEpochMilli()
+        )
     }
 }
 
