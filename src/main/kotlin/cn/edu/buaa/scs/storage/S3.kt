@@ -14,14 +14,18 @@ fun uploadFile(
     bucket: String,
     filename: String,
     inputStream: InputStream,
-    contentType: String = "application/octet-stream"
+    contentType: String = "application/octet-stream",
+    size: Long = -1L
 ): StatObjectResponse {
     ensureBucketExists(bucket)
     PutObjectArgs
         .builder()
         .bucket(bucket)
         .`object`(filename)
-        .stream(inputStream, -1, minioPartSize)
+        .also {
+            if (size == -1L) it.stream(inputStream, -1, minioPartSize)
+            else it.stream(inputStream, size, -1)
+        }
         .contentType(contentType)
         .build()
         .let { minioClient.putObject(it) }
