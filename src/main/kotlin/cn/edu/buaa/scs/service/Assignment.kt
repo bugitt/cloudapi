@@ -95,5 +95,3 @@ val Assignment.Companion.bucket: String
 
 fun Assignment.getCourse(): Course = Course.id(this.courseId)
 
-fun Assignment.getExperiment(): Experiment = Experiment.id(this.expId)
-

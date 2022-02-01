@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.utils
 
-import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.User
 import io.ktor.application.*
 import io.ktor.features.*
@@ -14,16 +13,6 @@ fun ApplicationCall.user(): User =
 
 fun ApplicationCall.userId(): String =
     this.attributes[USER_ID_KEY]
-
-fun ApplicationCall.assertPermission(boolean: Boolean, action: () -> Unit) = run {
-    if (boolean) return@run
-
-    try {
-        action()
-    } catch (e: AuthorizationException) {
-        throw e
-    }
-}
 
 val ApplicationCall.baseURLName: String
     get() = this.request.uri.substringBefore("?").split("/").last()

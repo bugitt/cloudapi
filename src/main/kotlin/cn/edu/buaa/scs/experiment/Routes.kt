@@ -1,10 +1,13 @@
 package cn.edu.buaa.scs.experiment
 
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.NotFoundException
+import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.model.assignments
 import cn.edu.buaa.scs.service.assignment
+import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.getFormItem
 import cn.edu.buaa.scs.utils.user
@@ -24,6 +27,13 @@ fun Route.experimentRoute() {
         fun ApplicationCall.getExpIdFromPath(): Int =
             parameters["experimentId"]?.toInt()
                 ?: throw BadRequestException("experiment id is invalid")
+
+        route("/assignments/content") {
+            get {
+                call.user().assertWrite(Experiment.id(call.getExpIdFromPath()))
+
+            }
+        }
 
         route("/assignment") {
 
@@ -65,7 +75,6 @@ fun Route.experimentRoute() {
                  * 重复提交作业
                  */
                 patch {
-                    val experimentId = call.getExpIdFromPath()
                     val assignmentId = call.getAssignmentIdFromPath()
                     val assignment = mysql.assignments.find { it.id eq assignmentId }
                         ?: throw BadRequestException("assignment with assignmentId($assignmentId) not found")
