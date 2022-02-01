@@ -36,7 +36,7 @@ fun Route.fileRoute() {
                 getFormItem<PartData.FileItem>(partDataList, "file")
                     ?: throw BadRequestException("can not parse file item")
             }
-            call.file.update(call.getFile(), fileItem.streamProvider()).let {
+            call.file.update(call.getFile(), fileItem.originalFileName, fileItem.streamProvider()).let {
                 call.respond(it)
             }
         }
@@ -50,6 +50,10 @@ fun Route.fileRoute() {
                         ContentDisposition.Parameters.FileName,
                         URLEncoder.encode(file.name, "utf-8")
                     ).toString()
+                )
+                call.response.header(
+                    "file-size",
+                    file.size
                 )
                 call.respondOutputStream(
                     contentType = ContentType.parse(file.contentType),

@@ -86,7 +86,7 @@ fun File.Companion.upload(
     // 上传文件
     return bytes.inputStream().use { input ->
         when (fileType) {
-            FileType.Assignment -> uploadFile(Assignment.bucket, storeFileName, input, contentType)
+            FileType.Assignment -> uploadFile(Assignment.bucket, storeFileName, input, contentType, bytes.size.toLong())
         }
     }.let {
         FileResp(
