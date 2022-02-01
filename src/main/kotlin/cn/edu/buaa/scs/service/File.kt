@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.model.StoreType
 import cn.edu.buaa.scs.storage.getFile
 import cn.edu.buaa.scs.storage.uploadFile
+import cn.edu.buaa.scs.utils.updateFileExtension
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
@@ -49,7 +50,8 @@ class FileService(val call: ApplicationCall) {
         }
     }
 
-    fun update(file: File, inputStream: InputStream): File {
+    fun update(file: File, newFileName: String?, inputStream: InputStream): File {
+        file.name = file.name.updateFileExtension(newFileName)
         File.upload(file.name, file.fileType, inputStream).let {
             file.storeName = it.storeName
             file.uploadTime = it.uploadTime
@@ -61,6 +63,7 @@ class FileService(val call: ApplicationCall) {
             file.flushChanges()
         }
         return file
+        
     }
 }
 
@@ -70,6 +73,7 @@ fun File.Companion.upload(
     inputStream: InputStream
 ): FileResp {
     // detect file type
+    // TODO: large file
     val bytes = ByteArrayOutputStream().use { output ->
         inputStream.copyTo(output)
         output.toByteArray()
