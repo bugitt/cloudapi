@@ -5,6 +5,16 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.request.*
 
+fun ApplicationCall.headerString(key: String): String =
+    this.request.header(key) ?: throw BadRequestException("missing header: $key")
+
+fun ApplicationCall.headerInt(key: String): Int =
+    this.request.header(key)?.toInt() ?: throw BadRequestException("missing header: $key")
+
+fun ApplicationCall.headerIntOrNull(key: String): Int? =
+    this.request.header(key)?.toInt()
+
+
 fun ApplicationCall.token(): String =
     this.attributes[TOKEN_KEY]
 

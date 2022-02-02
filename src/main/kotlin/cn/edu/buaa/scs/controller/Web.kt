@@ -1,6 +1,6 @@
-package cn.edu.buaa.scs.web
+package cn.edu.buaa.scs.controller
 
-import cn.edu.buaa.scs.web.plugins.*
+import cn.edu.buaa.scs.controller.plugins.*
 import io.ktor.application.*
 
 @Suppress("unused")

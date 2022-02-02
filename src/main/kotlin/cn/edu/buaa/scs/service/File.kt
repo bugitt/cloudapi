@@ -1,18 +1,24 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
-import cn.edu.buaa.scs.model.Assignment
-import cn.edu.buaa.scs.model.File
-import cn.edu.buaa.scs.model.FileType
-import cn.edu.buaa.scs.model.StoreType
+import cn.edu.buaa.scs.error.BusinessException
+import cn.edu.buaa.scs.error.NotFoundException
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.getFile
+import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.storage.uploadFile
 import cn.edu.buaa.scs.utils.updateFileExtension
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
+import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import java.io.ByteArrayOutputStream
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
@@ -21,6 +27,37 @@ val ApplicationCall.file: FileService
     get() = FileService(this)
 
 class FileService(val call: ApplicationCall) {
+    fun get(fileId: Int): File {
+        val file = mysql.files.find { it.id eq fileId }
+            ?: throw NotFoundException("assignment($fileId) not found")
+        call.user().assertRead(file)
+        return file
+    }
+
+    suspend fun createOrUpdate(
+        readChannel: ByteReadChannel,
+        originalName: String,
+        owner: String,
+        fileType: FileType,
+        involvedId: Int,
+        contentType: String,
+        fileId: Int?
+    ): File {
+        val tmpFilename = UUID.randomUUID().toString()
+        withContext(Dispatchers.IO) {
+            FileOutputStream(java.io.File(tmpFilename)).use { out ->
+                val byteBufferSize = 1024 * 100
+                val byteBuffer = ByteArray(byteBufferSize)
+                do {
+                    val currentRead = readChannel.readAvailable(byteBuffer, 0, byteBufferSize)
+                    if (currentRead > 0) {
+                        out.write(byteBuffer)
+                    }
+                } while (currentRead > 0)
+            }
+        }
+    }
+
     fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
         val inputStream = getFile(file.storePath, file.storeName)
@@ -63,8 +100,13 @@ class FileService(val call: ApplicationCall) {
             file.flushChanges()
         }
         return file
-        
+
     }
+}
+
+fun File.Companion.id(id: Int): File {
+    return mysql.files.find { it.id eq id }
+        ?: throw BusinessException("find file($id) from database error")
 }
 
 fun File.Companion.upload(

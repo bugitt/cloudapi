@@ -1,9 +1,9 @@
-package cn.edu.buaa.scs.web.plugins
+package cn.edu.buaa.scs.controller.plugins
 
 import cn.edu.buaa.scs.auth.authRoute
 import cn.edu.buaa.scs.auth.fetchToken
-import cn.edu.buaa.scs.experiment.experimentRoute
-import cn.edu.buaa.scs.file.fileRoute
+import cn.edu.buaa.scs.route.experimentRoute
+import cn.edu.buaa.scs.route.fileRoute
 import cn.edu.buaa.scs.utils.test.test
 import io.ktor.application.*
 import io.ktor.routing.*
