@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.web.plugins
+package cn.edu.buaa.scs.controller.plugins
 
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException

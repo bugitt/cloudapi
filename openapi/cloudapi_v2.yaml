@@ -1,0 +1,334 @@
+openapi: 3.0.0
+info:
+  title: cloudapi_v2
+  version: '2.0'
+  description: buaa scs cloud api v2
+  license:
+    name: MIT
+  contact:
+    name: loheagn
+    email: loheagn@icloud.com
+  termsOfService: 'https://scs.buaa.edu.cn'
+tags:
+  - name: 作业
+    description: 作业相关
+  - name: 文件
+    description: 文件相关
+servers:
+  - url: 'https://scs.buaa.edu.cn/api/v2'
+paths:
+  '/experiment/{experimentId}/assignment':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: experimentId
+        in: path
+        required: true
+    post:
+      summary: 创建作业
+      tags:
+        - 作业
+      operationId: post-experiment-experimentId-assignment
+      security:
+        - Authorization: []
+      description: 第一次上传作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentRequest'
+  '/experiment/{experimentId}/assignment/{assignmentId}':
+    parameters:
+      - schema:
+          type: integer
+        name: experimentId
+        in: path
+        required: true
+      - schema:
+          type: integer
+        name: assignmentId
+        in: path
+        required: true
+    patch:
+      summary: 修改作业
+      operationId: patch-experiment-experimentId-assignment
+      security:
+        - Authorization: []
+      description: 重复上传作业，直接覆盖之前的作业
+      tags:
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAssignmentRequest'
+    get:
+      summary: 查看作业
+      operationId: get-experiment-experimentId-assignment-assignmentId
+      security:
+        - Authorization: []
+      description: 查看某次作业的详细信息
+      tags:
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+  '/file/{fileId}':
+    parameters:
+      - schema:
+          type: integer
+        name: fileId
+        in: path
+        required: true
+    get:
+      summary: 获取文件元信息
+      tags:
+        - 文件
+      operationId: get-file-fileId
+      security:
+        - Authorization: []
+      description: 获取文件的元信息
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileResponse'
+  '/file/{fileId}/content':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: fileId
+        in: path
+        required: true
+    get:
+      summary: 下载文件
+      tags:
+        - 文件
+      operationId: get-file-fileId-content
+      description: |-
+        下载文件
+        文件的一些元信息（名称、format-type）等展示在相应的header中
+
+        该接口的response是一个二进制字节流，即为文件的内容
+      security:
+        - Authorization: []
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            content-disposition:
+              schema:
+                type: string
+                example: attachment; filename=%E6%9D%8E%E6%A5%A0_15131049_%E6%B5%8B%E8%AF%95%E4%BD%9C%E4%B8%9A02.doc
+              description: 可以从该header中检出文件名。从示例中可以看出，filename之后的内容为文件名（未防止乱码，文件名使用了URL编码，使用时可以重新解码）
+            content-type:
+              schema:
+                type: string
+              description: 描述了文件的mimetype
+  /file:
+    post:
+      summary: 创建或修改文件
+      operationId: post-file
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileResponse'
+      tags:
+        - 文件
+      description: 上传新文件，或修改旧文件。如果请求体中的fileId为空或为0，那么为创建新文件，或者为修改旧文件
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: content-type
+          required: true
+        - schema:
+            type: string
+          in: header
+          name: file-owner
+          required: true
+        - schema:
+            type: string
+            example: Assignment
+          in: header
+          name: file-type
+          required: true
+          description: 枚举值，可选 Assignment
+        - schema:
+            type: integer
+          in: header
+          name: involved-id
+          required: true
+        - schema:
+            type: string
+          in: header
+          name: file-id
+          description: 可选，如果为空，则直接创建新的文件
+        - schema:
+            type: string
+          in: header
+          name: file-name
+          required: true
+      requestBody:
+        content:
+          raw:
+            schema:
+              type: object
+              properties: {}
+components:
+  schemas:
+    AssignmentResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          id: 22
+          studentId: '15131049'
+          fileId: 40
+          expId: 1062
+          courseId: 438
+          createdAt: 1643361519220
+          updatedAt: 1643363133061
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: string
+          minLength: 1
+        expId:
+          type: integer
+        courseId:
+          type: integer
+        file:
+          $ref: '#/components/schemas/FileResponse'
+        createdAt:
+          type: integer
+          format: int64
+          description: 长整型时间戳
+        updatedAt:
+          type: integer
+          format: int64
+          description: 长整型时间戳
+      required:
+        - id
+        - studentId
+        - expId
+        - courseId
+        - createdAt
+        - updatedAt
+    FileResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          id: 39
+          name: example.png
+          storeType: S3
+          storeName: 0e17e5b6-4bd0-480c-9ea7-256adbd6fd9b
+          storePath: bucket
+          uploadTime: 1643366839000
+          fileType: Assignment
+          size: 880188
+          uploader: admin
+          owner: '15131049'
+          createdAt: 1643361520223
+          updatedAt: 1643366839703
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+        uploadTime:
+          type: integer
+          format: int64
+        fileType:
+          type: string
+          minLength: 1
+          description: 文件类型，枚举值，可选：Assignment
+        fileSize:
+          type: integer
+          format: int64
+          description: 文件大小，长整型
+        uploader:
+          type: string
+          minLength: 1
+        owner:
+          type: string
+          minLength: 1
+        downloadLink:
+          type: string
+          format: uri
+        createdAt:
+          type: integer
+          format: int64
+        updatedAt:
+          type: integer
+          format: int64
+      required:
+        - id
+        - name
+        - uploadTime
+        - fileType
+        - fileSize
+        - uploader
+        - owner
+        - downloadLink
+        - createdAt
+        - updatedAt
+    AssignmentRequest:
+      title: AssignmentRequest
+      type: object
+      description: ''
+      properties:
+        studentId:
+          type: string
+      required:
+        - studentId
+    PatchAssignmentRequest:
+      title: PatchAssignmentRequest
+      type: object
+      properties:
+        fileId:
+          type: integer
+          format: int32
+        tt:
+          type: string
+      required:
+        - fileId
+  securitySchemes:
+    Authorization:
+      type: apiKey
+      in: header
+      description: ''
+      name: Authorization
+  responses: {}
+  requestBodies: {}
