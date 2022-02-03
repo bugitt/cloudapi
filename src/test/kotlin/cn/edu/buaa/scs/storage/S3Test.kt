@@ -3,7 +3,10 @@ package cn.edu.buaa.scs.storage
 import cn.edu.buaa.scs.testEnv
 import io.ktor.server.testing.*
 import io.minio.BucketExistsArgs
-import org.junit.Test
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.FileInputStream
 import java.nio.file.Files
@@ -23,18 +26,6 @@ class S3TEst {
     }
 
     @Test
-    fun testEnsureBucketExists() {
-        withApplication(testEnv) {
-            ensureBucketExists("scsos3")
-            assert(
-                minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket("scsos").build()
-                )
-            )
-        }
-    }
-
-    @Test
     fun testFileManagement() {
         withApplication(testEnv) {
             val content = "12345"
@@ -42,28 +33,34 @@ class S3TEst {
             val filename = UUID.randomUUID().toString()
             val fullFilePath = "${getBaseFilePath()}/$filename"
 
-            // upload
-            val fileInfo = fullFilePath
-                .let { File(it).apply { writeText(content) } }
-                .let { FileInputStream(it) }
-                .use { uploadFile(bucket, filename, it) }
+            val s3Uploader = S3(bucket)
 
-            assert(fileInfo.size() == 5L)
+            runBlocking {
+                withContext(Dispatchers.IO) {
+                    // upload
+                    val fileInfo = fullFilePath
+                        .let { File(it).apply { writeText(content) } }
+                        .let { FileInputStream(it) }
+                        .use { s3Uploader.uploadFile(filename, it) }
 
-            // get
-            assert(String(getFile(bucket, filename).readBytes()) == content)
+                    assert(fileInfo.size() == 5L)
 
-            // download
-            val newFilepath = "${getBaseFilePath()}/$filename-2"
-            downloadFile(bucket, filename, newFilepath)
-            assert(Files.exists(Paths.get(newFilepath)))
+                    // get
+                    assert(String(s3Uploader.getFile(filename).readBytes()) == content)
 
-            // delete
-            deleteFile(bucket, filename)
+                    // download
+                    val newFilepath = "${getBaseFilePath()}/$filename-2"
+                    s3Uploader.downloadFile(filename, newFilepath)
+                    assert(Files.exists(Paths.get(newFilepath)))
 
-            // delete local file
-            Files.delete(Paths.get(fullFilePath))
-            Files.delete(Paths.get(newFilepath))
+                    // delete
+                    s3Uploader.deleteFile(filename)
+
+                    // delete local file
+                    Files.delete(Paths.get(fullFilePath))
+                    Files.delete(Paths.get(newFilepath))
+                }
+            }
         }
 
     }
