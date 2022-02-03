@@ -22,6 +22,10 @@ fun Route.test() {
             withContext(Dispatchers.IO) {
                 delay(100L)
                 call.info("delay end, ${Thread.currentThread().id}")
+                withContext(Dispatchers.IO) {
+                    delay(100L)
+                    call.info("delay end, ${Thread.currentThread().id}")
+                }
             }
             call.info("before respond")
             call.respond("ok")
