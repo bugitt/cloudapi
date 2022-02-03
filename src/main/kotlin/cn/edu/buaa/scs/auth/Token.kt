@@ -30,11 +30,6 @@ fun fetchToken(call: ApplicationCall) {
         headers["authorization"] ?: headers["Authorization"]
     }?.let { auth -> auth.split(" ").let { if (it.size > 1 && it[0] == "Bearer") it[1] else auth } } ?: ""
 
-    // TODO 添加其他不需要token例外情况
-    if (token.isEmpty()) {
-        throw AuthenticationException()
-    }
-
     val setUser = fun(user: User) {
         call.attributes.put(TOKEN_KEY, token)
         call.attributes.put(USER_KEY, user)
@@ -44,6 +39,11 @@ fun fetchToken(call: ApplicationCall) {
     // just for test
     if (call.request.path() == "/test") {
         return
+    }
+
+    // TODO 添加其他不需要token例外情况
+    if (token.isEmpty()) {
+        throw AuthenticationException()
     }
 
     // super token
