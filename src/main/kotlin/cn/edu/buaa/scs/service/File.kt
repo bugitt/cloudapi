@@ -2,14 +2,13 @@ package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertAdmin
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
-import cn.edu.buaa.scs.model.File
-import cn.edu.buaa.scs.model.FileType
-import cn.edu.buaa.scs.model.StoreType
-import cn.edu.buaa.scs.model.files
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.info
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.utils.value
@@ -34,19 +33,29 @@ val ApplicationCall.file: FileService
 
 class FileService(val call: ApplicationCall) {
 
-    interface IFileUploadService {
+    interface IFileManageService {
+
         fun uploader(): S3
 
         // return filename and storeName
         fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String>
+
         fun checkOwner(ownerId: String, involvedId: Int): Boolean
+
         fun storePath(): String
+
+        suspend fun packageFiles(involvedId: Int): PackageResult
     }
+
+    data class PackageResult(
+        val files: List<File>,
+        val readme: String
+    )
 
     suspend fun createOrUpdate(): File {
         val req = parseFormData()
         val (tmpFile, contentType) = detectContentType(req.filePart)
-        val service: IFileUploadService = req.fileType.uploaderService()
+        val service: IFileManageService = req.fileType.uploaderService()
         // check owner
         if (!service.checkOwner(req.owner, req.involvedId)) {
             throw BadRequestException("owner mismatch")
@@ -164,7 +173,21 @@ class FileService(val call: ApplicationCall) {
         return { inputStream.use { it.copyTo(this) } }
     }
 
-    private fun FileType.uploaderService(): IFileUploadService =
+    suspend fun packageDownload(fileType: FileType, involvedId: Int): suspend OutputStream.() -> Unit {
+        // check permission
+        when (fileType) {
+            FileType.Assignment ->
+                call.user().assertWrite(Experiment.id(involvedId))
+        }
+        // get files
+        val service = fileType.uploaderService()
+        val (files, readme) = service.packageFiles(involvedId)
+        call.info(readme)
+        return { "ok".toByteArray().inputStream().use { it.copyTo(this) } }
+//        return { inputStream.use { it.copyTo(this) } }
+    }
+
+    private fun FileType.uploaderService(): IFileManageService =
         when (this) {
             FileType.Assignment -> call.assignment
         }

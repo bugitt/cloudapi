@@ -13,20 +13,23 @@ import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getFileExtension
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.entity.add
-import org.ktorm.entity.find
-import org.ktorm.entity.update
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
+import org.ktorm.dsl.*
+import org.ktorm.entity.*
+import java.util.*
 
 val ApplicationCall.assignment: AssignmentService
     get() = AssignmentService(this)
 
-class AssignmentService(val call: ApplicationCall) : FileService.IFileUploadService {
+class AssignmentService(val call: ApplicationCall) : FileService.IFileManageService {
 
     companion object {
         private const val bucketName = "scs-assignment"
     }
+
+    private val s3: S3 by lazy { S3(bucketName) }
 
     fun create(expId: Int, owner: String): Assignment {
         if (mysql.assignments.exists { (it.studentId eq owner) and (it.expId eq expId) }) {
@@ -65,17 +68,16 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileUploadServ
         return assignment
     }
 
-    override fun uploader(): S3 {
-        return S3(bucketName)
-    }
+    override fun uploader(): S3 = s3
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         val owner = User.id(ownerId)
         val assignment = Assignment.id(involvedId)
         val expName = Experiment.id(assignment.expId).name.filterNot { it.isWhitespace() }
-        val name =
-            "${owner.name}_${owner.id}_$expName.${(originalName ?: "").getFileExtension()}"
-        val storeName = "exp-${assignment.expId}/$name"
+        val fileExtension = (originalName ?: "").getFileExtension()
+
+        val name = "${owner.name}_${owner.id}_$expName.$fileExtension"
+        val storeName = "exp-${assignment.expId}/${owner.name}_${owner.id}_${UUID.randomUUID()}.$fileExtension"
         return Pair(name, storeName)
     }
 
@@ -86,6 +88,52 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileUploadServ
     override fun storePath(): String {
         return bucketName
     }
+
+    override suspend fun packageFiles(involvedId: Int): FileService.PackageResult =
+        withContext(Dispatchers.Default) {
+            val experiment = Experiment.id(involvedId)
+
+            val validAssignments = mysql.assignments
+                .filter { it.expId eq experiment.id }
+                .filterNot { (it.fileId eq 0) or (it.fileId.isNull()) }
+                .toList()
+
+            val files = async {
+                val fileIds = validAssignments.map { it.fileId }
+                if (fileIds.isEmpty()) {
+                    listOf<File>()
+                } else {
+                    mysql.files.filter { it.id inList fileIds }.toList()
+                }
+            }
+
+            val readme = async {
+                val validStudentIds = validAssignments.map { it.studentId }
+                val invalidStudents =
+                    mysql.from(Users)
+                        .leftJoin(CourseStudents, on = Users.id eq CourseStudents.studentId)
+                        .select()
+                        .also {
+                            // 不是交了作业的
+                            if (validAssignments.isNotEmpty()) {
+                                it.where { Users.id notInList validStudentIds }
+                            }
+                        }
+                        // 并且选了这个课的
+                        .where { CourseStudents.courseId eq experiment.courseId }
+                        .map { row -> Users.createEntity(row) }
+                """
+                    已提交作业: ${validStudentIds.size} 人
+                    未提交作业: ${invalidStudents.size} 人
+                    
+                    未提交作业名单: 
+                    ${invalidStudents.joinToString { "${it.id}\t${it.name}\n" }}
+                """.trimIndent()
+            }
+
+            FileService.PackageResult(files.await(), readme.await())
+        }
+
 }
 
 fun Assignment.Companion.id(id: Int): Assignment {
