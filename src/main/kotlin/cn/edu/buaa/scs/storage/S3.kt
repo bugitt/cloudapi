@@ -19,12 +19,19 @@ class S3(private val bucket: String) {
         private val dispatcher: CoroutineDispatcher = Dispatchers.IO
     }
 
+    data class FileResp(
+        val storeName: String,
+        val size: Long,
+        val contentType: String,
+        val uploadTime: Long,
+    )
+
     suspend fun uploadFile(
         filename: String,
         inputStream: InputStream,
         contentType: String = "application/octet-stream",
         size: Long = -1L
-    ): StatObjectResponse = withContext(dispatcher) {
+    ): FileResp = withContext(dispatcher) {
         ensureBucketExists(bucket)
         PutObjectArgs
             .builder()
@@ -37,7 +44,9 @@ class S3(private val bucket: String) {
             .contentType(contentType)
             .build()
             .let { minioClient.putObject(it) }
-        inspectFile(filename)
+        inspectFile(filename).let {
+            FileResp(filename, it.size(), it.contentType(), it.lastModified().toInstant().toEpochMilli())
+        }
     }
 
     private suspend fun inspectFile(filename: String): StatObjectResponse = withContext(dispatcher) {
