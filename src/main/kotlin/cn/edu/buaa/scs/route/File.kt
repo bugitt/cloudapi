@@ -17,7 +17,7 @@ fun Route.fileRoute() {
     route("/file") {
         post {
             call.file.createOrUpdate().let {
-                call.respond(it)
+                call.respond(convertFileResponse(it))
             }
         }
 
@@ -38,21 +38,23 @@ fun Route.fileRoute() {
                 // 下载文件
                 get {
                     val file = File.id(call.getFileIdFromPath())
-                    call.file.downloadFile(file).let {
-                        call.response.header(
-                            HttpHeaders.ContentDisposition,
-                            ContentDisposition.Attachment.withParameter(
-                                ContentDisposition.Parameters.FileName,
-                                @Suppress("BlockingMethodInNonBlockingContext")
-                                URLEncoder.encode(file.name, "utf-8")
-                            ).toString()
-                        )
-                        call.response.header(
-                            "fixed-content-type",
-                            file.contentType
-                        )
-                        call.respondFile(it)
-                    }
+                    call.response.header(
+                        HttpHeaders.ContentDisposition,
+                        ContentDisposition.Attachment.withParameter(
+                            ContentDisposition.Parameters.FileName,
+                            @Suppress("BlockingMethodInNonBlockingContext")
+                            URLEncoder.encode(file.name, "utf-8")
+                        ).toString()
+                    )
+                    call.response.header(
+                        "file-size",
+                        file.size
+                    )
+                    call.respondOutputStream(
+                        contentType = ContentType.parse(file.contentType),
+                        status = HttpStatusCode.OK,
+                        producer = call.file.fetchProducer(file)
+                    )
                 }
             }
         }

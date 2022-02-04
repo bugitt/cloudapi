@@ -10,7 +10,6 @@ import cn.edu.buaa.scs.model.StoreType
 import cn.edu.buaa.scs.model.files
 import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.getFileExtension
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.utils.value
@@ -27,6 +26,7 @@ import org.ktorm.entity.find
 import org.ktorm.entity.update
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.util.*
 
 val ApplicationCall.file: FileService
@@ -36,7 +36,9 @@ class FileService(val call: ApplicationCall) {
 
     interface IFileUploadService {
         fun uploader(): S3
-        fun fixName(originalName: String?, ownerId: String, involvedId: Int): String
+
+        // return filename and storeName
+        fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String>
         fun checkOwner(ownerId: String, involvedId: Int): Boolean
         fun storePath(): String
     }
@@ -44,22 +46,21 @@ class FileService(val call: ApplicationCall) {
     suspend fun createOrUpdate(): File {
         val req = parseFormData()
         val (tmpFile, contentType) = detectContentType(req.filePart)
-        val storeName = UUID.randomUUID().toString()
         val service: IFileUploadService = req.fileType.uploaderService()
         // check owner
         if (!service.checkOwner(req.owner, req.involvedId)) {
             throw BadRequestException("owner mismatch")
         }
+        val (name, storeName) = service.fixName(req.filePart.originalFileName, req.owner, req.involvedId)
+
         // upload
-        val uploadResp = tmpFile?.let { file ->
-            FileInputStream(file).use { input ->
-                service.uploader().uploadFile(storeName, input, contentType, file.length())
-            }
-        } ?: req.filePart.streamProvider().use { input ->
-            service.uploader().uploadFile(storeName, input, contentType)
+        val input = tmpFile?.let { FileInputStream(it) } ?: req.filePart.streamProvider()
+        val uploadResp = input.use {
+            service.uploader().uploadFile(storeName, it, contentType, tmpFile?.length() ?: -1L)
         }
+
         val file = File {
-            this.name = service.fixName(req.filePart.originalFileName, req.owner, req.involvedId)
+            this.name = name
             this.storeType = StoreType.S3
             this.storeName = storeName
             this.storePath = service.storePath()
@@ -156,12 +157,11 @@ class FileService(val call: ApplicationCall) {
         return file
     }
 
-    suspend fun downloadFile(file: File): java.io.File {
+    suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
-        val tmpFilePath = "${UUID.randomUUID()}.${file.name.getFileExtension()}"
         val service = file.fileType.uploaderService()
-        service.uploader().downloadFile(file.storeName, tmpFilePath)
-        return java.io.File(tmpFilePath)
+        val inputStream = service.uploader().getFile(file.storeName)
+        return { inputStream.use { it.copyTo(this) } }
     }
 
     private fun FileType.uploaderService(): IFileUploadService =

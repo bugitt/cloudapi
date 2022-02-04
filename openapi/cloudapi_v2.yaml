@@ -148,10 +148,11 @@ paths:
               schema:
                 type: string
               description: 描述了文件的mimetype
-            fixed-content-type:
+            file-size:
               schema:
-                type: string
-              description: 当content-type不足以描述清楚文件类型时，fixed-content-type可能会提供更加具体的信息
+                type: integer
+                format: int64
+              description: 文件大小
   /file:
     post:
       summary: 创建或修改文件
