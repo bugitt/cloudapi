@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.route
 import cn.edu.buaa.scs.controller.models.FileResponse
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.File
+import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.service.file
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.BASE_URL
@@ -56,6 +57,20 @@ fun Route.fileRoute() {
                         producer = call.file.fetchProducer(file)
                     )
                 }
+            }
+        }
+
+        route("/package") {
+            get {
+                val (fileType, involvedId) = try {
+                    val query = call.request.queryParameters
+                    val fileType = FileType.valueOf(query["type"] as String)
+                    val involvedId = query["id"]!!.toInt()
+                    Pair(fileType, involvedId)
+                } catch (e: Exception) {
+                    throw BadRequestException("please check your request parameters")
+                }
+                call.respondOutputStream(producer = call.file.packageDownload(fileType, involvedId))
             }
         }
     }

@@ -175,6 +175,39 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/UploadFileRequest'
+  /file/package:
+    get:
+      summary: 打包下载文件
+      tags:
+        - 文件
+      responses:
+        '200':
+          description: OK
+          headers:
+            content-type:
+              schema:
+                type: string
+            content-length:
+              schema:
+                type: string
+      operationId: get-file-package
+      description: 打包下载文件，如下载当前实验的全部作业，或下载当前课程的全部资源
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: type
+          description: 枚举值，如 Assignment，Resource
+          required: true
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: id
+          required: true
+          description: 关联的实体ID
 components:
   schemas:
     AssignmentResponse:
