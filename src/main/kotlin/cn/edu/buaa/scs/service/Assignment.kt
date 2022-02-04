@@ -69,10 +69,14 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileUploadServ
         return S3(bucketName)
     }
 
-    override fun fixName(originalName: String?, ownerId: String, involvedId: Int): String {
+    override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         val owner = User.id(ownerId)
         val assignment = Assignment.id(involvedId)
-        return "${owner.name}_${owner.id}_${Experiment.id(assignment.expId).name}.${(originalName ?: "").getFileExtension()}"
+        val expName = Experiment.id(assignment.expId).name.filterNot { it.isWhitespace() }
+        val name =
+            "${owner.name}_${owner.id}_$expName.${(originalName ?: "").getFileExtension()}"
+        val storeName = "exp-${assignment.expId}/$name"
+        return Pair(name, storeName)
     }
 
     override fun checkOwner(ownerId: String, involvedId: Int): Boolean {
