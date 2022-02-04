@@ -148,6 +148,10 @@ paths:
               schema:
                 type: string
               description: 描述了文件的mimetype
+            fixed-content-type:
+              schema:
+                type: string
+              description: 当content-type不足以描述清楚文件类型时，fixed-content-type可能会提供更加具体的信息
   /file:
     post:
       summary: 创建或修改文件
@@ -164,45 +168,12 @@ paths:
       description: 上传新文件，或修改旧文件。如果请求体中的fileId为空或为0，那么为创建新文件，或者为修改旧文件
       security:
         - Authorization: []
-      parameters:
-        - schema:
-            type: string
-          in: header
-          name: content-type
-          required: true
-        - schema:
-            type: string
-          in: header
-          name: file-owner
-          required: true
-        - schema:
-            type: string
-            example: Assignment
-          in: header
-          name: file-type
-          required: true
-          description: 枚举值，可选 Assignment
-        - schema:
-            type: integer
-          in: header
-          name: involved-id
-          required: true
-        - schema:
-            type: string
-          in: header
-          name: file-id
-          description: 可选，如果为空，则直接创建新的文件
-        - schema:
-            type: string
-          in: header
-          name: file-name
-          required: true
+      parameters: []
       requestBody:
         content:
-          raw:
+          multipart/form-data:
             schema:
-              type: object
-              properties: {}
+              $ref: '#/components/schemas/UploadFileRequest'
 components:
   schemas:
     AssignmentResponse:
@@ -324,6 +295,30 @@ components:
           type: string
       required:
         - fileId
+    UploadFileRequest:
+      title: UploadFileRequest
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        owner:
+          type: string
+        fileType:
+          type: string
+          example: Assignment
+          description: 枚举值，可以取值 Assignment
+        involvedId:
+          type: integer
+          format: int32
+        fileId:
+          type: integer
+          format: int32
+          description: 可选，如果为空，则表示创建新文件；如果不为空，表示修改旧文件
+      required:
+        - owner
+        - fileType
+        - involvedId
   securitySchemes:
     Authorization:
       type: apiKey
