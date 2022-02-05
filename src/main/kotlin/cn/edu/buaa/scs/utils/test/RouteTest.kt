@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.utils.test
 
-import cn.edu.buaa.scs.utils.info
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -18,16 +17,36 @@ fun Route.test() {
 //                    call.info("log in launch ${Thread.currentThread().name}")
 //                }
 //            }
-            call.info("before withContext, ${Thread.currentThread().id}")
+
+
+//            call.info("before withContext, ${Thread.currentThread().id}")
+//            withContext(Dispatchers.IO) {
+//                delay(100L)
+//                call.info("delay end, ${Thread.currentThread().id}")
+//                withContext(Dispatchers.IO) {
+//                    delay(100L)
+//                    call.info("delay end, ${Thread.currentThread().id}")
+//                }
+//            }
+//            call.info("before respond")
+//            withContext(Dispatchers.Default) {
+//                val r1 = async {
+//                    delay(1000L)
+//                    call.info("r1")
+//                    "r1"
+//                }
+//                val r2 = async {
+//                    delay(10L)
+//                    call.info("r2")
+//                    "r2"
+//                }
+//                call.info("${r1.await()}, ${r2.await()}")
+//            }
+
             withContext(Dispatchers.IO) {
-                delay(100L)
-                call.info("delay end, ${Thread.currentThread().id}")
-                withContext(Dispatchers.IO) {
-                    delay(100L)
-                    call.info("delay end, ${Thread.currentThread().id}")
-                }
+                delay(10000L)
             }
-            call.info("before respond")
+
             call.respond("ok")
         }
     }

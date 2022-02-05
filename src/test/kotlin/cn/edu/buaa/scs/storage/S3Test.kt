@@ -43,7 +43,7 @@ class S3TEst {
                         .let { FileInputStream(it) }
                         .use { s3Uploader.uploadFile(filename, it) }
 
-                    assert(fileInfo.size() == 5L)
+                    assert(fileInfo.size == 5L)
 
                     // get
                     assert(String(s3Uploader.getFile(filename).readBytes()) == content)

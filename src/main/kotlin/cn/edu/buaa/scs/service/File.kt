@@ -8,7 +8,6 @@ import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.info
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.utils.value
@@ -23,10 +22,13 @@ import org.ktorm.dsl.eq
 import org.ktorm.entity.add
 import org.ktorm.entity.find
 import org.ktorm.entity.update
+import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 val ApplicationCall.file: FileService
     get() = FileService(this)
@@ -49,7 +51,8 @@ class FileService(val call: ApplicationCall) {
 
     data class PackageResult(
         val files: List<File>,
-        val readme: String
+        val readme: String,
+        val zipFilename: String,
     )
 
     suspend fun createOrUpdate(): File {
@@ -173,7 +176,7 @@ class FileService(val call: ApplicationCall) {
         return { inputStream.use { it.copyTo(this) } }
     }
 
-    suspend fun packageDownload(fileType: FileType, involvedId: Int): suspend OutputStream.() -> Unit {
+    suspend fun packageDownload(fileType: FileType, involvedId: Int): java.io.File {
         // check permission
         when (fileType) {
             FileType.Assignment ->
@@ -181,10 +184,25 @@ class FileService(val call: ApplicationCall) {
         }
         // get files
         val service = fileType.uploaderService()
-        val (files, readme) = service.packageFiles(involvedId)
-        call.info(readme)
-        return { "ok".toByteArray().inputStream().use { it.copyTo(this) } }
-//        return { inputStream.use { it.copyTo(this) } }
+        val (files, readme, zipFilename) = service.packageFiles(involvedId)
+        return withContext(Dispatchers.IO) {
+            val dirname = "package/${UUID.randomUUID()}"
+            java.io.File(dirname).mkdirs()
+            val zipFile = java.io.File("$dirname/$zipFilename")
+            zipFile.createNewFile()
+            ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
+                files.forEach { file ->
+                    zipOut.putNextEntry(ZipEntry(file.name))
+                    service.uploader().getFile(file.storeName).use { input ->
+                        input.copyTo(zipOut)
+                    }
+                }
+
+                zipOut.putNextEntry(ZipEntry("README"))
+                zipOut.write(readme.toByteArray())
+            }
+            zipFile
+        }
     }
 
     private fun FileType.uploaderService(): IFileManageService =
