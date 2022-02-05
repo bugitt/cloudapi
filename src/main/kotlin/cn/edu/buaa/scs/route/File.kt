@@ -13,6 +13,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import java.net.URI
 import java.net.URLEncoder
+import java.nio.file.Files
 
 fun Route.fileRoute() {
     route("/file") {
@@ -70,7 +71,18 @@ fun Route.fileRoute() {
                 } catch (e: Exception) {
                     throw BadRequestException("please check your request parameters")
                 }
-                call.respondOutputStream(producer = call.file.packageDownload(fileType, involvedId))
+                call.file.packageDownload(fileType, involvedId).let {
+                    call.response.header(
+                        HttpHeaders.ContentDisposition,
+                        ContentDisposition.Attachment.withParameter(
+                            ContentDisposition.Parameters.FileName,
+                            @Suppress("BlockingMethodInNonBlockingContext")
+                            URLEncoder.encode(it.name, "utf-8")
+                        ).toString()
+                    )
+                    call.respondFile(it)
+                    Files.delete(it.toPath())
+                }
             }
         }
     }

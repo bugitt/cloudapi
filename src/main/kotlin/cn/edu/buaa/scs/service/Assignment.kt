@@ -101,7 +101,7 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
             val files = async {
                 val fileIds = validAssignments.map { it.fileId }
                 if (fileIds.isEmpty()) {
-                    listOf<File>()
+                    listOf()
                 } else {
                     mysql.files.filter { it.id inList fileIds }.toList()
                 }
@@ -131,7 +131,9 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
                 """.trimIndent()
             }
 
-            FileService.PackageResult(files.await(), readme.await())
+            val filename = "全部作业_${experiment.name.filterNot { it.isWhitespace() }}.zip"
+
+            FileService.PackageResult(files.await(), readme.await(), filename)
         }
 
 }
