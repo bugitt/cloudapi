@@ -37,9 +37,9 @@ class S3(private val bucket: String) {
             .builder()
             .bucket(bucket)
             .`object`(filename)
-            .also {
-                if (size == -1L) it.stream(inputStream, -1, minioPartSize)
-                else it.stream(inputStream, size, -1)
+            .apply {
+                if (size == -1L) this.stream(inputStream, -1, minioPartSize)
+                else this.stream(inputStream, size, -1)
             }
             .contentType(contentType)
             .build()

@@ -109,25 +109,34 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
 
             val readme = async {
                 val validStudentIds = validAssignments.map { it.studentId }
-                val invalidStudents =
-                    mysql.from(Users)
-                        .leftJoin(CourseStudents, on = Users.id eq CourseStudents.studentId)
-                        .select()
-                        .also {
-                            // 不是交了作业的
-                            if (validAssignments.isNotEmpty()) {
-                                it.where { Users.id notInList validStudentIds }
-                            }
+                val invalidStudents = mysql.from(Users)
+                    .leftJoin(CourseStudents, on = Users.id eq CourseStudents.studentId)
+                    .select()
+                    .where {
+                        // 选了这个课的
+                        var condition = (CourseStudents.courseId eq experiment.courseId)
+                        // 并且不是交了作业的
+                        if (validStudentIds.isNotEmpty()) {
+                            condition = condition.and(Users.id notInList validStudentIds)
                         }
-                        // 并且选了这个课的
-                        .where { CourseStudents.courseId eq experiment.courseId }
-                        .map { row -> Users.createEntity(row) }
+                        condition
+                    }
+                    .map { row -> Users.createEntity(row) }
+
                 """
                     已提交作业: ${validStudentIds.size} 人
                     未提交作业: ${invalidStudents.size} 人
                     
-                    未提交作业名单: 
-                    ${invalidStudents.joinToString { "${it.id}\t${it.name}\n" }}
+                    ${
+                    if (invalidStudents.isNotEmpty()) {
+                        """
+                            未提交作业名单:
+                            ${invalidStudents.joinToString { "${it.id}\t${it.name}\n" }}
+                            """.trimIndent()
+                    } else {
+                        ""
+                    }
+                }
                 """.trimIndent()
             }
 
