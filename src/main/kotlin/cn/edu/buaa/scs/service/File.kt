@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertAdmin
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
+import cn.edu.buaa.scs.controller.models.FilePackageResponse
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
@@ -176,7 +177,7 @@ class FileService(val call: ApplicationCall) {
         return { inputStream.use { it.copyTo(this) } }
     }
 
-    suspend fun packageDownload(fileType: FileType, involvedId: Int): java.io.File {
+    suspend fun `package`(fileType: FileType, involvedId: Int): FilePackageResponse {
         // check permission
         when (fileType) {
             FileType.Assignment ->
@@ -185,10 +186,8 @@ class FileService(val call: ApplicationCall) {
         // get files
         val service = fileType.uploaderService()
         val (files, readme, zipFilename) = service.packageFiles(involvedId)
-        return withContext(Dispatchers.IO) {
-            val dirname = "package/${UUID.randomUUID()}"
-            java.io.File(dirname).mkdirs()
-            val zipFile = java.io.File("$dirname/$zipFilename")
+        val packageId = withContext(Dispatchers.IO) {
+            val zipFile = java.io.File("${UUID.randomUUID()}.package.tmp")
             zipFile.createNewFile()
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
                 files.forEach { file ->
@@ -201,8 +200,9 @@ class FileService(val call: ApplicationCall) {
                 zipOut.putNextEntry(ZipEntry("README"))
                 zipOut.write(readme.toByteArray())
             }
-            zipFile
+            zipFile.name
         }
+        return FilePackageResponse(packageId, zipFilename)
     }
 
     private fun FileType.uploaderService(): IFileManageService =

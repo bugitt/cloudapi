@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.route
 
+import cn.edu.buaa.scs.controller.models.FilePackageRequest
 import cn.edu.buaa.scs.controller.models.FileResponse
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.File
@@ -9,8 +10,11 @@ import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.BASE_URL
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -63,25 +67,35 @@ fun Route.fileRoute() {
 
         route("/package") {
             get {
-                val (fileType, involvedId) = try {
+                val (packageId, packageName) = try {
                     val query = call.request.queryParameters
-                    val fileType = FileType.valueOf(query["type"] as String)
-                    val involvedId = query["id"]!!.toInt()
-                    Pair(fileType, involvedId)
+                    val packageId = query["packageId"]!!
+                    val packageName = query["packageName"]!!
+                    Pair(packageId, packageName)
                 } catch (e: Exception) {
                     throw BadRequestException("please check your request parameters")
                 }
-                call.file.packageDownload(fileType, involvedId).let {
-                    call.response.header(
-                        HttpHeaders.ContentDisposition,
-                        ContentDisposition.Attachment.withParameter(
-                            ContentDisposition.Parameters.FileName,
-                            @Suppress("BlockingMethodInNonBlockingContext")
-                            URLEncoder.encode(it.name, "utf-8")
-                        ).toString()
-                    )
-                    call.respondFile(it)
-                    Files.delete(it.toPath())
+                val file = java.io.File(packageId)
+                call.response.header(
+                    HttpHeaders.ContentDisposition,
+                    ContentDisposition.Attachment.withParameter(
+                        ContentDisposition.Parameters.FileName,
+                        @Suppress("BlockingMethodInNonBlockingContext")
+                        URLEncoder.encode(packageName, "utf-8")
+                    ).toString()
+                )
+                call.respondFile(file)
+                // delete tmp file
+                withContext(Dispatchers.IO) {
+                    Files.delete(file.toPath())
+                }
+
+            }
+
+            post {
+                val req = call.receive<FilePackageRequest>()
+                call.file.`package`(FileType.valueOf(req.fileType), req.involvedId).let {
+                    call.respond(it)
                 }
             }
         }

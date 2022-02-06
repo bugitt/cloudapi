@@ -177,19 +177,25 @@ paths:
               $ref: '#/components/schemas/UploadFileRequest'
   /file/package:
     get:
-      summary: 打包下载文件
+      summary: 下载打包好的zip
       tags:
         - 文件
       responses:
         '200':
           description: OK
           headers:
-            content-type:
-              schema:
-                type: string
             content-length:
               schema:
                 type: string
+            content-disposition:
+              schema:
+                type: string
+                example: attachment; filename=package.zip
+          content:
+            application/zip:
+              schema:
+                type: object
+                properties: {}
       operationId: get-file-package
       description: 打包下载文件，如下载当前实验的全部作业，或下载当前课程的全部资源
       security:
@@ -198,16 +204,34 @@ paths:
         - schema:
             type: string
           in: query
-          name: type
-          description: 枚举值，如 Assignment，Resource
+          name: packageId
           required: true
         - schema:
-            type: integer
+            type: string
             format: int32
           in: query
-          name: id
+          name: packageName
           required: true
-          description: 关联的实体ID
+    post:
+      summary: 触发打包动作
+      operationId: post-file-package
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilePackageResponse'
+      tags:
+        - 文件
+      security:
+        - Authorization: []
+      description: 触发打包动作
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilePackageRequest'
 components:
   schemas:
     AssignmentResponse:
@@ -325,8 +349,6 @@ components:
         fileId:
           type: integer
           format: int32
-        tt:
-          type: string
       required:
         - fileId
     UploadFileRequest:
@@ -351,6 +373,31 @@ components:
           description: 可选，如果为空，则表示创建新文件；如果不为空，表示修改旧文件
       required:
         - owner
+        - fileType
+        - involvedId
+    FilePackageResponse:
+      title: FilePackageResponse
+      type: object
+      properties:
+        packageId:
+          type: string
+        packageName:
+          type: string
+      required:
+        - packageId
+        - packageName
+    FilePackageRequest:
+      title: FilePackageRequest
+      type: object
+      properties:
+        fileType:
+          type: string
+          example: 'Assignment, Resource'
+        involvedId:
+          type: integer
+          format: int32
+          description: 关联的实体ID
+      required:
         - fileType
         - involvedId
   securitySchemes:

@@ -14,9 +14,11 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param fileId 
+ * @param packageId 
+ * @param packageName 
  */
-data class PatchAssignmentRequest(
-    val fileId: kotlin.Int
+data class FilePackageResponse(
+    val packageId: kotlin.String,
+    val packageName: kotlin.String
 ) 
 
