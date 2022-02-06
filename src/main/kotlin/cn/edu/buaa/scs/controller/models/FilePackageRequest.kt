@@ -14,9 +14,12 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param fileId 
+ * @param fileType 
+ * @param involvedId 关联的实体ID
  */
-data class PatchAssignmentRequest(
-    val fileId: kotlin.Int
+data class FilePackageRequest(
+    val fileType: kotlin.String,
+    /* 关联的实体ID */
+    val involvedId: kotlin.Int
 ) 
 
