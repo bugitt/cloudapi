@@ -163,7 +163,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileResponse'
+                $ref: '#/components/schemas/UploadFileResponse'
       tags:
         - 文件
       description: 上传新文件，或修改旧文件。如果请求体中的fileId为空或为0，那么为创建新文件，或者为修改旧文件
@@ -175,6 +175,7 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/UploadFileRequest'
+        description: 在创建文件时，支持传入多个fileItem。注意：如果fileId不为空且不为0时，传入多个fileItem，那么行为不可控
   /file/package:
     get:
       summary: 下载打包好的zip
@@ -322,6 +323,9 @@ components:
         updatedAt:
           type: integer
           format: int64
+        contentType:
+          type: string
+          description: mimeType
       required:
         - id
         - name
@@ -333,6 +337,7 @@ components:
         - downloadLink
         - createdAt
         - updatedAt
+        - contentType
     AssignmentRequest:
       title: AssignmentRequest
       type: object
@@ -400,6 +405,14 @@ components:
       required:
         - fileType
         - involvedId
+    UploadFileResponse:
+      title: UploadFileResponse
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileResponse'
   securitySchemes:
     Authorization:
       type: apiKey
