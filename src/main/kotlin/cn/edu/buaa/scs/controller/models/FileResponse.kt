@@ -24,6 +24,7 @@ package cn.edu.buaa.scs.controller.models
  * @param downloadLink 
  * @param createdAt 
  * @param updatedAt 
+ * @param contentType mimeType
  */
 data class FileResponse(
     val id: kotlin.Int,
@@ -37,6 +38,8 @@ data class FileResponse(
     val owner: kotlin.String,
     val downloadLink: java.net.URI,
     val createdAt: kotlin.Long,
-    val updatedAt: kotlin.Long
+    val updatedAt: kotlin.Long,
+    /* mimeType */
+    val contentType: kotlin.String
 ) 
 

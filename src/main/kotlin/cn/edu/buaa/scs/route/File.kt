@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.FilePackageRequest
 import cn.edu.buaa.scs.controller.models.FileResponse
+import cn.edu.buaa.scs.controller.models.UploadFileResponse
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.model.FileType
@@ -23,7 +24,7 @@ fun Route.fileRoute() {
     route("/file") {
         post {
             call.file.createOrUpdate().let {
-                call.respond(convertFileResponse(it))
+                call.respond(UploadFileResponse(it.map { file -> convertFileResponse(file) }))
             }
         }
 
@@ -116,6 +117,7 @@ fun convertFileResponse(file: File): FileResponse {
         owner = file.owner,
         downloadLink = URI("$BASE_URL/api/v2/file/${file.id}/content"),
         createdAt = file.createdAt,
-        updatedAt = file.updatedAt
+        updatedAt = file.updatedAt,
+        contentType = file.contentType
     )
 }

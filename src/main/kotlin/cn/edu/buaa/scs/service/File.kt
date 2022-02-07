@@ -7,8 +7,10 @@ import cn.edu.buaa.scs.controller.models.FilePackageResponse
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.utils.value
@@ -23,10 +25,7 @@ import org.ktorm.dsl.eq
 import org.ktorm.entity.add
 import org.ktorm.entity.find
 import org.ktorm.entity.update
-import java.io.BufferedOutputStream
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.OutputStream
+import java.io.*
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -56,54 +55,71 @@ class FileService(val call: ApplicationCall) {
         val zipFilename: String,
     )
 
-    suspend fun createOrUpdate(): File {
-        val req = parseFormData()
-        val (tmpFile, contentType) = detectContentType(req.filePart)
-        val service: IFileManageService = req.fileType.uploaderService()
+    suspend fun createOrUpdate(): List<File> {
+        val (fileParts, owner, fileType, involvedId, fileId) = parseFormData()
+        // 校验参数
+        if (fileId != null && fileParts.size != 1) {
+            throw BadRequestException("当fileId不为空或0时, 仅允许上传单个文件")
+        }
+        if (fileType == FileType.Assignment && fileParts.size != 1) {
+            throw BadRequestException("上传作业时，仅允许上传单个文件")
+        }
+        
+        val service: IFileManageService = fileType.uploaderService()
         // check owner
-        if (!service.checkOwner(req.owner, req.involvedId)) {
+        if (!service.checkOwner(owner, involvedId)) {
             throw BadRequestException("owner mismatch")
         }
-        val (name, storeName) = service.fixName(req.filePart.originalFileName, req.owner, req.involvedId)
+        val handleFile: suspend (FilePart) -> File = { filePart ->
+            val (name, storeName) = service.fixName(filePart.originalName, owner, involvedId)
 
-        // upload
-        val input = tmpFile?.let { FileInputStream(it) } ?: req.filePart.streamProvider()
-        val uploadResp = input.use {
-            service.uploader().uploadFile(storeName, it, contentType, tmpFile?.length() ?: -1L)
+            // upload
+            val uploadResp = filePart.input().use {
+                service.uploader().uploadFile(storeName, it, filePart.contentType, filePart.tmpFile?.length() ?: -1L)
+            }
+
+            val file = File {
+                this.name = name
+                this.storeType = StoreType.S3
+                this.storeName = storeName
+                this.storePath = service.storePath()
+                this.uploadTime = uploadResp.uploadTime
+                this.fileType = fileType
+                this.involvedId = involvedId
+                this.size = uploadResp.size
+                this.uploader = call.userId()
+                this.contentType = filePart.contentType
+                this.owner = owner
+            }
+
+            call.user().assertAdmin(file)
+
+            fileId?.let {
+                file.id = it
+                file.updatedAt = System.currentTimeMillis()
+                mysql.files.update(file)
+            } ?: run {
+                file.createdAt = System.currentTimeMillis()
+                file.updatedAt = System.currentTimeMillis()
+                mysql.files.add(file)
+            }
+            // 清理 tempFile
+            filePart.tmpFile?.delete()
+            file
         }
 
-        val file = File {
-            this.name = name
-            this.storeType = StoreType.S3
-            this.storeName = storeName
-            this.storePath = service.storePath()
-            this.uploadTime = uploadResp.uploadTime
-            this.fileType = req.fileType
-            this.involvedId = req.involvedId
-            this.size = uploadResp.size
-            this.uploader = call.userId()
-            this.contentType = contentType
-            this.owner = req.owner
-        }
-
-        call.user().assertAdmin(file)
-
-        req.fileId?.let {
-            file.id = it
-            file.updatedAt = System.currentTimeMillis()
-            mysql.files.update(file)
-        } ?: run {
-            file.createdAt = System.currentTimeMillis()
-            file.updatedAt = System.currentTimeMillis()
-            mysql.files.add(file)
-        }
-        // 清理 tempFile
-        tmpFile?.delete()
-        return file
+        return CommonScheduler.multiCoroutinesProduce(fileParts.map { { handleFile(it) } }, Dispatchers.IO)
     }
 
+    private data class FilePart(
+        val originalName: String,
+        val contentType: String,
+        val input: () -> InputStream,
+        val tmpFile: java.io.File? = null
+    )
+
     private data class ParseFormDataResult(
-        val filePart: PartData.FileItem,
+        val fileParts: List<FilePart>,
         val owner: String,
         val fileType: FileType,
         val involvedId: Int,
@@ -111,7 +127,7 @@ class FileService(val call: ApplicationCall) {
     )
 
     private suspend fun parseFormData(): ParseFormDataResult {
-        var filePart: PartData.FileItem? = null
+        val fileParts = mutableListOf<FilePart>()
         var owner: String? = null
         var fileType: FileType? = null
         var involvedId: Int? = null
@@ -120,35 +136,38 @@ class FileService(val call: ApplicationCall) {
         try {
             multiPart.forEachPart { part ->
                 when (part) {
-                    is PartData.FileItem ->
-                        if (part.name == "file")
-                            filePart = part
+                    is PartData.FileItem -> {
+                        assert(part.originalFileName != null)
+                        fileParts.add(parseFilePart(part))
+                    }
                     is PartData.FormItem ->
                         when (part.name) {
                             "owner" -> owner = part.value
                             "fileType" -> fileType = FileType.valueOf(part.value)
                             "involvedId" -> involvedId = part.value.toInt()
-                            "fileId" -> fileId = part.value.toInt()
+                            "fileId" -> fileId = part.value.toInt().let { if (it == 0) null else it }
                         }
                     else -> Unit
                 }
             }
             return ParseFormDataResult(
-                filePart!!,
+                fileParts,
                 owner!!,
                 fileType!!,
                 involvedId!!,
                 fileId
             )
         } catch (e: Exception) {
-            throw BadRequestException("please check your form-data request")
+            throw BadRequestException("please check your form-data request", e)
         }
     }
 
 
-    private suspend fun detectContentType(part: PartData.FileItem): Pair<java.io.File?, String> {
+    private suspend fun parseFilePart(part: PartData.FileItem): FilePart {
+        val originalName = part.originalFileName as String
         var contentType = part.contentType?.value ?: "application/octet-stream"
-        if (contentType != "application/octet-stream") return Pair(null, contentType)
+        if (contentType != "application/octet-stream")
+            return FilePart(originalName, contentType, part.streamProvider)
 
         // use tika to detect file type
         val tmpFile = withContext(Dispatchers.IO) {
@@ -159,7 +178,7 @@ class FileService(val call: ApplicationCall) {
             contentType = Tika().detect(tmp)
             tmp
         }
-        return Pair(tmpFile, contentType)
+        return FilePart(originalName, contentType, { BufferedInputStream(FileInputStream(tmpFile)) }, tmpFile)
     }
 
 
