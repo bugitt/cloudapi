@@ -37,12 +37,12 @@ class FileService(val call: ApplicationCall) {
 
     interface IFileManageService {
 
-        fun uploader(): S3
+        fun manager(): S3
 
         // return filename and storeName
         fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String>
 
-        fun checkOwner(ownerId: String, involvedId: Int): Boolean
+        fun checkPermission(ownerId: String, involvedId: Int): Boolean
 
         fun storePath(): String
 
@@ -64,10 +64,10 @@ class FileService(val call: ApplicationCall) {
         if (fileType == FileType.Assignment && fileParts.size != 1) {
             throw BadRequestException("上传作业时，仅允许上传单个文件")
         }
-        
+
         val service: IFileManageService = fileType.uploaderService()
         // check owner
-        if (!service.checkOwner(owner, involvedId)) {
+        if (!service.checkPermission(owner, involvedId)) {
             throw BadRequestException("owner mismatch")
         }
         val handleFile: suspend (FilePart) -> File = { filePart ->
@@ -75,7 +75,7 @@ class FileService(val call: ApplicationCall) {
 
             // upload
             val uploadResp = filePart.input().use {
-                service.uploader().uploadFile(storeName, it, filePart.contentType, filePart.tmpFile?.length() ?: -1L)
+                service.manager().uploadFile(storeName, it, filePart.contentType, filePart.tmpFile?.length() ?: -1L)
             }
 
             val file = File {
@@ -192,7 +192,7 @@ class FileService(val call: ApplicationCall) {
     suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
         val service = file.fileType.uploaderService()
-        val inputStream = service.uploader().getFile(file.storeName)
+        val inputStream = service.manager().getFile(file.storeName)
         return { inputStream.use { it.copyTo(this) } }
     }
 
@@ -211,7 +211,7 @@ class FileService(val call: ApplicationCall) {
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
                 files.forEach { file ->
                     zipOut.putNextEntry(ZipEntry(file.name))
-                    service.uploader().getFile(file.storeName).use { input ->
+                    service.manager().getFile(file.storeName).use { input ->
                         input.copyTo(zipOut)
                     }
                 }
