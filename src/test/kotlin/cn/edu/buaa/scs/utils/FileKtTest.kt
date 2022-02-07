@@ -11,6 +11,7 @@ internal class FileKtTest {
     @Test
     fun getFileExtension() {
         assert("example.docx".getFileExtension() == "docx")
+        assert("example.tar.gz".getFileExtension() == "tar.gz")
         assert("ex".getFileExtension() == "")
         assert("".getFileExtension() == "")
     }
