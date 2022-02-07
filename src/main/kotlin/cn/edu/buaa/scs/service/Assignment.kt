@@ -68,7 +68,7 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
         return assignment
     }
 
-    override fun uploader(): S3 = s3
+    override fun manager(): S3 = s3
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         val owner = User.id(ownerId)
@@ -81,7 +81,7 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
         return Pair(name, storeName)
     }
 
-    override fun checkOwner(ownerId: String, involvedId: Int): Boolean {
+    override fun checkPermission(ownerId: String, involvedId: Int): Boolean {
         return Assignment.id(involvedId).studentId == ownerId
     }
 
