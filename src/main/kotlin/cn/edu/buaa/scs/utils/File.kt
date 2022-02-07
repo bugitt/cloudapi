@@ -1,11 +1,20 @@
 package cn.edu.buaa.scs.utils
 
-fun String.getFileExtension(): String =
-    if (this.endsWith(".tar.gz")) {
+fun String.getFileExtension(): String {
+    val specialList = listOf(
+        "docx",
+        "doc",
+        "zip",
+        "pdf",
         "tar.gz"
-    } else {
-        this.split(".").let {
-            if (it.size > 1) it.last()
-            else ""
+    )
+    for (name in specialList) {
+        if (this.endsWith(".$name")) {
+            return name
         }
     }
+    return this.split(".").let {
+        if (it.size > 1) it.last()
+        else ""
+    }
+}
