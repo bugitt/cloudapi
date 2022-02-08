@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.controller.plugins
 
 import cn.edu.buaa.scs.auth.authRoute
 import cn.edu.buaa.scs.auth.fetchToken
+import cn.edu.buaa.scs.route.courseRoute
 import cn.edu.buaa.scs.route.experimentRoute
 import cn.edu.buaa.scs.route.fileRoute
 import cn.edu.buaa.scs.utils.test.test
@@ -17,6 +18,7 @@ fun Application.configureRouting() {
     routing {
         route("/api/v2") {
             authRoute()
+            courseRoute()
             experimentRoute()
             fileRoute()
             // 添加其他的 route

@@ -25,6 +25,7 @@ package cn.edu.buaa.scs.controller.models
  * @param createdAt 
  * @param updatedAt 
  * @param contentType mimeType
+ * @param involveId 
  */
 data class FileResponse(
     val id: kotlin.Int,
@@ -40,6 +41,7 @@ data class FileResponse(
     val createdAt: kotlin.Long,
     val updatedAt: kotlin.Long,
     /* mimeType */
-    val contentType: kotlin.String
+    val contentType: kotlin.String,
+    val involveId: kotlin.Int
 ) 
 

@@ -36,10 +36,11 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
             // 如果之前已经创建过了，那么直接返回
             return mysql.assignments.find { it.studentId eq owner and (it.expId eq expId) }!!
         }
+        val experiment = Experiment.id(expId)
         val assignment = Assignment {
             this.studentId = owner
-            this.expId = expId
-            this.courseId = Experiment.id(expId).courseId
+            this.experiment = experiment
+            this.course = experiment.course
             this.createdAt = System.currentTimeMillis()
             this.updatedAt = System.currentTimeMillis()
         }
@@ -73,11 +74,11 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         val owner = User.id(ownerId)
         val assignment = Assignment.id(involvedId)
-        val expName = Experiment.id(assignment.expId).name.filterNot { it.isWhitespace() }
+        val expName = assignment.experiment.name.filterNot { it.isWhitespace() }
         val fileExtension = (originalName ?: "").getFileExtension()
 
         val name = "${owner.name}_${owner.id}_$expName.$fileExtension"
-        val storeName = "exp-${assignment.expId}/${owner.name}_${owner.id}_${UUID.randomUUID()}.$fileExtension"
+        val storeName = "exp-${assignment.experiment.id}/${owner.name}_${owner.id}_${UUID.randomUUID()}.$fileExtension"
         return Pair(name, storeName)
     }
 
@@ -87,6 +88,10 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
 
     override fun storePath(): String {
         return bucketName
+    }
+
+    override fun callback(involvedEntity: IEntity, file: File) {
+        // do noting
     }
 
     override suspend fun packageFiles(involvedId: Int): FileService.PackageResult =
@@ -114,7 +119,7 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
                     .select()
                     .where {
                         // 选了这个课的
-                        var condition = (CourseStudents.courseId eq experiment.courseId)
+                        var condition = (CourseStudents.courseId eq experiment.course.id)
                         // 并且不是交了作业的
                         if (validStudentIds.isNotEmpty()) {
                             condition = condition.and(Users.id notInList validStudentIds)
@@ -151,6 +156,4 @@ fun Assignment.Companion.id(id: Int): Assignment {
     return mysql.assignments.find { it.id eq id }
         ?: throw BusinessException("find course($id) from database error")
 }
-
-fun Assignment.getCourse(): Course = Course.id(this.courseId)
 

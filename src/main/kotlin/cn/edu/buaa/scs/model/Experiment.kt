@@ -12,7 +12,7 @@ interface Experiment : Entity<Experiment>, IEntity {
     companion object : Entity.Factory<Experiment>()
 
     var id: Int
-    var courseId: Int
+    var course: Course
     var name: String
     var type: Boolean
     var detail: String
@@ -38,7 +38,7 @@ object Experiments : Table<Experiment>("experiment") {
     val id = int("id").primaryKey().bindTo { it.id }
 
     @Suppress("unused")
-    val courseId = int("course_id").bindTo { it.courseId }
+    val courseId = int("course_id").references(Courses) { it.course }
 
     @Suppress("unused")
     val name = varchar("name").bindTo { it.name }

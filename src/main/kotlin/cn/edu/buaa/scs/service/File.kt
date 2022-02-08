@@ -46,6 +46,9 @@ class FileService(val call: ApplicationCall) {
 
         fun storePath(): String
 
+        // after create file
+        fun callback(involvedEntity: IEntity, file: File)
+
         suspend fun packageFiles(involvedId: Int): PackageResult
     }
 
@@ -65,12 +68,19 @@ class FileService(val call: ApplicationCall) {
             throw BadRequestException("上传作业时，仅允许上传单个文件")
         }
 
-        val service: IFileManageService = fileType.uploaderService()
+        val service: IFileManageService = fileType.manageService()
         // check owner
         if (!service.checkPermission(owner, involvedId)) {
             throw BadRequestException("owner mismatch")
         }
-        val handleFile: suspend (FilePart) -> File = { filePart ->
+        val involvedEntity = fileType.getInvolvedEntity(involvedId)
+
+        data class HandleFileCreateOrUpdate(
+            val file: File,
+            val action: (File) -> Unit,
+        )
+
+        val handleFile: suspend (FilePart) -> HandleFileCreateOrUpdate = { filePart ->
             val (name, storeName) = service.fixName(filePart.originalName, owner, involvedId)
 
             // upload
@@ -94,21 +104,27 @@ class FileService(val call: ApplicationCall) {
 
             call.user().assertAdmin(file)
 
-            fileId?.let {
-                file.id = it
-                file.updatedAt = System.currentTimeMillis()
-                mysql.files.update(file)
-            } ?: run {
-                file.createdAt = System.currentTimeMillis()
-                file.updatedAt = System.currentTimeMillis()
-                mysql.files.add(file)
+            HandleFileCreateOrUpdate(file) { innerFile ->
+                fileId?.let {
+                    innerFile.id = it
+                    innerFile.updatedAt = System.currentTimeMillis()
+                    mysql.files.update(innerFile)
+                } ?: run {
+                    innerFile.createdAt = System.currentTimeMillis()
+                    innerFile.updatedAt = System.currentTimeMillis()
+                    mysql.files.add(innerFile)
+                }
+                service.callback(involvedEntity, innerFile)
+                // 清理 tempFile
+                filePart.tmpFile?.delete()
             }
-            // 清理 tempFile
-            filePart.tmpFile?.delete()
-            file
         }
 
-        return CommonScheduler.multiCoroutinesProduce(fileParts.map { { handleFile(it) } }, Dispatchers.IO)
+        val handlerList = CommonScheduler.multiCoroutinesProduce(fileParts.map { { handleFile(it) } }, Dispatchers.IO)
+        mysql.useTransaction {
+            handlerList.forEach { it.action(it.file) }
+        }
+        return handlerList.map { it.file }
     }
 
     private data class FilePart(
@@ -127,6 +143,25 @@ class FileService(val call: ApplicationCall) {
     )
 
     private suspend fun parseFormData(): ParseFormDataResult {
+
+        suspend fun parseFilePart(part: PartData.FileItem): FilePart {
+            val originalName = part.originalFileName as String
+            var contentType = part.contentType?.value ?: "application/octet-stream"
+            if (contentType != "application/octet-stream")
+                return FilePart(originalName, contentType, part.streamProvider)
+
+            // use tika to detect file type
+            val tmpFile = withContext(Dispatchers.IO) {
+                val tmp = java.io.File.createTempFile(UUID.randomUUID().toString(), ".tmp")
+                FileOutputStream(tmp).use { output ->
+                    part.streamProvider().copyTo(output)
+                }
+                contentType = Tika().detect(tmp)
+                tmp
+            }
+            return FilePart(originalName, contentType, { BufferedInputStream(FileInputStream(tmpFile)) }, tmpFile)
+        }
+
         val fileParts = mutableListOf<FilePart>()
         var owner: String? = null
         var fileType: FileType? = null
@@ -163,25 +198,6 @@ class FileService(val call: ApplicationCall) {
     }
 
 
-    private suspend fun parseFilePart(part: PartData.FileItem): FilePart {
-        val originalName = part.originalFileName as String
-        var contentType = part.contentType?.value ?: "application/octet-stream"
-        if (contentType != "application/octet-stream")
-            return FilePart(originalName, contentType, part.streamProvider)
-
-        // use tika to detect file type
-        val tmpFile = withContext(Dispatchers.IO) {
-            val tmp = java.io.File.createTempFile(UUID.randomUUID().toString(), ".tmp")
-            FileOutputStream(tmp).use { output ->
-                part.streamProvider().copyTo(output)
-            }
-            contentType = Tika().detect(tmp)
-            tmp
-        }
-        return FilePart(originalName, contentType, { BufferedInputStream(FileInputStream(tmpFile)) }, tmpFile)
-    }
-
-
     fun get(fileId: Int): File {
         val file = mysql.files.find { it.id eq fileId }
             ?: throw NotFoundException("assignment($fileId) not found")
@@ -189,9 +205,16 @@ class FileService(val call: ApplicationCall) {
         return file
     }
 
+    /**
+     * 本方法不包含鉴权操作
+     */
+    internal suspend fun deleteFileFromStorage(file: File) {
+        file.fileType.manageService().manager().deleteFile(file.storeName)
+    }
+
     suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
-        val service = file.fileType.uploaderService()
+        val service = file.fileType.manageService()
         val inputStream = service.manager().getFile(file.storeName)
         return { inputStream.use { it.copyTo(this) } }
     }
@@ -200,10 +223,14 @@ class FileService(val call: ApplicationCall) {
         // check permission
         when (fileType) {
             FileType.Assignment ->
+                // 老师和助教才能打包作业
                 call.user().assertWrite(Experiment.id(involvedId))
+            FileType.CourseResource ->
+                // 对课程有读权限的，都可以打包下载课程资源
+                call.user().assertRead(Course.id(involvedId))
         }
         // get files
-        val service = fileType.uploaderService()
+        val service = fileType.manageService()
         val (files, readme, zipFilename) = service.packageFiles(involvedId)
         val packageId = withContext(Dispatchers.IO) {
             val zipFile = java.io.File("${UUID.randomUUID()}.package.tmp")
@@ -224,9 +251,16 @@ class FileService(val call: ApplicationCall) {
         return FilePackageResponse(packageId, zipFilename)
     }
 
-    private fun FileType.uploaderService(): IFileManageService =
+    private fun FileType.manageService(): IFileManageService =
         when (this) {
             FileType.Assignment -> call.assignment
+            FileType.CourseResource -> call.courseResource
+        }
+
+    private fun FileType.getInvolvedEntity(involvedId: Int): IEntity =
+        when (this) {
+            FileType.Assignment -> Assignment.id(involvedId)
+            FileType.CourseResource -> Course.id(involvedId)
         }
 }
 

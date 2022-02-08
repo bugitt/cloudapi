@@ -3,7 +3,6 @@ package cn.edu.buaa.scs.auth
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
-import cn.edu.buaa.scs.service.getCourse
 import cn.edu.buaa.scs.service.id
 
 fun User.authRead(entity: IEntity): Boolean {
@@ -14,17 +13,21 @@ fun User.authRead(entity: IEntity): Boolean {
             isCourseStudent(entity) || isCourseAssistant(entity) || isCourseTeacher(entity)
 
         is Experiment ->
-            authRead(entity.getCourse())
+            authRead(entity.course)
 
         is Assignment ->
             // 学生本人
             entity.studentId == this.id
                     // 或这门课的老师、助教
-                    || entity.getCourse().let { isCourseAssistant(it) || isCourseTeacher(it) }
+                    || entity.course.let { isCourseAssistant(it) || isCourseTeacher(it) }
+
+        is CourseResource ->
+            authRead(entity.course)
 
         is File ->
             when (entity.fileType) {
                 FileType.Assignment -> authRead(Assignment.id(entity.involvedId))
+                FileType.CourseResource -> authRead(CourseResource.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
@@ -45,15 +48,19 @@ fun User.authWrite(entity: IEntity): Boolean {
             isCourseAssistant(entity) || isCourseTeacher(entity)
 
         is Experiment ->
-            authWrite(entity.getCourse())
+            authWrite(entity.course)
 
         is Assignment ->
             // 作业的读写权限是一样的
             authRead(entity)
 
+        is CourseResource ->
+            authWrite(entity.course)
+
         is File ->
             when (entity.fileType) {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
+                FileType.CourseResource -> authWrite(CourseResource.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
@@ -75,7 +82,7 @@ fun User.authAdmin(entity: IEntity): Boolean {
 
         is Experiment ->
             // 这门课的助教或老师可以新建或删除实验
-            entity.getCourse().let {
+            entity.course.let {
                 isCourseTeacher(it) || isCourseStudent(it)
             }
 
@@ -83,9 +90,13 @@ fun User.authAdmin(entity: IEntity): Boolean {
             // 作业的读写权限是一样的
             authRead(entity)
 
+        is CourseResource ->
+            authAdmin(entity.course)
+
         is File ->
             when (entity.fileType) {
-                FileType.Assignment -> authAdmin(Assignment.id(entity.involvedId))
+                FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
+                FileType.CourseResource -> authWrite(CourseResource.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
