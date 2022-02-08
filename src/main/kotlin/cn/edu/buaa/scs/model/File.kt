@@ -14,7 +14,8 @@ enum class StoreType {
 }
 
 enum class FileType {
-    Assignment
+    Assignment,
+    CourseResource
 }
 
 interface File : Entity<File>, IEntity {

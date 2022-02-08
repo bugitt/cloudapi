@@ -118,6 +118,7 @@ fun convertFileResponse(file: File): FileResponse {
         downloadLink = URI("$BASE_URL/api/v2/file/${file.id}/content"),
         createdAt = file.createdAt,
         updatedAt = file.updatedAt,
-        contentType = file.contentType
+        contentType = file.contentType,
+        involveId = file.involvedId
     )
 }

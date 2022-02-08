@@ -10,9 +10,9 @@ interface Assignment : Entity<Assignment>, IEntity {
     var id: Int
     var studentId: String
     var fileId: Int
-    var expId: Int
+    var experiment: Experiment
     var score: Float
-    var courseId: Int
+    var course: Course
 
     var createdAt: Long
     var updatedAt: Long
@@ -31,10 +31,10 @@ object Assignments : Table<Assignment>("assignment_v2") {
     val fileId = int("file_id").bindTo { it.fileId }
 
     @Suppress("unused")
-    val expId = int("exp_id").bindTo { it.expId }
+    val expId = int("exp_id").references(Experiments) { it.experiment }
 
     @Suppress("unused")
-    val courseId = int("course_id").bindTo { it.courseId }
+    val courseId = int("course_id").references(Courses) { it.course }
 
     @Suppress("unused")
     val score = float("score").bindTo { it.score }

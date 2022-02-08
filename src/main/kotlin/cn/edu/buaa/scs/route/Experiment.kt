@@ -10,15 +10,11 @@ import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.service.assignment
 import cn.edu.buaa.scs.service.id
-import cn.edu.buaa.scs.utils.getFormItem
 import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
-import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import java.io.InputStream
 
 fun Route.experimentRoute() {
     route("/experiment/{experimentId}") {
@@ -36,23 +32,11 @@ fun Route.experimentRoute() {
 
         route("/assignment") {
 
-            suspend fun ApplicationCall.parseUserAndFile(): Triple<String, String, InputStream> {
-                return receiveMultipart().readAllParts().let { partDataList ->
-                    val userId = getFormItem<PartData.FormItem>(partDataList, "owner")?.value ?: userId()
-
-                    val fileItem = getFormItem<PartData.FileItem>(partDataList, "file")
-                        ?: throw BadRequestException("can not parse file item")
-                    Triple(userId, fileItem.originalFileName ?: "", fileItem.streamProvider())
-                }
-            }
-
             /**
              * 创建作业
              */
             post {
                 val req = call.receive<AssignmentRequest>()
-                val ass = Assignment.id(30)
-                println(ass.fileId)
                 call.assignment.create(call.getExpIdFromPath(), req.studentId).let {
                     call.respond(convertAssignmentResponse(it))
                 }
@@ -96,8 +80,8 @@ fun convertAssignmentResponse(assignment: Assignment): AssignmentResponse {
     return AssignmentResponse(
         id = assignment.id,
         studentId = assignment.studentId,
-        expId = assignment.expId,
-        courseId = assignment.courseId,
+        expId = assignment.experiment.id,
+        courseId = assignment.course.id,
         createdAt = assignment.createdAt,
         updatedAt = assignment.updatedAt,
         file = file
