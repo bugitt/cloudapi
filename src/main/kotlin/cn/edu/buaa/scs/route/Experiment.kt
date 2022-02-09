@@ -7,7 +7,6 @@ import cn.edu.buaa.scs.controller.models.PatchAssignmentRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.Experiment
-import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.service.assignment
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.user
@@ -70,13 +69,6 @@ fun Route.experimentRoute() {
 }
 
 fun convertAssignmentResponse(assignment: Assignment): AssignmentResponse {
-    val file = if (assignment.fileId != 0) {
-        File.id(assignment.fileId)
-    } else {
-        null
-    }
-        ?.let { convertFileResponse(it) }
-
     return AssignmentResponse(
         id = assignment.id,
         studentId = assignment.studentId,
@@ -84,6 +76,6 @@ fun convertAssignmentResponse(assignment: Assignment): AssignmentResponse {
         courseId = assignment.course.id,
         createdAt = assignment.createdAt,
         updatedAt = assignment.updatedAt,
-        file = file
+        file = assignment.file?.let { convertFileResponse(it) }
     )
 }
