@@ -18,7 +18,5 @@ fun Application.configureCORS() {
         header(HttpHeaders.ContentType)
         header(HttpHeaders.Authorization)
         allowHeadersPrefixed("x-scs-")
-
-        maxAgeInSeconds = 3600
     }
 }
