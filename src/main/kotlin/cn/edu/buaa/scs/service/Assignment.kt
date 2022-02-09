@@ -64,7 +64,8 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
         if (file.owner != assignment.studentId) {
             throw AuthorizationException("file owner(${file.owner} is conflict with assignment student(${assignment.studentId}")
         }
-        assignment.fileId = fileId
+        assignment.file = file
+        assignment.updatedAt = System.currentTimeMillis()
         mysql.assignments.update(assignment)
         return assignment
     }
@@ -103,14 +104,7 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
                 .filterNot { (it.fileId eq 0) or (it.fileId.isNull()) }
                 .toList()
 
-            val files = async {
-                val fileIds = validAssignments.map { it.fileId }
-                if (fileIds.isEmpty()) {
-                    listOf()
-                } else {
-                    mysql.files.filter { it.id inList fileIds }.toList()
-                }
-            }
+            val files = validAssignments.mapNotNull { it.file }
 
             val readme = async {
                 val validStudentIds = validAssignments.map { it.studentId }
@@ -147,7 +141,7 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
 
             val filename = "全部作业_${experiment.name.filterNot { it.isWhitespace() }}.zip"
 
-            FileService.PackageResult(files.await(), readme.await(), filename)
+            FileService.PackageResult(files, readme.await(), filename)
         }
 
 }
