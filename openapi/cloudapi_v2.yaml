@@ -238,7 +238,8 @@ paths:
   '/course/{courseId}/resources':
     parameters:
       - schema:
-          type: string
+          type: integer
+          format: int32
         name: courseId
         in: path
         required: true
@@ -274,12 +275,14 @@ paths:
   '/course/{courseId}/resource/{resourceId}':
     parameters:
       - schema:
-          type: string
+          type: integer
+          format: int32
         name: courseId
         in: path
         required: true
       - schema:
-          type: string
+          type: integer
+          format: int32
         name: resourceId
         in: path
         required: true
