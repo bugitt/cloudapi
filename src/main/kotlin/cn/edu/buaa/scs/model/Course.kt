@@ -11,7 +11,7 @@ interface Course : Entity<Course>, IEntity {
     companion object : Entity.Factory<Course>()
 
     var id: Int
-    var teacherId: String
+    var teacher: User
     var name: String
     var termId: Int
     var departmentId: String
@@ -24,7 +24,7 @@ object Courses : Table<Course>("course") {
     val id = int("id").primaryKey().bindTo { it.id }
 
     @Suppress("unused")
-    val teacherId = varchar("teacher_id").bindTo { it.teacherId }
+    val teacherId = varchar("teacher_id").references(Users) { it.teacher }
 
     @Suppress("unused")
     val name = varchar("name").bindTo { it.name }

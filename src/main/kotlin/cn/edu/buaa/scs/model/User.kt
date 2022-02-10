@@ -53,7 +53,7 @@ interface User : Entity<User>, IEntity {
             (it.courseId eq courseId.toString()) and (it.studentId eq this.id)
         }?.let { true } ?: false
 
-    fun isCourseTeacher(course: Course): Boolean = course.teacherId == this.id
+    fun isCourseTeacher(course: Course): Boolean = course.teacher.id == this.id
 }
 
 object Users : Table<User>("user") {

@@ -92,7 +92,7 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
     }
 
     override fun checkPermission(ownerId: String, involvedId: Int): Boolean {
-        return ownerId == Course.id(involvedId).teacherId
+        return ownerId == Course.id(involvedId).teacher.id
     }
 
     override fun storePath(): String {

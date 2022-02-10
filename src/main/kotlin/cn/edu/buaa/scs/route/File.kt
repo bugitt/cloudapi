@@ -106,7 +106,7 @@ fun Route.fileRoute() {
 }
 
 
-fun convertFileResponse(file: File): FileResponse {
+internal fun convertFileResponse(file: File): FileResponse {
     return FileResponse(
         id = file.id,
         name = file.name,

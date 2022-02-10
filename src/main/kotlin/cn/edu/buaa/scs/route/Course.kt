@@ -2,9 +2,12 @@ package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.CourseResourceListResponse
 import cn.edu.buaa.scs.controller.models.CourseResourceResponse
+import cn.edu.buaa.scs.controller.models.CourseResponse
 import cn.edu.buaa.scs.controller.models.DeleteCourseResourcesRequest
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
+import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.courseResource
 import io.ktor.application.*
 import io.ktor.request.*
@@ -17,6 +20,12 @@ fun Route.courseRoute() {
         fun ApplicationCall.getCourseIdFromPath(): Int =
             parameters["courseId"]?.toInt()
                 ?: throw BadRequestException("course id is invalid")
+
+        get {
+            val courseId = call.getCourseIdFromPath()
+            val course = call.course.get(courseId)
+            call.respond(convertCourse(course))
+        }
 
         route("/resource") {
             route("/{resourceId}") {
@@ -60,7 +69,18 @@ fun Route.courseRoute() {
 
 }
 
-fun convertCourseResource(courseResource: CourseResource): CourseResourceResponse {
+internal fun convertCourse(course: Course): CourseResponse {
+    return CourseResponse(
+        id = course.id,
+        name = course.name,
+        teacher = course.teacher.name,
+        termId = course.termId,
+        createTime = course.createTime,
+        departmentId = course.departmentId,
+    )
+}
+
+internal fun convertCourseResource(courseResource: CourseResource): CourseResourceResponse {
     val file = if (courseResource.file.id != 0) {
         courseResource.file
     } else {
@@ -74,7 +94,7 @@ fun convertCourseResource(courseResource: CourseResource): CourseResourceRespons
     )
 }
 
-fun convertCourseResourceList(courseResourceList: List<CourseResource>): CourseResourceListResponse {
+internal fun convertCourseResourceList(courseResourceList: List<CourseResource>): CourseResourceListResponse {
     return CourseResourceListResponse(
         resources = courseResourceList.map { convertCourseResource(it) }
     )
