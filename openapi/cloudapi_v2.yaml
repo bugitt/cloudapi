@@ -10,6 +10,8 @@ info:
     email: loheagn@icloud.com
   termsOfService: 'https://scs.buaa.edu.cn'
 tags:
+  - name: 课程
+    description: 课程相关
   - name: 作业
     description: 作业相关
   - name: 文件
@@ -19,6 +21,28 @@ tags:
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
+  '/experimnet/{experimentId}':
+    parameters:
+      - schema:
+          type: integer
+        name: experimentId
+        in: path
+        required: true
+    get:
+      summary: 获取一项实验（作业）
+      tags:
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentResponse'
+      operationId: get-experimnet-experimentId
+      description: 获取一项实验（作业）详情
+      security:
+        - Authorization: []
   '/experiment/{experimentId}/assignment':
     parameters:
       - schema:
@@ -47,6 +71,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AssignmentRequest'
+    get:
+      summary: 获取实验（作业）下学生提交的作业信息
+      operationId: get-experiment-experimentId-assignment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+      description: 获取实验（作业）下学生提交的作业信息
+      security:
+        - Authorization: []
+      tags:
+        - 作业
   '/experiment/{experimentId}/assignment/{assignmentId}':
     parameters:
       - schema:
@@ -297,6 +336,27 @@ paths:
       description: 删除课程资源
       security:
         - Authorization: []
+  '/course/{courseId}':
+    parameters:
+      - schema:
+          type: string
+        name: courseId
+        in: path
+        required: true
+    get:
+      summary: 获取课程信息
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+      operationId: get-course-courseId
+      description: 获取课程信息
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -517,6 +577,95 @@ components:
             format: int32
       required:
         - idList
+    ExperimentResponse:
+      description: ''
+      type: object
+      x-examples: {}
+      title: ''
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: boolean
+        detail:
+          type: string
+          minLength: 1
+        resource:
+          type: string
+          minLength: 1
+        createTime:
+          type: string
+          minLength: 1
+        startTime:
+          type: string
+          minLength: 1
+        endTime:
+          type: string
+          minLength: 1
+        deadLine:
+          type: string
+          minLength: 1
+        isPeerAssessment:
+          type: boolean
+        peerAssessmentDeadline:
+          type: string
+        appealDeadline:
+          type: string
+        peerAssessmentRules:
+          type: string
+        peerAssessmentStart:
+          type: boolean
+        sentEmail:
+          type: boolean
+        course:
+          $ref: '#/components/schemas/CourseResponse'
+      required:
+        - id
+        - name
+        - type
+        - detail
+        - createTime
+        - startTime
+        - endTime
+        - deadLine
+        - isPeerAssessment
+        - peerAssessmentDeadline
+        - appealDeadline
+        - peerAssessmentRules
+        - peerAssessmentStart
+        - sentEmail
+        - course
+    CourseResponse:
+      description: ''
+      type: object
+      x-examples: {}
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+        teacher:
+          type: string
+          description: 任课教师姓名
+        termId:
+          type: integer
+        createTime:
+          type: string
+          minLength: 1
+        departmentId:
+          type: string
+          minLength: 1
+      required:
+        - id
+        - name
+        - teacher
+        - termId
+        - createTime
+        - departmentId
   securitySchemes:
     Authorization:
       type: apiKey

@@ -1,15 +1,14 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.controller.models.AssignmentRequest
 import cn.edu.buaa.scs.controller.models.AssignmentResponse
+import cn.edu.buaa.scs.controller.models.ExperimentResponse
 import cn.edu.buaa.scs.controller.models.PatchAssignmentRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.service.assignment
-import cn.edu.buaa.scs.service.id
-import cn.edu.buaa.scs.utils.user
+import cn.edu.buaa.scs.service.experiment
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -22,11 +21,9 @@ fun Route.experimentRoute() {
             parameters["experimentId"]?.toInt()
                 ?: throw BadRequestException("experiment id is invalid")
 
-        route("/assignments/content") {
-            get {
-                call.user().assertWrite(Experiment.id(call.getExpIdFromPath()))
-
-            }
+        get {
+            val experiment = call.experiment.get(call.getExpIdFromPath())
+            call.respond(convertExperiment(experiment))
         }
 
         route("/assignment") {
@@ -68,7 +65,27 @@ fun Route.experimentRoute() {
     }
 }
 
-fun convertAssignmentResponse(assignment: Assignment): AssignmentResponse {
+internal fun convertExperiment(experiment: Experiment): ExperimentResponse =
+    ExperimentResponse(
+        id = experiment.id,
+        name = experiment.name,
+        type = experiment.type,
+        detail = experiment.detail,
+        resource = if (experiment.resource.isEmpty() || experiment.resource == "null") null else experiment.resource,
+        createTime = experiment.createTime,
+        startTime = experiment.startTime,
+        endTime = experiment.endTime,
+        deadLine = experiment.deadLine,
+        isPeerAssessment = experiment.isPeerAssessment,
+        peerAssessmentDeadline = experiment.peerAssessmentDeadline,
+        appealDeadline = experiment.appealDeadline,
+        peerAssessmentRules = experiment.peerAssessmentRules,
+        peerAssessmentStart = experiment.peerAssessmentStart,
+        sentEmail = experiment.sentEmail,
+        course = convertCourse(experiment.course),
+    )
+
+internal fun convertAssignmentResponse(assignment: Assignment): AssignmentResponse {
     return AssignmentResponse(
         id = assignment.id,
         studentId = assignment.studentId,

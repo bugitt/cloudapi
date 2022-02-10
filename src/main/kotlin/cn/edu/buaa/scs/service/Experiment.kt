@@ -1,11 +1,24 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.model.experiments
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.user
+import io.ktor.application.*
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
+
+val ApplicationCall.experiment get() = ExperimentService(this)
+
+class ExperimentService(val call: ApplicationCall) {
+    fun get(id: Int): Experiment {
+        val experiment = Experiment.id(id)
+        call.user().assertRead(experiment)
+        return experiment
+    }
+}
 
 fun Experiment.Companion.id(id: Int): Experiment {
     return mysql.experiments.find { it.id eq id }
