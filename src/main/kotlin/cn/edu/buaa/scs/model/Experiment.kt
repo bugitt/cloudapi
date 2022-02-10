@@ -20,7 +20,7 @@ interface Experiment : Entity<Experiment>, IEntity {
     var createTime: String
     var startTime: String
     var endTime: String
-    var deadLine: String
+    var deadline: String
     var vmStatus: Int
     var vmName: String
     var vmApplyId: Int
@@ -62,7 +62,7 @@ object Experiments : Table<Experiment>("experiment") {
     var endTime = varchar("end_time").bindTo { it.endTime }
 
     @Suppress("unused")
-    var deadline = varchar("deadline").bindTo { it.deadLine }
+    var deadline = varchar("deadline").bindTo { it.deadline }
 
     @Suppress("unused")
     var vmStatus = int("vm_status").bindTo { it.vmStatus }

@@ -618,7 +618,7 @@ components:
         endTime:
           type: string
           minLength: 1
-        deadLine:
+        deadline:
           type: string
           minLength: 1
         isPeerAssessment:
@@ -643,7 +643,7 @@ components:
         - createTime
         - startTime
         - endTime
-        - deadLine
+        - deadline
         - isPeerAssessment
         - peerAssessmentDeadline
         - appealDeadline

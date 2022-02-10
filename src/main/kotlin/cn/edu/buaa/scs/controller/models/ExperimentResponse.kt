@@ -22,7 +22,7 @@ import cn.edu.buaa.scs.controller.models.CourseResponse
  * @param createTime 
  * @param startTime 
  * @param endTime 
- * @param deadLine 
+ * @param deadline 
  * @param isPeerAssessment 
  * @param peerAssessmentDeadline 
  * @param appealDeadline 
@@ -40,7 +40,7 @@ data class ExperimentResponse(
     val createTime: kotlin.String,
     val startTime: kotlin.String,
     val endTime: kotlin.String,
-    val deadLine: kotlin.String,
+    val deadline: kotlin.String,
     val isPeerAssessment: kotlin.Boolean,
     val peerAssessmentDeadline: kotlin.String,
     val appealDeadline: kotlin.String,
