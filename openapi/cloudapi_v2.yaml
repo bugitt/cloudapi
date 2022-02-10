@@ -71,6 +71,14 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AssignmentRequest'
+  '/experiment/{experimentId}/assignments':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: experimentId
+        in: path
+        required: true
     get:
       summary: 获取实验（作业）下学生提交的作业信息
       operationId: get-experiment-experimentId-assignment
@@ -80,8 +88,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentResponse'
-      description: 获取实验（作业）下学生提交的作业信息
+                $ref: '#/components/schemas/AssignmentListResponse'
+      description: |-
+        获取实验（作业）下学生提交的作业信息
+
+        如果是当前课程的教师或助教调用，则返回当前实验的全部作业
+
+        否则，仅返回当前学生的作业
       security:
         - Authorization: []
       tags:
@@ -666,6 +679,16 @@ components:
         - termId
         - createTime
         - departmentId
+    AssignmentListResponse:
+      title: AssignmentListResponse
+      type: object
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignmentResponse'
+      required:
+        - assignments
   securitySchemes:
     Authorization:
       type: apiKey

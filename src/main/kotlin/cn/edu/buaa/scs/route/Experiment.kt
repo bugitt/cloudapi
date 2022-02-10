@@ -1,9 +1,6 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.AssignmentRequest
-import cn.edu.buaa.scs.controller.models.AssignmentResponse
-import cn.edu.buaa.scs.controller.models.ExperimentResponse
-import cn.edu.buaa.scs.controller.models.PatchAssignmentRequest
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.Experiment
@@ -26,6 +23,14 @@ fun Route.experimentRoute() {
             call.respond(convertExperiment(experiment))
         }
 
+        route("/assignments") {
+            get {
+                call.respond(
+                    convertAssignmentList(call.assignment.getAll(call.getExpIdFromPath()))
+                )
+            }
+        }
+
         route("/assignment") {
 
             /**
@@ -34,7 +39,7 @@ fun Route.experimentRoute() {
             post {
                 val req = call.receive<AssignmentRequest>()
                 call.assignment.create(call.getExpIdFromPath(), req.studentId).let {
-                    call.respond(convertAssignmentResponse(it))
+                    call.respond(convertAssignment(it))
                 }
             }
 
@@ -47,7 +52,7 @@ fun Route.experimentRoute() {
 
                 get {
                     call.assignment.get(call.getAssignmentIdFromPath()).let {
-                        call.respond(convertAssignmentResponse(it))
+                        call.respond(convertAssignment(it))
                     }
                 }
 
@@ -57,7 +62,7 @@ fun Route.experimentRoute() {
                 patch {
                     val req = call.receive<PatchAssignmentRequest>()
                     call.assignment.patch(call.getAssignmentIdFromPath(), req.fileId).let {
-                        call.respond(convertAssignmentResponse(it))
+                        call.respond(convertAssignment(it))
                     }
                 }
             }
@@ -85,7 +90,10 @@ internal fun convertExperiment(experiment: Experiment): ExperimentResponse =
         course = convertCourse(experiment.course),
     )
 
-internal fun convertAssignmentResponse(assignment: Assignment): AssignmentResponse {
+internal fun convertAssignmentList(assignmentList: List<Assignment>): AssignmentListResponse =
+    AssignmentListResponse(assignmentList.map { convertAssignment(it) })
+
+internal fun convertAssignment(assignment: Assignment): AssignmentResponse {
     return AssignmentResponse(
         id = assignment.id,
         studentId = assignment.studentId,

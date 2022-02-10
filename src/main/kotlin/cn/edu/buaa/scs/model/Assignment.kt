@@ -12,7 +12,7 @@ interface Assignment : Entity<Assignment>, IEntity {
 
     // TODO: 检查其他的可空字段
     var file: File?
-    
+
     var experiment: Experiment
     var score: Float
     var course: Course
@@ -38,6 +38,8 @@ object Assignments : Table<Assignment>("assignment_v2") {
 
     @Suppress("unused")
     val courseId = int("course_id").references(Courses) { it.course }
+
+    val course get() = courseId.referenceTable as Courses
 
     @Suppress("unused")
     val score = float("score").bindTo { it.score }

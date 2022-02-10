@@ -49,6 +49,23 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
         return assignment
     }
 
+    fun getAll(expId: Int): List<Assignment> {
+        val experiment = Experiment.id(expId)
+        val baseQuery = mysql.assignments.filter {
+            (it.expId eq expId) and
+                    (it.fileId.isNotNull()) and
+                    (it.fileId.notEq(0))
+        }
+        return if (call.user().isCourseTeacher(experiment.course) || call.user()
+                .isCourseAssistant(experiment.course) || call.user().isAdmin()
+        ) {
+            baseQuery.toList()
+        } else {
+            baseQuery.filter { it.studentId eq call.user().id }.toList()
+        }
+    }
+
+
     fun get(assignmentId: Int): Assignment {
         val assignment = mysql.assignments.find { it.id eq assignmentId }
             ?: throw NotFoundException("assignment($assignmentId) not found")
