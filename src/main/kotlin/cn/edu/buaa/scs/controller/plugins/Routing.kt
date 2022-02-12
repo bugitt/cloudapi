@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.auth.fetchToken
 import cn.edu.buaa.scs.route.courseRoute
 import cn.edu.buaa.scs.route.experimentRoute
 import cn.edu.buaa.scs.route.fileRoute
+import cn.edu.buaa.scs.route.statRoute
 import cn.edu.buaa.scs.utils.test.test
 import io.ktor.application.*
 import io.ktor.routing.*
@@ -21,6 +22,7 @@ fun Application.configureRouting() {
             courseRoute()
             experimentRoute()
             fileRoute()
+            statRoute()
             // 添加其他的 route
         }
 

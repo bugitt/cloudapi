@@ -18,6 +18,8 @@ tags:
     description: 文件相关
   - name: 课程资源
     description: 课程资源相关
+  - name: 统计
+    description: 获取各种统计信息
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -370,6 +372,30 @@ paths:
       description: 获取课程信息
       security:
         - Authorization: []
+  '/stat/exp/{expId}/assignments':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: expId
+        in: path
+        required: true
+    get:
+      summary: 统计某门实验的提交作业的情况
+      tags:
+        - 统计
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatExpAssignmentResponse'
+      operationId: get-stat-exp-expId-assignment
+      description: 统计某门实验的提交作业的情况（该课程的助教或教师调用）
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -689,6 +715,25 @@ components:
             $ref: '#/components/schemas/AssignmentResponse'
       required:
         - assignments
+    StatExpAssignmentResponse:
+      title: StatExpAssignmentResponse
+      description: 统计某门实验的提交作业的情况
+      type: object
+      properties:
+        assignments:
+          type: array
+          items:
+            type: object
+            properties:
+              studentId:
+                type: string
+              studentName:
+                type: string
+              assignment:
+                $ref: '#/components/schemas/AssignmentResponse'
+            required:
+              - studentId
+              - studentName
   securitySchemes:
     Authorization:
       type: apiKey
