@@ -11,7 +11,7 @@ interface CourseStudent : Entity<CourseStudent>, IEntity {
     companion object : Entity.Factory<CourseStudent>()
 
     var courseId: Int
-    var studentId: String
+    var student: User
 }
 
 object CourseStudents : Table<CourseStudent>("course_student_mapping") {
@@ -19,7 +19,7 @@ object CourseStudents : Table<CourseStudent>("course_student_mapping") {
     val courseId = int("course_id").bindTo { it.courseId }
 
     @Suppress("unused")
-    val studentId = varchar("student_id").bindTo { it.studentId }
+    val studentId = varchar("student_id").references(Users) { it.student }
 }
 
 val Database.courseStudents get() = this.sequenceOf(CourseStudents)
