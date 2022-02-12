@@ -139,21 +139,14 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
                     }
                     .map { row -> Users.createEntity(row) }
 
-                """
-                    已提交作业: ${validStudentIds.size} 人
-                    未提交作业: ${invalidStudents.size} 人
-                    
-                    ${
+                val invalidStudentListInfo =
                     if (invalidStudents.isNotEmpty()) {
-                        """
-                            未提交作业名单:
-                            ${invalidStudents.joinToString { "${it.id}\t${it.name}\n" }}
-                            """.trimIndent()
+                        "未提交作业名单:${invalidStudents.joinToString { "${it.id}\t${it.name}\n" }}"
                     } else {
                         ""
                     }
-                }
-                """.trimIndent()
+
+                "已提交作业: ${validStudentIds.size} 人\n未提交作业: ${invalidStudents.size} 人\n$invalidStudentListInfo"
             }
 
             val filename = "全部作业_${experiment.name.filterNot { it.isWhitespace() }}.zip"
