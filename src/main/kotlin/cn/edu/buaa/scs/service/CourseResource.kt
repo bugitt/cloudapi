@@ -107,13 +107,16 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
         })
     }
 
-    override suspend fun packageFiles(involvedId: Int): FileService.PackageResult {
+    override suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): FileService.PackageResult {
         val course = Course.id(involvedId)
-        val files =
+        var files =
             mysql.courseResources
                 .filter { (it.courseId eq involvedId) and (it.fileId.isNotNull() and (it.fileId notEq 0)) }
                 .toList()
                 .map { it.file }
+        if (fileIdList != null && fileIdList.isNotEmpty()) {
+            files = files.filter { fileIdList.contains(it.id) }
+        }
         val readme = """
             共下载 ${files.size} 个文件:
             

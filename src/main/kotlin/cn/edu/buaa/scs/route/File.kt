@@ -95,7 +95,7 @@ fun Route.fileRoute() {
 
             post {
                 val req = call.receive<FilePackageRequest>()
-                call.file.`package`(FileType.valueOf(req.fileType), req.involvedId).let {
+                call.file.`package`(FileType.valueOf(req.fileType), req.involvedId, req.fileIdList).let {
                     call.respond(it)
                 }
             }
