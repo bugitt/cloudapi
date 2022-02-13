@@ -112,7 +112,10 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
         // do noting
     }
 
-    override suspend fun packageFiles(involvedId: Int): FileService.PackageResult =
+    /**
+     * 作业打包时默认全部打包, 不关心 fileIdList
+     */
+    override suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): FileService.PackageResult =
         withContext(Dispatchers.Default) {
             val experiment = Experiment.id(involvedId)
 

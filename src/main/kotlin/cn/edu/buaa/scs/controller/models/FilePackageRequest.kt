@@ -16,10 +16,12 @@ package cn.edu.buaa.scs.controller.models
  * 
  * @param fileType 
  * @param involvedId 关联的实体ID
+ * @param fileIdList 
  */
 data class FilePackageRequest(
     val fileType: kotlin.String,
     /* 关联的实体ID */
-    val involvedId: kotlin.Int
+    val involvedId: kotlin.Int,
+    val fileIdList: kotlin.collections.List<kotlin.Int>? = null
 ) 
 

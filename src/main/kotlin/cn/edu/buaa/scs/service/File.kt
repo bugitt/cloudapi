@@ -49,7 +49,7 @@ class FileService(val call: ApplicationCall) {
         // after create file
         fun callback(involvedEntity: IEntity, file: File)
 
-        suspend fun packageFiles(involvedId: Int): PackageResult
+        suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): PackageResult
     }
 
     data class PackageResult(
@@ -219,7 +219,7 @@ class FileService(val call: ApplicationCall) {
         return { inputStream.use { it.copyTo(this) } }
     }
 
-    suspend fun `package`(fileType: FileType, involvedId: Int): FilePackageResponse {
+    suspend fun `package`(fileType: FileType, involvedId: Int, fileIdList: List<Int>?): FilePackageResponse {
         // check permission
         when (fileType) {
             FileType.Assignment ->
@@ -231,7 +231,7 @@ class FileService(val call: ApplicationCall) {
         }
         // get files
         val service = fileType.manageService()
-        val (files, readme, zipFilename) = service.packageFiles(involvedId)
+        val (files, readme, zipFilename) = service.packageFiles(involvedId, fileIdList)
         val packageId = withContext(Dispatchers.IO) {
             val zipFile = java.io.File("${UUID.randomUUID()}.package.tmp")
             zipFile.createNewFile()
