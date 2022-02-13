@@ -81,21 +81,15 @@ internal fun convertCourse(course: Course): CourseResponse {
 }
 
 internal fun convertCourseResource(courseResource: CourseResource): CourseResourceResponse {
-    val file = if (courseResource.file.id != 0) {
-        courseResource.file
-    } else {
-        null
-    }?.let { convertFileResponse(it) }
-
     return CourseResourceResponse(
         id = courseResource.id,
         courseId = courseResource.course.id,
-        file = file
+        file = convertFileResponse(courseResource.file)
     )
 }
 
 internal fun convertCourseResourceList(courseResourceList: List<CourseResource>): CourseResourceListResponse {
     return CourseResourceListResponse(
-        resources = courseResourceList.map { convertCourseResource(it) }
+        resources = courseResourceList.sortedBy { it.file.uploadTime }.map { convertCourseResource(it) }
     )
 }

@@ -22,6 +22,6 @@ import cn.edu.buaa.scs.controller.models.FileResponse
 data class CourseResourceResponse(
     val id: kotlin.Int,
     val courseId: kotlin.Int,
-    val file: FileResponse? = null
+    val file: FileResponse
 ) 
 
