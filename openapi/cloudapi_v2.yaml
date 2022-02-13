@@ -611,6 +611,7 @@ components:
       required:
         - id
         - courseId
+        - file
     DeleteCourseResourcesRequest:
       title: DeleteCourseResourcesRequest
       type: object

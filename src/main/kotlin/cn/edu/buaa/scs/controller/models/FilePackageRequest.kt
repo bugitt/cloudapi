@@ -13,7 +13,7 @@ package cn.edu.buaa.scs.controller.models
 
 
 /**
- * 
+ * fileIdList指定只打包哪些文件。当fileIdList不为空时，仅打包list中指定的文件（但此时list中的fileId必须合法，即必须确定是与对应的实体相关联的）；当其为空时，则打包所有相关文件。
  * @param fileType 
  * @param involvedId 关联的实体ID
  * @param fileIdList 
