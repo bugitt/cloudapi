@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.utils.IntOrString
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
@@ -31,6 +32,10 @@ interface Experiment : Entity<Experiment>, IEntity {
     var peerAssessmentRules: String
     var peerAssessmentStart: Boolean
     var sentEmail: Boolean
+
+    override fun entityId(): IntOrString {
+        return IntOrString(this.id)
+    }
 }
 
 object Experiments : Table<Experiment>("experiment") {

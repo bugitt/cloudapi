@@ -46,8 +46,10 @@ class FileService(val call: ApplicationCall) {
 
         fun storePath(): String
 
+        fun beforeCreateOrUpdate(involvedEntity: IEntity, file: File) {}
+
         // after create file
-        fun callback(involvedEntity: IEntity, file: File)
+        fun callback(involvedEntity: IEntity, file: File) {}
 
         suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): PackageResult
     }
@@ -105,6 +107,7 @@ class FileService(val call: ApplicationCall) {
             call.user().assertAdmin(file)
 
             HandleFileCreateOrUpdate(file) { innerFile ->
+                service.beforeCreateOrUpdate(involvedEntity, innerFile)
                 fileId?.let {
                     innerFile.id = it
                     innerFile.updatedAt = System.currentTimeMillis()
