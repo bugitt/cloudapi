@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.IntOrString
 import cn.edu.buaa.scs.utils.exists
@@ -55,6 +56,8 @@ interface User : Entity<User>, IEntity {
         }?.let { true } ?: false
 
     fun isCourseTeacher(course: Course): Boolean = course.teacher.id == this.id
+
+    fun isCourseTeacher(courseId: Int): Boolean = Course.id(courseId).teacher.id == this.id
 
     override fun entityId(): IntOrString {
         return IntOrString(this.id)
