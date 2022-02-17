@@ -108,10 +108,6 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
         return bucketName
     }
 
-    override fun callback(involvedEntity: IEntity, file: File) {
-        // do noting
-    }
-
     /**
      * 作业打包时默认全部打包, 不关心 fileIdList
      */

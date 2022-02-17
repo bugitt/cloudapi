@@ -99,6 +99,16 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
         return bucketName
     }
 
+    override fun beforeCreateOrUpdate(involvedEntity: IEntity, file: File) {
+        // 同一课程中不能包含同名的课程资源
+        val course = involvedEntity as Course
+        if (mysql.courseResources.filter { it.courseId.eq(course.id) }.toList()
+                .find { it.file.name == file.name } != null
+        ) {
+            throw BadRequestException("同一课程下存在同名资源: ${file.name}")
+        }
+    }
+
     override fun callback(involvedEntity: IEntity, file: File) {
         val course = involvedEntity as Course
         mysql.courseResources.add(CourseResource {

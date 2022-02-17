@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.utils.IntOrString
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
@@ -12,6 +13,10 @@ interface CourseResource : Entity<CourseResource>, IEntity {
     var id: Int
     var course: Course
     var file: File
+
+    override fun entityId(): IntOrString {
+        return IntOrString(this.id)
+    }
 }
 
 object CourseResources : Table<CourseResource>("course_resource") {

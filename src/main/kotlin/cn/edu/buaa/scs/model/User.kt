@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.IntOrString
 import cn.edu.buaa.scs.utils.exists
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
@@ -54,6 +55,10 @@ interface User : Entity<User>, IEntity {
         }?.let { true } ?: false
 
     fun isCourseTeacher(course: Course): Boolean = course.teacher.id == this.id
+
+    override fun entityId(): IntOrString {
+        return IntOrString(this.id)
+    }
 }
 
 object Users : Table<User>("user") {

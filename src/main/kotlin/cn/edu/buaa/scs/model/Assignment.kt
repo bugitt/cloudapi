@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.utils.IntOrString
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
@@ -21,6 +22,10 @@ interface Assignment : Entity<Assignment>, IEntity {
     var updatedAt: Long
 
     companion object : Entity.Factory<Assignment>()
+
+    override fun entityId(): IntOrString {
+        return IntOrString(this.id)
+    }
 }
 
 object Assignments : Table<Assignment>("assignment_v2") {
