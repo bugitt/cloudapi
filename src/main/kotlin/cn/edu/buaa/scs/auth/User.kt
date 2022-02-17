@@ -27,7 +27,7 @@ fun User.authRead(entity: IEntity): Boolean {
         is File ->
             when (entity.fileType) {
                 FileType.Assignment -> authRead(Assignment.id(entity.involvedId))
-                FileType.CourseResource -> authRead(CourseResource.id(entity.involvedId))
+                FileType.CourseResource -> authRead(Course.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
@@ -60,7 +60,7 @@ fun User.authWrite(entity: IEntity): Boolean {
         is File ->
             when (entity.fileType) {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
-                FileType.CourseResource -> authWrite(CourseResource.id(entity.involvedId))
+                FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
@@ -96,7 +96,7 @@ fun User.authAdmin(entity: IEntity): Boolean {
         is File ->
             when (entity.fileType) {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
-                FileType.CourseResource -> authWrite(CourseResource.id(entity.involvedId))
+                FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
