@@ -14,7 +14,7 @@ interface Course : Entity<Course>, IEntity {
     var id: Int
     var teacher: User
     var name: String
-    var termId: Int
+    var term: Term
     var departmentId: String
     var createTime: String
     var resourceFolder: String
@@ -35,7 +35,7 @@ object Courses : Table<Course>("course") {
     val name = varchar("name").bindTo { it.name }
 
     @Suppress("unused")
-    val termId = int("term_id").bindTo { it.termId }
+    val termId = int("term_id").references(Terms) { it.term }
 
     @Suppress("unused")
     val createTime = varchar("create_time").bindTo { it.createTime }

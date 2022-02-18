@@ -2,11 +2,9 @@ package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.error.BusinessException
-import cn.edu.buaa.scs.model.Course
-import cn.edu.buaa.scs.model.User
-import cn.edu.buaa.scs.model.courseStudents
-import cn.edu.buaa.scs.model.courses
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
 import org.ktorm.dsl.eq
@@ -17,6 +15,19 @@ import org.ktorm.entity.toList
 val ApplicationCall.course get() = CourseService(this)
 
 class CourseService(val call: ApplicationCall) {
+    data class StatCourseExps(
+        val course: Course,
+        val teacher: User,
+        val students: List<User>,
+        val expDetails: List<ExpDetail>,
+    ) {
+        data class ExpDetail(
+            val exp: Experiment,
+            val vmCnt: Int,
+            val submittedAssignmentsCnt: Int,
+        )
+    }
+
     fun get(id: Int): Course {
         val course = Course.id(id)
         call.user().assertRead(course)
@@ -25,6 +36,15 @@ class CourseService(val call: ApplicationCall) {
 
     fun getAllStudents(courseId: Int): List<User> {
         return mysql.courseStudents.filter { it.courseId eq courseId }.toList().map { it.student }
+    }
+
+    suspend fun statCourseExps(courseId: Int): StatCourseExps {
+        val course = Course.id(courseId)
+        val teacher = course.teacher
+        val students = getAllStudents(courseId)
+        val exps = mysql.experiments.filter { it.courseId eq course.id }.toList()
+        val expDetails = CommonScheduler.multiCoroutinesProduce(exps.map { { call.experiment.statExp(it) } })
+        return StatCourseExps(course, teacher, students, expDetails)
     }
 }
 

@@ -74,7 +74,7 @@ internal fun convertCourse(course: Course): CourseResponse {
         id = course.id,
         name = course.name,
         teacher = course.teacher.name,
-        termId = course.termId,
+        term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
     )

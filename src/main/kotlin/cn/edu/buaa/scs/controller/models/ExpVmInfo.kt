@@ -11,24 +11,20 @@
 */
 package cn.edu.buaa.scs.controller.models
 
-import cn.edu.buaa.scs.controller.models.TermModel
 
 /**
- * 
- * @param id 
+ * 某次实验所分配的虚拟机情况
+ * @param status 
+ * @param applyId 
  * @param name 
- * @param teacher 任课教师姓名
- * @param term 
- * @param createTime 
- * @param departmentId 
+ * @param password 
+ * @param cnt 
  */
-data class CourseResponse(
-    val id: kotlin.Int,
+data class ExpVmInfo(
+    val status: kotlin.Int,
+    val applyId: kotlin.Int,
     val name: kotlin.String,
-    /* 任课教师姓名 */
-    val teacher: kotlin.String,
-    val term: TermModel,
-    val createTime: kotlin.String,
-    val departmentId: kotlin.String
+    val password: kotlin.String,
+    val cnt: kotlin.Int
 ) 
 

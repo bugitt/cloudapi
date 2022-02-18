@@ -11,24 +11,20 @@
 */
 package cn.edu.buaa.scs.controller.models
 
-import cn.edu.buaa.scs.controller.models.TermModel
 
 /**
  * 
  * @param id 
  * @param name 
- * @param teacher 任课教师姓名
- * @param term 
- * @param createTime 
- * @param departmentId 
+ * @param department 
+ * @param email 
+ * @param role 
  */
-data class CourseResponse(
-    val id: kotlin.Int,
+data class UserModel(
+    val id: kotlin.String,
     val name: kotlin.String,
-    /* 任课教师姓名 */
-    val teacher: kotlin.String,
-    val term: TermModel,
-    val createTime: kotlin.String,
-    val departmentId: kotlin.String
+    val department: kotlin.Int,
+    val email: kotlin.String,
+    val role: kotlin.String
 ) 
 
