@@ -12,6 +12,16 @@ import io.ktor.response.*
 import io.ktor.routing.*
 
 fun Route.experimentRoute() {
+    route("/experiments") {
+        get {
+            val termId = call.request.queryParameters["termId"]?.toInt()
+            val submitted = call.request.queryParameters["submitted"]?.toBoolean()
+            call.experiment.getAll(termId, submitted).let {
+                call.respond(it.map { exp -> convertExperiment(exp) })
+            }
+        }
+    }
+
     route("/experiment/{experimentId}") {
 
         fun ApplicationCall.getExpIdFromPath(): Int =

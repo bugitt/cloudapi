@@ -420,6 +420,36 @@ paths:
       description: 获取课程中所有实验的统计信息，本课程的助教或教师调用
       security:
         - Authorization: []
+  /expriments:
+    get:
+      summary: 获取实验信息列表
+      tags:
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentResponse'
+      operationId: get-expriments
+      description: 学生获取属于自己的实验信息列表
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: termId
+          description: 学期序号。该值缺失，或小于等于0时，表示所有学期的实验信息
+        - schema:
+            type: boolean
+          in: query
+          name: submitted
+          description: 当为true时，表示获取已完成的实验列表；为false时，表示获取未完成的实验列表；缺失时，表示同时获取已完成和未完成的实验列表。
 components:
   schemas:
     AssignmentResponse:

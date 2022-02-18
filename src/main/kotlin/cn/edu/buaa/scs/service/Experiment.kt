@@ -2,18 +2,16 @@ package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.error.BusinessException
-import cn.edu.buaa.scs.model.Experiment
-import cn.edu.buaa.scs.model.assignments
-import cn.edu.buaa.scs.model.experiments
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
+import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.dsl.isNotNull
-import org.ktorm.dsl.notEq
+import org.ktorm.dsl.*
 import org.ktorm.entity.count
+import org.ktorm.entity.filter
 import org.ktorm.entity.find
+import org.ktorm.entity.toList
 
 val ApplicationCall.experiment get() = ExperimentService(this)
 
@@ -22,6 +20,28 @@ class ExperimentService(val call: ApplicationCall) {
         val experiment = Experiment.id(id)
         call.user().assertRead(experiment)
         return experiment
+    }
+
+    fun getAll(termId: Int? = null, submitted: Boolean? = null): List<Experiment> {
+        val courseQuery = if (termId != null && termId > 0) mysql.courseStudents.filter {
+            val course = it.courseId.referenceTable as Courses
+            course.termId.eq(termId)
+        } else {
+            mysql.courseStudents
+        }
+        val courseIdList = courseQuery.filter { it.studentId.eq(call.userId()) }.toList().map { it.courseId }
+        if (courseIdList.isEmpty()) return emptyList()
+        return if (submitted == null) {
+            mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
+        } else if (submitted) {
+            mysql.from(Experiments).leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId)).select()
+                .where(Assignments.fileId.notEq(0) and Assignments.fileId.isNotNull())
+                .map { Experiments.createEntity(it) }
+        } else {
+            mysql.from(Experiments).leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId)).select()
+                .where(Assignments.fileId.eq(0) or Assignments.fileId.isNull())
+                .map { Experiments.createEntity(it) }
+        }
     }
 
     fun statExp(experiment: Experiment): CourseService.StatCourseExps.ExpDetail {
