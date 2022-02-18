@@ -9,7 +9,7 @@ object CommonScheduler {
 
     suspend fun <T> multiCoroutinesProduce(
         actionList: List<suspend () -> T>,
-        dispatcher: CoroutineDispatcher
+        dispatcher: CoroutineDispatcher = Dispatchers.Default
     ): List<T> =
         withContext(defaultDispatcher) {
             val output = Channel<T>(actionList.size)

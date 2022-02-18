@@ -396,6 +396,30 @@ paths:
       description: 统计某门实验的提交作业的情况（该课程的助教或教师调用）
       security:
         - Authorization: []
+  '/stat/course/{courseId}/experiments':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: courseId
+        in: path
+        required: true
+    get:
+      summary: 获取课程中所有实验的统计信息
+      tags:
+        - 统计
+        - 课程
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatCourseExpsResponse'
+      operationId: get-stat-course-courseId-experiments
+      description: 获取课程中所有实验的统计信息，本课程的助教或教师调用
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -684,6 +708,72 @@ components:
         - peerAssessmentStart
         - sentEmail
         - course
+    StatCourseExp:
+      description: ''
+      type: object
+      x-examples: {}
+      title: ''
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: boolean
+          description: 表示是实验还是作业。false表示是作业，true表示是实验
+        detail:
+          type: string
+          minLength: 1
+        resource:
+          type: string
+          minLength: 1
+        createTime:
+          type: string
+          minLength: 1
+        startTime:
+          type: string
+          minLength: 1
+        endTime:
+          type: string
+          minLength: 1
+        deadline:
+          type: string
+          minLength: 1
+        isPeerAssessment:
+          type: boolean
+        peerAssessmentDeadline:
+          type: string
+        appealDeadline:
+          type: string
+        peerAssessmentRules:
+          type: string
+        peerAssessmentStart:
+          type: boolean
+        sentEmail:
+          type: boolean
+        vm:
+          $ref: '#/components/schemas/ExpVmInfo'
+        submittedAssignmentsCnt:
+          type: integer
+          format: int32
+          description: 已提交作业的人数
+      required:
+        - id
+        - name
+        - type
+        - detail
+        - createTime
+        - startTime
+        - endTime
+        - deadline
+        - isPeerAssessment
+        - peerAssessmentDeadline
+        - appealDeadline
+        - peerAssessmentRules
+        - peerAssessmentStart
+        - sentEmail
+        - submittedAssignmentsCnt
     CourseResponse:
       description: ''
       type: object
@@ -697,8 +787,8 @@ components:
         teacher:
           type: string
           description: 任课教师姓名
-        termId:
-          type: integer
+        term:
+          $ref: '#/components/schemas/TermModel'
         createTime:
           type: string
           minLength: 1
@@ -709,7 +799,7 @@ components:
         - id
         - name
         - teacher
-        - termId
+        - term
         - createTime
         - departmentId
     AssignmentListResponse:
@@ -741,6 +831,84 @@ components:
             required:
               - studentId
               - studentName
+    StatCourseExpsResponse:
+      title: StatCourseExpsResponse
+      type: object
+      description: 某门课程中所有实验的详细统计信息
+      properties:
+        course:
+          $ref: '#/components/schemas/CourseResponse'
+        teacher:
+          $ref: '#/components/schemas/UserModel'
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserModel'
+        exps:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatCourseExp'
+      required:
+        - course
+        - teacher
+        - students
+        - exps
+    UserModel:
+      title: UserModel
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        department:
+          type: integer
+          format: int32
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          example: 枚举值，teacher or student
+      required:
+        - id
+        - name
+        - department
+        - email
+        - role
+    TermModel:
+      title: TermModel
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    ExpVmInfo:
+      title: ExpVmInfo
+      type: object
+      description: 某次实验所分配的虚拟机情况
+      properties:
+        status:
+          type: integer
+          format: int32
+        applyId:
+          type: integer
+          format: int32
+        name:
+          type: string
+        password:
+          type: string
+        cnt:
+          type: integer
+          format: int32
+      required:
+        - status
+        - applyId
+        - name
+        - password
+        - cnt
   securitySchemes:
     Authorization:
       type: apiKey

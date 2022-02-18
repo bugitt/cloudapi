@@ -15,27 +15,45 @@ import org.ktorm.schema.boolean
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 
-interface User : Entity<User>, IEntity {
-    companion object : Entity.Factory<User>() {
+enum class UserRole {
+    STUDENT,
+    TEACHER,
+    SYS;
 
-        fun isTeacher(userId: String): Boolean =
-            mysql.users.find { it.id eq userId }?.isTeacher() ?: false
-
-        fun isAdmin(userId: String): Boolean =
-            userId == "admin"
+    fun level(): Int {
+        return when (this) {
+            STUDENT -> 1
+            TEACHER -> 2
+            SYS -> 4
+        }
     }
+
+    companion object {
+        fun fromLevel(level: Int): UserRole {
+            return when (level) {
+                1 -> STUDENT
+                2 -> TEACHER
+                4 -> SYS
+                else -> throw IllegalArgumentException("Invalid user level: $level")
+            }
+        }
+    }
+}
+
+interface User : Entity<User>, IEntity {
+    companion object : Entity.Factory<User>()
 
     var id: String
     var name: String
     var nickName: String
     var password: String
     var email: String
-    var role: Int
-    var departmentID: String
+    var role: UserRole
+    var departmentId: Int
     var isAccepted: Boolean
     var acceptTime: String
 
-    fun isTeacher(): Boolean = this.role >= 2
+    fun isTeacher(): Boolean = this.role.level() >= 2
 
     fun isAdmin(): Boolean = this.id == "admin"
 
@@ -81,10 +99,10 @@ object Users : Table<User>("user") {
     val email = varchar("email").bindTo { it.email }
 
     @Suppress("unused")
-    val role = int("role").bindTo { it.role }
+    val role = int("role").transform({ UserRole.fromLevel(it) }, { it.level() }).bindTo { it.role }
 
     @Suppress("unused")
-    val departmentID = varchar("department_id").bindTo { it.departmentID }
+    val departmentID = varchar("department_id").transform({ it.toInt() }, { it.toString() }).bindTo { it.departmentId }
 
     @Suppress("unused")
     val isAccepted = boolean("is_accept").bindTo { it.isAccepted }
