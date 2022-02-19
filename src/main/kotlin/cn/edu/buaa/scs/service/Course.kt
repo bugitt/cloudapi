@@ -42,7 +42,7 @@ class CourseService(val call: ApplicationCall) {
         val course = Course.id(courseId)
         val teacher = course.teacher
         val students = getAllStudents(courseId)
-        val exps = mysql.experiments.filter { it.courseId eq course.id }.toList()
+        val exps = mysql.experiments.filter { it.courseId eq course.id }.toList().sortedBy { it.startTime }
         val expDetails = CommonScheduler.multiCoroutinesProduce(exps.map { { call.experiment.statExp(it) } })
         return StatCourseExps(course, teacher, students, expDetails)
     }
