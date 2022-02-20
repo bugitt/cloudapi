@@ -9,6 +9,7 @@ import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.courseResource
+import cn.edu.buaa.scs.service.studentCnt
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -24,7 +25,7 @@ fun Route.courseRoute() {
         get {
             val courseId = call.getCourseIdFromPath()
             val course = call.course.get(courseId)
-            call.respond(convertCourse(course))
+            call.respond(convertCourseResponse(course))
         }
 
         route("/resource") {
@@ -69,7 +70,7 @@ fun Route.courseRoute() {
 
 }
 
-internal fun convertCourse(course: Course): CourseResponse {
+internal fun convertCourseResponse(course: Course): CourseResponse {
     return CourseResponse(
         id = course.id,
         name = course.name,
@@ -77,6 +78,7 @@ internal fun convertCourse(course: Course): CourseResponse {
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
+        studentCnt = Course.studentCnt(course.id)
     )
 }
 
