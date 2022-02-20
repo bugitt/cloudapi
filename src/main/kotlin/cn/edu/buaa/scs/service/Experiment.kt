@@ -54,7 +54,7 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
     }
 
     companion object {
-        private val bucket = "exp-resource"
+        private const val bucket = "exp-resource"
         private val s3 by lazy { S3(bucket) }
     }
 
