@@ -28,6 +28,7 @@ fun User.authRead(entity: IEntity): Boolean {
             when (entity.fileType) {
                 FileType.Assignment -> authRead(Assignment.id(entity.involvedId))
                 FileType.CourseResource -> authRead(Course.id(entity.involvedId))
+                FileType.ExperimentResource -> authRead(Experiment.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
@@ -61,6 +62,7 @@ fun User.authWrite(entity: IEntity): Boolean {
             when (entity.fileType) {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
                 FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
+                FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
@@ -97,6 +99,7 @@ fun User.authAdmin(entity: IEntity): Boolean {
             when (entity.fileType) {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
                 FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
+                FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
             }
 
         else -> throw BadRequestException("unsupported auth entity: $entity")

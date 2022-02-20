@@ -3,19 +3,19 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.getFileExtension
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
 import org.ktorm.dsl.*
-import org.ktorm.entity.count
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.toList
+import org.ktorm.entity.*
+import java.util.*
 
 val ApplicationCall.experiment get() = ExperimentService(this)
 
-class ExperimentService(val call: ApplicationCall) {
+class ExperimentService(val call: ApplicationCall) : FileService.IFileManageService {
     fun get(id: Int): Experiment {
         val experiment = Experiment.id(id)
         call.user().assertRead(experiment)
@@ -51,6 +51,35 @@ class ExperimentService(val call: ApplicationCall) {
         // TODO: 统计虚拟机数量
         val vmCnt = 0
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
+    }
+
+    companion object {
+        private val bucket = "exp-resource"
+        private val s3 by lazy { S3(bucket) }
+    }
+
+    override fun manager(): S3 {
+        return s3
+    }
+
+    override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
+        return Pair(originalName ?: "", "$originalName-${UUID.randomUUID()}.${originalName?.getFileExtension()}")
+    }
+
+    override fun checkPermission(ownerId: String, involvedId: Int): Boolean {
+        val course = Experiment.id(involvedId).course
+        val user = User.id(ownerId)
+        return user.isCourseAssistant(course) || user.isCourseTeacher(course)
+    }
+
+    override fun storePath(): String {
+        return bucket
+    }
+
+    override fun afterCreateOrUpdate(involvedEntity: IEntity, file: File) {
+        val experiment = involvedEntity as Experiment
+        experiment.resourceFile = file
+        mysql.experiments.update(experiment)
     }
 }
 

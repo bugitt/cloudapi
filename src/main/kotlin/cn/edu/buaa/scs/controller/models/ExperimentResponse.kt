@@ -12,6 +12,7 @@
 package cn.edu.buaa.scs.controller.models
 
 import cn.edu.buaa.scs.controller.models.CourseResponse
+import cn.edu.buaa.scs.controller.models.FileResponse
 
 /**
  * 
@@ -30,7 +31,7 @@ import cn.edu.buaa.scs.controller.models.CourseResponse
  * @param peerAssessmentStart 
  * @param sentEmail 
  * @param course 
- * @param resource 
+ * @param resourceFile 
  */
 data class ExperimentResponse(
     val id: kotlin.Int,
@@ -48,6 +49,6 @@ data class ExperimentResponse(
     val peerAssessmentStart: kotlin.Boolean,
     val sentEmail: kotlin.Boolean,
     val course: CourseResponse,
-    val resource: kotlin.String? = null
+    val resourceFile: FileResponse? = null
 ) 
 

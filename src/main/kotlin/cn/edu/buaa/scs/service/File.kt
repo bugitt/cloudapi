@@ -49,9 +49,11 @@ class FileService(val call: ApplicationCall) {
         fun beforeCreateOrUpdate(involvedEntity: IEntity, file: File) {}
 
         // after create file
-        fun callback(involvedEntity: IEntity, file: File) {}
+        fun afterCreateOrUpdate(involvedEntity: IEntity, file: File) {}
 
-        suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): PackageResult
+        suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): PackageResult {
+            throw NotImplementedError()
+        }
     }
 
     data class PackageResult(
@@ -117,7 +119,7 @@ class FileService(val call: ApplicationCall) {
                     innerFile.updatedAt = System.currentTimeMillis()
                     mysql.files.add(innerFile)
                 }
-                service.callback(involvedEntity, innerFile)
+                service.afterCreateOrUpdate(involvedEntity, innerFile)
                 // 清理 tempFile
                 filePart.tmpFile?.delete()
             }
@@ -231,6 +233,8 @@ class FileService(val call: ApplicationCall) {
             FileType.CourseResource ->
                 // 对课程有读权限的，都可以打包下载课程资源
                 call.user().assertRead(Course.id(involvedId))
+            FileType.ExperimentResource ->
+                call.user().assertRead(Experiment.id(involvedId))
         }
         // get files
         val service = fileType.manageService()
@@ -258,12 +262,14 @@ class FileService(val call: ApplicationCall) {
         when (this) {
             FileType.Assignment -> call.assignment
             FileType.CourseResource -> call.courseResource
+            FileType.ExperimentResource -> call.experiment
         }
 
     private fun FileType.getInvolvedEntity(involvedId: Int): IEntity =
         when (this) {
             FileType.Assignment -> Assignment.id(involvedId)
             FileType.CourseResource -> Course.id(involvedId)
+            FileType.ExperimentResource -> Experiment.id(involvedId)
         }
 }
 
