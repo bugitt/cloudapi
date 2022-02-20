@@ -444,7 +444,7 @@ paths:
             format: int32
           in: query
           name: termId
-          description: 学期序号。该值缺失，或小于等于0时，表示所有学期的实验信息
+          description: 学期序号。该值缺失，或小于等于0时，将默认获取最新学期的信息
         - schema:
             type: boolean
           in: query
