@@ -55,5 +55,5 @@ fun Course.Companion.id(id: Int): Course {
 }
 
 fun Course.Companion.studentCnt(courseId: Int): Int {
-    return mysql.courseStudents.count { it.courseId eq courseId }
+    return mysql.courseStudents.filter { it.courseId eq courseId }.count()
 }

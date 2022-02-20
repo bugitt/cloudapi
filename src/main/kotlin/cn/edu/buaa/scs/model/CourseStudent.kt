@@ -11,7 +11,7 @@ import org.ktorm.schema.varchar
 interface CourseStudent : Entity<CourseStudent>, IEntity {
     companion object : Entity.Factory<CourseStudent>()
 
-    var courseId: Int
+    var course: Course
     var student: User
 
     override fun entityId(): IntOrString {
@@ -21,7 +21,7 @@ interface CourseStudent : Entity<CourseStudent>, IEntity {
 
 object CourseStudents : Table<CourseStudent>("course_student_mapping") {
     @Suppress("unused")
-    val courseId = int("course_id").bindTo { it.courseId }
+    val courseId = int("course_id").references(Courses) { it.course }
 
     @Suppress("unused")
     val studentId = varchar("student_id").references(Users) { it.student }
