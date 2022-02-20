@@ -23,23 +23,43 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
     }
 
     fun getAll(termId: Int? = null, submitted: Boolean? = null): List<Experiment> {
-        val courseQuery = if (termId != null && termId > 0) mysql.courseStudents.filter {
-            val course = it.courseId.referenceTable as Courses
-            course.termId.eq(termId)
+        val aTermId = if (termId == null || termId <= 0) {
+            mysql.terms.sortedBy { it.id }.last().id
         } else {
-            mysql.courseStudents
+            termId
         }
-        val courseIdList = courseQuery.filter { it.studentId.eq(call.userId()) }.toList().map { it.courseId }
+        val courseIdList = mysql.from(Courses)
+            .leftJoin(CourseStudents, on = CourseStudents.courseId.eq(Courses.id)).select()
+            .where { CourseStudents.studentId.eq(call.userId()) and Courses.termId.eq(aTermId) }
+            .map { row -> Courses.createEntity(row) }
+            .map { it.id }
         if (courseIdList.isEmpty()) return emptyList()
         return if (submitted == null) {
             mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
         } else if (submitted) {
-            mysql.from(Experiments).leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId)).select()
-                .where(Assignments.fileId.notEq(0) and Assignments.fileId.isNotNull())
+            mysql.from(Experiments)
+                .leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId))
+                .leftJoin(Courses, on = Courses.id.eq(Experiments.courseId))
+                .leftJoin(Users, on = Courses.teacherId.eq(Users.id))
+                .leftJoin(Terms, on = Terms.id.eq(Courses.termId))
+                .select()
+                .where(
+                    Assignments.fileId.notEq(0)
+                            and Assignments.fileId.isNotNull()
+                            and Experiments.courseId.inList(courseIdList)
+                )
                 .map { Experiments.createEntity(it) }
         } else {
-            mysql.from(Experiments).leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId)).select()
-                .where(Assignments.fileId.eq(0) or Assignments.fileId.isNull())
+            mysql.from(Experiments)
+                .leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId))
+                .leftJoin(Courses, on = Courses.id.eq(Experiments.courseId))
+                .leftJoin(Users, on = Courses.teacherId.eq(Users.id))
+                .leftJoin(Terms, on = Terms.id.eq(Courses.termId))
+                .select()
+                .where(
+                    (Assignments.fileId.eq(0) or Assignments.fileId.isNull())
+                            and Experiments.courseId.inList(courseIdList)
+                )
                 .map { Experiments.createEntity(it) }
         }
     }
