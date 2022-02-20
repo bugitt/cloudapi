@@ -21,6 +21,7 @@ import cn.edu.buaa.scs.controller.models.TermModel
  * @param term 
  * @param createTime 
  * @param departmentId 
+ * @param studentCnt 本门课的学生人数
  */
 data class CourseResponse(
     val id: kotlin.Int,
@@ -29,6 +30,8 @@ data class CourseResponse(
     val teacher: kotlin.String,
     val term: TermModel,
     val createTime: kotlin.String,
-    val departmentId: kotlin.String
+    val departmentId: kotlin.String,
+    /* 本门课的学生人数 */
+    val studentCnt: kotlin.Int
 ) 
 

@@ -825,6 +825,9 @@ components:
         departmentId:
           type: string
           minLength: 1
+        studentCnt:
+          type: integer
+          description: 本门课的学生人数
       required:
         - id
         - name
@@ -832,6 +835,7 @@ components:
         - term
         - createTime
         - departmentId
+        - studentCnt
     AssignmentListResponse:
       title: AssignmentListResponse
       type: object

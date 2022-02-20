@@ -8,6 +8,7 @@ import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
 import org.ktorm.dsl.eq
+import org.ktorm.entity.count
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.toList
@@ -51,4 +52,8 @@ class CourseService(val call: ApplicationCall) {
 fun Course.Companion.id(id: Int): Course {
     return mysql.courses.find { it.id eq id }
         ?: throw BusinessException("find course($id) from database error")
+}
+
+fun Course.Companion.studentCnt(courseId: Int): Int {
+    return mysql.courseStudents.count { it.courseId eq courseId }
 }

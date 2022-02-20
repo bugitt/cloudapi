@@ -17,7 +17,7 @@ fun Route.experimentRoute() {
             val termId = call.request.queryParameters["termId"]?.toInt()
             val submitted = call.request.queryParameters["submitted"]?.toBoolean()
             call.experiment.getAll(termId, submitted).let {
-                call.respond(it.map { exp -> convertExperiment(exp) })
+                call.respond(it.map { exp -> convertExperimentResponse(exp) })
             }
         }
     }
@@ -30,7 +30,7 @@ fun Route.experimentRoute() {
 
         get {
             val experiment = call.experiment.get(call.getExpIdFromPath())
-            call.respond(convertExperiment(experiment))
+            call.respond(convertExperimentResponse(experiment))
         }
 
         route("/assignments") {
@@ -80,7 +80,7 @@ fun Route.experimentRoute() {
     }
 }
 
-internal fun convertExperiment(experiment: Experiment): ExperimentResponse =
+internal fun convertExperimentResponse(experiment: Experiment): ExperimentResponse =
     ExperimentResponse(
         id = experiment.id,
         name = experiment.name,
@@ -97,7 +97,7 @@ internal fun convertExperiment(experiment: Experiment): ExperimentResponse =
         peerAssessmentRules = experiment.peerAssessmentRules,
         peerAssessmentStart = experiment.peerAssessmentStart,
         sentEmail = experiment.sentEmail,
-        course = convertCourse(experiment.course),
+        course = convertCourseResponse(experiment.course),
     )
 
 internal fun convertAssignmentList(assignmentList: List<Assignment>): AssignmentListResponse =
