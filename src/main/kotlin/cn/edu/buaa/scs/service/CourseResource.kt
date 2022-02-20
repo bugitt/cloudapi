@@ -111,7 +111,7 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
         }
     }
 
-    override fun callback(involvedEntity: IEntity, file: File) {
+    override fun afterCreateOrUpdate(involvedEntity: IEntity, file: File) {
         val course = involvedEntity as Course
         mysql.courseResources.add(CourseResource {
             this.course = course

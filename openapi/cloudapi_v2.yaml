@@ -693,9 +693,8 @@ components:
         detail:
           type: string
           minLength: 1
-        resource:
-          type: string
-          minLength: 1
+        resourceFile:
+          $ref: '#/components/schemas/FileResponse'
         createTime:
           type: string
           minLength: 1
@@ -755,9 +754,8 @@ components:
         detail:
           type: string
           minLength: 1
-        resource:
-          type: string
-          minLength: 1
+        resourceFile:
+          $ref: '#/components/schemas/FileResponse'
         createTime:
           type: string
           minLength: 1

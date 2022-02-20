@@ -17,7 +17,8 @@ interface Experiment : Entity<Experiment>, IEntity {
     var name: String
     var type: Boolean
     var detail: String
-    var resource: String
+    var resource: String?
+    var resourceFile: File?
     var createTime: String
     var startTime: String
     var endTime: String
@@ -56,6 +57,9 @@ object Experiments : Table<Experiment>("experiment") {
 
     @Suppress("unused")
     val resource = varchar("resource").bindTo { it.resource }
+
+    @Suppress("unused")
+    val resourceFileId = int("resource_file").references(Files) { it.resourceFile }
 
     @Suppress("unused")
     val createTime = varchar("create_time").bindTo { it.createTime }

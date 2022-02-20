@@ -60,7 +60,7 @@ internal fun convertStatCourseExp(expDetail: CourseService.StatCourseExps.ExpDet
         name = experiment.name,
         type = experiment.type,
         detail = experiment.detail,
-        resource = if (experiment.resource.isEmpty() || (experiment.resource == "null")) null else experiment.resource,
+        resourceFile = experiment.resourceFile?.let { convertFileResponse(it) },
         createTime = experiment.createTime,
         startTime = experiment.startTime,
         endTime = experiment.endTime,
