@@ -7,9 +7,9 @@ import cn.edu.buaa.scs.controller.models.DeleteCourseResourcesRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
+import cn.edu.buaa.scs.service.CourseService
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.courseResource
-import cn.edu.buaa.scs.service.studentCnt
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -78,7 +78,7 @@ internal fun convertCourseResponse(course: Course): CourseResponse {
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = Course.studentCnt(course.id)
+        studentCnt = CourseService.studentCnt(course.id)
     )
 }
 

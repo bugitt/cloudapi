@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.getOrPut
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
@@ -12,10 +13,21 @@ import org.ktorm.entity.count
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.toList
+import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.course get() = CourseService(this)
 
 class CourseService(val call: ApplicationCall) {
+    companion object {
+        private val studentCntMap: MutableMap<Int, Int> = ConcurrentHashMap()
+
+        fun studentCnt(courseId: Int): Int {
+            return studentCntMap.getOrPut(courseId) {
+                mysql.courseStudents.filter { it.courseId eq courseId }.count()
+            }
+        }
+    }
+
     data class StatCourseExps(
         val course: Course,
         val teacher: User,
@@ -52,8 +64,4 @@ class CourseService(val call: ApplicationCall) {
 fun Course.Companion.id(id: Int): Course {
     return mysql.courses.find { it.id eq id }
         ?: throw BusinessException("find course($id) from database error")
-}
-
-fun Course.Companion.studentCnt(courseId: Int): Int {
-    return mysql.courseStudents.filter { it.courseId eq courseId }.count()
 }
