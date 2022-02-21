@@ -16,7 +16,8 @@ fun Route.experimentRoute() {
         get {
             val termId = call.request.queryParameters["termId"]?.toInt()
             val submitted = call.request.queryParameters["submitted"]?.toBoolean()
-            call.experiment.getAll(termId, submitted).let {
+            val courseId = call.request.queryParameters["courseId"]?.toInt()
+            call.experiment.getAll(termId, submitted, courseId).let {
                 call.respond(it.map { exp -> convertExperimentResponse(exp) })
             }
         }

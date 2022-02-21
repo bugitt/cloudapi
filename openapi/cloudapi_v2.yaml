@@ -450,6 +450,11 @@ paths:
           in: query
           name: submitted
           description: 当为true时，表示获取已完成的实验列表；为false时，表示获取未完成的实验列表；缺失时，表示同时获取已完成和未完成的实验列表。
+        - schema:
+            type: integer
+          in: query
+          name: courseId
+          description: 当为空或不合法时，获取所有符合上述条件的课程的实验列表
 components:
   schemas:
     AssignmentResponse:
