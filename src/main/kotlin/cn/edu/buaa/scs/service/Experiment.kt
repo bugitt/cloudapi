@@ -34,33 +34,17 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
             .map { row -> Courses.createEntity(row) }
             .map { it.id }
         if (courseIdList.isEmpty()) return emptyList()
-        return if (submitted == null) {
-            mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
-        } else if (submitted) {
-            mysql.from(Experiments)
-                .leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId))
-                .leftJoin(Courses, on = Courses.id.eq(Experiments.courseId))
-                .leftJoin(Users, on = Courses.teacherId.eq(Users.id))
-                .leftJoin(Terms, on = Terms.id.eq(Courses.termId))
-                .select()
-                .where(
-                    Assignments.fileId.notEq(0)
-                            and Assignments.fileId.isNotNull()
-                            and Experiments.courseId.inList(courseIdList)
-                )
-                .map { Experiments.createEntity(it) }
+
+        val experiments = mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
+        if (submitted == null) {
+            return mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
+        }
+        val submittedExperiments =
+            mysql.assignments.filter { it.fileId.isNotNull() and it.fileId.notEq(0) }.map { it.experiment.id }.toSet()
+        return if (submitted) {
+            experiments.filter { submittedExperiments.contains(it.id) }
         } else {
-            mysql.from(Experiments)
-                .leftJoin(Assignments, on = Experiments.id.eq(Assignments.expId))
-                .leftJoin(Courses, on = Courses.id.eq(Experiments.courseId))
-                .leftJoin(Users, on = Courses.teacherId.eq(Users.id))
-                .leftJoin(Terms, on = Terms.id.eq(Courses.termId))
-                .select()
-                .where(
-                    (Assignments.fileId.eq(0) or Assignments.fileId.isNull())
-                            and Experiments.courseId.inList(courseIdList)
-                )
-                .map { Experiments.createEntity(it) }
+            experiments.filterNot { submittedExperiments.contains(it.id) }
         }
     }
 
