@@ -22,17 +22,22 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
         return experiment
     }
 
-    fun getAll(termId: Int? = null, submitted: Boolean? = null): List<Experiment> {
+    fun getAll(termId: Int? = null, submitted: Boolean? = null, courseId: Int? = null): List<Experiment> {
         val aTermId = if (termId == null || termId <= 0) {
             mysql.terms.sortedBy { it.id }.last().id
         } else {
             termId
         }
-        val courseIdList = mysql.from(Courses)
-            .leftJoin(CourseStudents, on = CourseStudents.courseId.eq(Courses.id)).select()
-            .where { CourseStudents.studentId.eq(call.userId()) and Courses.termId.eq(aTermId) }
-            .map { row -> Courses.createEntity(row) }
-            .map { it.id }
+        val courseIdList = if (courseId != null && courseId != 0) {
+            call.user().assertRead(Course.id(courseId))
+            listOf(courseId)
+        } else {
+            mysql.from(Courses)
+                .leftJoin(CourseStudents, on = CourseStudents.courseId.eq(Courses.id)).select()
+                .where { CourseStudents.studentId.eq(call.userId()) and Courses.termId.eq(aTermId) }
+                .map { row -> Courses.createEntity(row) }
+                .map { it.id }
+        }
         if (courseIdList.isEmpty()) return emptyList()
 
         val experiments = mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
