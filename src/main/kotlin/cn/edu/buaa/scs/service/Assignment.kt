@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.auth.authAdmin
 import cn.edu.buaa.scs.error.AuthorizationException
+import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
@@ -11,6 +12,7 @@ import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getFileExtension
+import cn.edu.buaa.scs.utils.toTimestamp
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
 import kotlinx.coroutines.Dispatchers
@@ -106,6 +108,13 @@ class AssignmentService(val call: ApplicationCall) : FileService.IFileManageServ
 
     override fun storePath(): String {
         return bucketName
+    }
+
+    override fun beforeUploadFile(involvedEntity: IEntity, filePart: FileService.FilePart) {
+        val assignment = involvedEntity as Assignment
+        if (System.currentTimeMillis() > assignment.experiment.deadline.toTimestamp()) {
+            throw BadRequestException("已过作业提交截止时间")
+        }
     }
 
     /**

@@ -46,6 +46,8 @@ class FileService(val call: ApplicationCall) {
 
         fun storePath(): String
 
+        fun beforeUploadFile(involvedEntity: IEntity, filePart: FilePart) {}
+
         fun beforeCreateOrUpdate(involvedEntity: IEntity, file: File) {}
 
         // after create file
@@ -85,6 +87,8 @@ class FileService(val call: ApplicationCall) {
         )
 
         val handleFile: suspend (FilePart) -> HandleFileCreateOrUpdate = { filePart ->
+            service.beforeUploadFile(involvedEntity, filePart)
+
             val (name, storeName) = service.fixName(filePart.originalName, owner, involvedId)
 
             // upload
@@ -132,7 +136,7 @@ class FileService(val call: ApplicationCall) {
         return handlerList.map { it.file }
     }
 
-    private data class FilePart(
+    data class FilePart(
         val originalName: String,
         val contentType: String,
         val input: () -> InputStream,
