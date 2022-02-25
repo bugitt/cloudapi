@@ -21,6 +21,13 @@ import java.net.URLEncoder
 import java.nio.file.Files
 
 fun Route.fileRoute() {
+    route("/scsos") {
+        post {
+            val fileUrl = call.file.scsosCreate()
+            call.respond(fileUrl)
+        }
+    }
+
     route("/file") {
         post {
             call.file.createOrUpdate().let {
