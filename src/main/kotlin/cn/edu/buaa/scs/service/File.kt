@@ -26,6 +26,7 @@ import org.ktorm.entity.add
 import org.ktorm.entity.find
 import org.ktorm.entity.update
 import java.io.*
+import java.net.URLEncoder
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -34,6 +35,44 @@ val ApplicationCall.file: FileService
     get() = FileService(this)
 
 class FileService(val call: ApplicationCall) {
+
+    companion object {
+        val scsosS3 = S3("scsos")
+    }
+
+    /**
+     * 简单的对象存储上传
+     * @return String 可供访问的文件URL
+     */
+    suspend fun scsosCreate(): String {
+        val multipart = call.receiveMultipart()
+        var filePart: PartData.FileItem? = null
+        multipart.forEachPart { part ->
+            when (part) {
+                is PartData.FileItem -> {
+                    filePart = part
+                }
+                else -> part.dispose()
+            }
+        }
+        if (filePart == null) {
+            throw BadRequestException("No file part found")
+        }
+        val originName = filePart?.originalFileName ?: ""
+        val fileName = withContext(Dispatchers.IO) {
+            val fileName = URLEncoder.encode("${UUID.randomUUID()}-$originName", "UTF-8")
+            filePart?.streamProvider?.invoke()?.use { input ->
+                scsosS3.uploadFile(
+                    "public/$fileName",
+                    input,
+                    filePart?.contentType?.value ?: "application/octet-stream"
+                )
+            } ?: throw BadRequestException("No file part found")
+            fileName
+        }
+        // TODO 落库
+        return "https://scs.buaa.edu.cn/scsos/public/$fileName"
+    }
 
     interface IFileManageService {
 
