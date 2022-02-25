@@ -455,6 +455,27 @@ paths:
           in: query
           name: courseId
           description: 当为空或不合法时，获取所有符合上述条件的课程的实验列表
+  /experiment:
+    post:
+      summary: 创建实验/作业
+      operationId: post-experiment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentResponse'
+      tags:
+        - 作业
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExperimentRequest'
+      description: 创建实验/作业
 components:
   schemas:
     AssignmentResponse:
@@ -946,6 +967,41 @@ components:
         - name
         - password
         - cnt
+    CreateExperimentRequest:
+      title: CreateExperimentRequest
+      type: object
+      properties:
+        courseId:
+          type: integer
+        name:
+          type: string
+        type:
+          type: boolean
+          description: 表示是“实验”还是“作业”
+        startTime:
+          type: string
+        endTime:
+          type: string
+        deadline:
+          type: string
+        description:
+          type: string
+        enablePeer:
+          type: boolean
+        peerDescription:
+          type: string
+        peerEndTime:
+          type: string
+        peerAppealDeadline:
+          type: string
+      required:
+        - courseId
+        - name
+        - type
+        - startTime
+        - endTime
+        - deadline
+        - enablePeer
   securitySchemes:
     Authorization:
       type: apiKey

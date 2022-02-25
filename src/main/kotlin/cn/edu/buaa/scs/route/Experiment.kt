@@ -23,57 +23,66 @@ fun Route.experimentRoute() {
         }
     }
 
-    route("/experiment/{experimentId}") {
+    route("/experiment") {
 
-        fun ApplicationCall.getExpIdFromPath(): Int =
-            parameters["experimentId"]?.toInt()
-                ?: throw BadRequestException("experiment id is invalid")
-
-        get {
-            val experiment = call.experiment.get(call.getExpIdFromPath())
+        post {
+            val request = call.receive<CreateExperimentRequest>()
+            val experiment = call.experiment.create(request)
             call.respond(convertExperimentResponse(experiment))
         }
 
-        route("/assignments") {
+        route("/{experimentId}") {
+
+            fun ApplicationCall.getExpIdFromPath(): Int =
+                parameters["experimentId"]?.toInt()
+                    ?: throw BadRequestException("experiment id is invalid")
+
             get {
-                call.respond(
-                    convertAssignmentList(call.assignment.getAll(call.getExpIdFromPath()))
-                )
+                val experiment = call.experiment.get(call.getExpIdFromPath())
+                call.respond(convertExperimentResponse(experiment))
             }
-        }
 
-        route("/assignment") {
-
-            /**
-             * 创建作业
-             */
-            post {
-                val req = call.receive<AssignmentRequest>()
-                call.assignment.create(call.getExpIdFromPath(), req.studentId).let {
-                    call.respond(convertAssignment(it))
+            route("/assignments") {
+                get {
+                    call.respond(
+                        convertAssignmentList(call.assignment.getAll(call.getExpIdFromPath()))
+                    )
                 }
             }
 
-            route("/{assignmentId}") {
+            route("/assignment") {
 
-
-                fun ApplicationCall.getAssignmentIdFromPath(): Int =
-                    parameters["assignmentId"]?.toInt()
-                        ?: throw BadRequestException("assignmentId id is invalid")
-
-                get {
-                    call.assignment.get(call.getAssignmentIdFromPath()).let {
+                /**
+                 * 创建作业
+                 */
+                post {
+                    val req = call.receive<AssignmentRequest>()
+                    call.assignment.create(call.getExpIdFromPath(), req.studentId).let {
                         call.respond(convertAssignment(it))
                     }
                 }
 
-                /**
-                 * 修改作业
-                 */
-                patch {
-                    val req = call.receive<PatchAssignmentRequest>()
-                    call.assignment.patch(call.getAssignmentIdFromPath(), req.fileId).let {
-                        call.respond(convertAssignment(it))
+                route("/{assignmentId}") {
+
+
+                    fun ApplicationCall.getAssignmentIdFromPath(): Int =
+                        parameters["assignmentId"]?.toInt()
+                            ?: throw BadRequestException("assignmentId id is invalid")
+
+                    get {
+                        call.assignment.get(call.getAssignmentIdFromPath()).let {
+                            call.respond(convertAssignment(it))
+                        }
+                    }
+
+                    /**
+                     * 修改作业
+                     */
+                    patch {
+                        val req = call.receive<PatchAssignmentRequest>()
+                        call.assignment.patch(call.getAssignmentIdFromPath(), req.fileId).let {
+                            call.respond(convertAssignment(it))
+                        }
                     }
                 }
             }

@@ -1,13 +1,12 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.getFileExtension
-import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
+import cn.edu.buaa.scs.utils.*
 import io.ktor.application.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
@@ -16,6 +15,31 @@ import java.util.*
 val ApplicationCall.experiment get() = ExperimentService(this)
 
 class ExperimentService(val call: ApplicationCall) : FileService.IFileManageService {
+    fun create(req: CreateExperimentRequest): Experiment {
+        val course = Course.id(req.courseId)
+        val experiment = Experiment {
+            this.course = course
+            this.name = req.name
+            this.type = req.type
+            this.detail = req.description ?: ""
+            this.createTime = TimeUtil.currentDateTime()
+            this.startTime = req.startTime
+            this.endTime = req.endTime
+            this.deadline = req.deadline
+            this.isPeerAssessment = req.enablePeer
+        }
+        if (experiment.isPeerAssessment) {
+            if (CommonUtil.isEmpty(req.peerDescription, req.peerEndTime, req.peerAppealDeadline)) {
+                throw BusinessException("peer assessment info incomplete")
+            }
+            experiment.peerAssessmentRules = req.peerDescription!!
+            experiment.peerAssessmentDeadline = req.peerEndTime!!
+            experiment.appealDeadline = req.peerAppealDeadline!!
+        }
+        mysql.experiments.add(experiment)
+        return experiment
+    }
+
     fun get(id: Int): Experiment {
         val experiment = Experiment.id(id)
         call.user().assertRead(experiment)
