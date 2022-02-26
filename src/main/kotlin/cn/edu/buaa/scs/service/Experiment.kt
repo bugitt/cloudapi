@@ -51,6 +51,15 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
         return experiment
     }
 
+    fun getNameList(courseId: Int? = null): List<String> {
+        val experiments = if (courseId == null || courseId == 0) {
+            mysql.experiments.toList()
+        } else {
+            mysql.experiments.filter { it.courseId.eq(courseId) }.toList()
+        }
+        return experiments.map { it.name }
+    }
+
     fun getAll(termId: Int? = null, submitted: Boolean? = null, courseId: Int? = null): List<Experiment> {
         val aTermId = if (termId == null || termId <= 0) {
             mysql.terms.sortedBy { it.id }.last().id

@@ -21,6 +21,14 @@ fun Route.experimentRoute() {
                 call.respond(it.map { exp -> convertExperimentResponse(exp) })
             }
         }
+
+        route("/names") {
+            get {
+                val courseId = call.request.queryParameters["courseId"]?.toInt()
+                    ?: throw BadRequestException("courseId is required")
+                call.respond(call.experiment.getNameList(courseId))
+            }
+        }
     }
 
     route("/experiment") {

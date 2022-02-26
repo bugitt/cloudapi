@@ -476,6 +476,28 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateExperimentRequest'
       description: 创建实验/作业
+  /experiments/names:
+    get:
+      summary: 获取实验名称列表
+      tags:
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      operationId: get-experiments-names
+      description: 获取实验名称列表
+      parameters:
+        - schema:
+            type: integer
+          in: query
+          name: courseId
+          description: 指定课程
 components:
   schemas:
     AssignmentResponse:
