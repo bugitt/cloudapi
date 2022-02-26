@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
@@ -18,6 +19,9 @@ val ApplicationCall.experiment get() = ExperimentService(this)
 class ExperimentService(val call: ApplicationCall) : FileService.IFileManageService {
     fun create(req: CreateExperimentRequest): Experiment {
         val course = Course.id(req.courseId)
+
+        call.user().assertWrite(course)
+
         // 检查一下有没有同名的实验
         if (mysql.experiments.exists { it.courseId.eq(req.courseId) and it.name.eq(req.name) }) {
             throw BadRequestException("实验名重复")
