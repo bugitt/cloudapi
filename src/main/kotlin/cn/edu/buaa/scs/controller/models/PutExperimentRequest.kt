@@ -24,6 +24,7 @@ package cn.edu.buaa.scs.controller.models
  * @param peerDescription 
  * @param peerEndTime 
  * @param peerAppealDeadline 
+ * @param courseId 该值在目前的处理逻辑中会被忽略
  */
 data class PutExperimentRequest(
     val name: kotlin.String,
@@ -36,6 +37,8 @@ data class PutExperimentRequest(
     val description: kotlin.String? = null,
     val peerDescription: kotlin.String? = null,
     val peerEndTime: kotlin.String? = null,
-    val peerAppealDeadline: kotlin.String? = null
+    val peerAppealDeadline: kotlin.String? = null,
+    /* 该值在目前的处理逻辑中会被忽略 */
+    val courseId: kotlin.Int? = null
 ) 
 

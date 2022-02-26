@@ -53,7 +53,6 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
         experiment.name = req.name
         experiment.type = req.type
         experiment.detail = req.description ?: ""
-        experiment.createTime = TimeUtil.currentDateTime()
         experiment.startTime = req.startTime
         experiment.endTime = req.endTime
         experiment.deadline = req.deadline
