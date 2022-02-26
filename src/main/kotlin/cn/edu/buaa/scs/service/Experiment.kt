@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
+import cn.edu.buaa.scs.controller.models.PutExperimentRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
@@ -37,16 +38,45 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
             this.deadline = req.deadline
             this.isPeerAssessment = req.enablePeer
         }
-        if (experiment.isPeerAssessment) {
-            if (CommonUtil.isEmpty(req.peerDescription, req.peerEndTime, req.peerAppealDeadline)) {
-                throw BusinessException("peer assessment info incomplete")
-            }
-            experiment.peerAssessmentRules = req.peerDescription!!
-            experiment.peerAssessmentDeadline = req.peerEndTime!!
-            experiment.appealDeadline = req.peerAppealDeadline!!
-        }
+        patchExperimentPeerInfo(experiment, req.peerDescription, req.peerEndTime, req.peerAppealDeadline)
         mysql.experiments.add(experiment)
         return experiment
+    }
+
+    fun put(expId: Int, req: PutExperimentRequest): Experiment {
+        val experiment = Experiment.id(expId)
+        // 检查一下有没有同名的实验
+        if (mysql.experiments.exists { it.courseId.eq(experiment.course.id) and it.name.eq(req.name) }) {
+            throw BadRequestException("实验名重复")
+        }
+        call.user().assertWrite(experiment)
+        experiment.name = req.name
+        experiment.type = req.type
+        experiment.detail = req.description ?: ""
+        experiment.createTime = TimeUtil.currentDateTime()
+        experiment.startTime = req.startTime
+        experiment.endTime = req.endTime
+        experiment.deadline = req.deadline
+        experiment.isPeerAssessment = req.enablePeer
+        patchExperimentPeerInfo(experiment, req.peerDescription, req.peerEndTime, req.peerAppealDeadline)
+        mysql.experiments.update(experiment)
+        return experiment
+    }
+
+    private fun patchExperimentPeerInfo(
+        experiment: Experiment,
+        peerDescription: String?,
+        peerEndTime: String?,
+        peerAppealDeadline: String?
+    ) {
+        if (experiment.isPeerAssessment) {
+            if (CommonUtil.isEmpty(peerDescription, peerEndTime, peerAppealDeadline)) {
+                throw BusinessException("peer assessment info incomplete")
+            }
+            experiment.peerAssessmentRules = peerDescription!!
+            experiment.peerAssessmentDeadline = peerEndTime!!
+            experiment.appealDeadline = peerAppealDeadline!!
+        }
     }
 
     fun get(id: Int): Experiment {

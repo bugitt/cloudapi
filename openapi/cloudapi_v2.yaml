@@ -45,6 +45,26 @@ paths:
       description: 获取一项实验（作业）详情
       security:
         - Authorization: []
+    put:
+      summary: 修改实验/作业信息
+      operationId: put-experimnet-experimentId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentResponse'
+      description: 教师或助教修改实验/作业信息
+      tags:
+        - 作业
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutExperimentRequest'
+      security:
+        - Authorization: []
   '/experiment/{experimentId}/assignment':
     parameters:
       - schema:
@@ -1018,6 +1038,38 @@ components:
           type: string
       required:
         - courseId
+        - name
+        - type
+        - startTime
+        - endTime
+        - deadline
+        - enablePeer
+    PutExperimentRequest:
+      title: PutExperimentRequest
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: boolean
+          description: 表示是“实验”还是“作业”
+        startTime:
+          type: string
+        endTime:
+          type: string
+        deadline:
+          type: string
+        description:
+          type: string
+        enablePeer:
+          type: boolean
+        peerDescription:
+          type: string
+        peerEndTime:
+          type: string
+        peerAppealDeadline:
+          type: string
+      required:
         - name
         - type
         - startTime

@@ -50,6 +50,13 @@ fun Route.experimentRoute() {
                 call.respond(convertExperimentResponse(experiment))
             }
 
+            put {
+                val experimentId = call.getExpIdFromPath()
+                val request = call.receive<PutExperimentRequest>()
+                val experiment = call.experiment.put(experimentId, request)
+                call.respond(convertExperimentResponse(experiment))
+            }
+
             route("/assignments") {
                 get {
                     call.respond(
