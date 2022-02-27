@@ -45,9 +45,11 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
 
     fun put(expId: Int, req: PutExperimentRequest): Experiment {
         val experiment = Experiment.id(expId)
-        // 检查一下有没有同名的实验
-        if (mysql.experiments.exists { it.courseId.eq(experiment.course.id) and it.name.eq(req.name) }) {
-            throw BadRequestException("实验名重复")
+        if (req.name != experiment.name) {
+            // 检查一下有没有同名的实验
+            if (mysql.experiments.exists { it.courseId.eq(experiment.course.id) and it.name.eq(req.name) }) {
+                throw BadRequestException("实验名重复")
+            }
         }
         call.user().assertWrite(experiment)
         experiment.name = req.name
