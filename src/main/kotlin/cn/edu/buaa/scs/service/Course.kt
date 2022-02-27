@@ -8,6 +8,9 @@ import cn.edu.buaa.scs.utils.getOrPut
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import org.ktorm.dsl.eq
 import org.ktorm.entity.count
 import org.ktorm.entity.filter
@@ -49,13 +52,13 @@ class CourseService(val call: ApplicationCall) {
         return mysql.courseStudents.filter { it.courseId eq courseId }.toList().map { it.student }
     }
 
-    suspend fun statCourseExps(courseId: Int): StatCourseExps {
+    suspend fun statCourseExps(courseId: Int): StatCourseExps = withContext(Dispatchers.Default) {
         val course = Course.id(courseId)
         val teacher = course.teacher
-        val students = getAllStudents(courseId)
+        val students = async { getAllStudents(courseId) }
         val exps = mysql.experiments.filter { it.courseId eq course.id }.toList().sortedBy { it.startTime }
         val expDetails = CommonScheduler.multiCoroutinesProduce(exps.map { { call.experiment.statExp(it) } })
-        return StatCourseExps(course, teacher, students, expDetails)
+        StatCourseExps(course, teacher, students.await(), expDetails)
     }
 }
 
