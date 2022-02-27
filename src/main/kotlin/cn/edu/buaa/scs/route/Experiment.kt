@@ -18,7 +18,7 @@ fun Route.experimentRoute() {
             val submitted = call.request.queryParameters["submitted"]?.toBoolean()
             val courseId = call.request.queryParameters["courseId"]?.toInt()
             call.experiment.getAll(termId, submitted, courseId).let {
-                call.respond(it.map { exp -> convertExperimentResponse(exp) })
+                call.respond(it.map { exp -> convertExperimentResponse(call, exp) })
             }
         }
 
@@ -36,7 +36,7 @@ fun Route.experimentRoute() {
         post {
             val request = call.receive<CreateExperimentRequest>()
             val experiment = call.experiment.create(request)
-            call.respond(convertExperimentResponse(experiment))
+            call.respond(convertExperimentResponse(call, experiment))
         }
 
         route("/{experimentId}") {
@@ -47,14 +47,14 @@ fun Route.experimentRoute() {
 
             get {
                 val experiment = call.experiment.get(call.getExpIdFromPath())
-                call.respond(convertExperimentResponse(experiment))
+                call.respond(convertExperimentResponse(call, experiment))
             }
 
             put {
                 val experimentId = call.getExpIdFromPath()
                 val request = call.receive<PutExperimentRequest>()
                 val experiment = call.experiment.put(experimentId, request)
-                call.respond(convertExperimentResponse(experiment))
+                call.respond(convertExperimentResponse(call, experiment))
             }
 
             route("/assignments") {
@@ -105,7 +105,7 @@ fun Route.experimentRoute() {
     }
 }
 
-internal fun convertExperimentResponse(experiment: Experiment): ExperimentResponse =
+internal fun convertExperimentResponse(call: ApplicationCall, experiment: Experiment): ExperimentResponse =
     ExperimentResponse(
         id = experiment.id,
         name = experiment.name,
@@ -122,7 +122,7 @@ internal fun convertExperimentResponse(experiment: Experiment): ExperimentRespon
         peerAssessmentRules = experiment.peerAssessmentRules,
         peerAssessmentStart = experiment.peerAssessmentStart,
         sentEmail = experiment.sentEmail,
-        course = convertCourseResponse(experiment.course),
+        course = convertCourseResponse(call, experiment.course),
     )
 
 internal fun convertAssignmentList(assignmentList: List<Assignment>): AssignmentListResponse =

@@ -7,7 +7,6 @@ import cn.edu.buaa.scs.controller.models.DeleteCourseResourcesRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
-import cn.edu.buaa.scs.service.CourseService
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.courseResource
 import io.ktor.application.*
@@ -25,7 +24,7 @@ fun Route.courseRoute() {
         get {
             val courseId = call.getCourseIdFromPath()
             val course = call.course.get(courseId)
-            call.respond(convertCourseResponse(course))
+            call.respond(convertCourseResponse(call, course))
         }
 
         route("/resource") {
@@ -70,7 +69,7 @@ fun Route.courseRoute() {
 
 }
 
-internal fun convertCourseResponse(course: Course): CourseResponse {
+internal fun convertCourseResponse(call: ApplicationCall, course: Course): CourseResponse {
     return CourseResponse(
         id = course.id,
         name = course.name,
@@ -78,7 +77,7 @@ internal fun convertCourseResponse(course: Course): CourseResponse {
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = CourseService.studentCnt(course.id)
+        studentCnt = call.course.studentCnt(course.id)
     )
 }
 
