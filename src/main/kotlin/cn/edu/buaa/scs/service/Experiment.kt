@@ -114,11 +114,20 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
         if (courseIdList.isEmpty()) return emptyList()
 
         val experiments = mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
+        if (experiments.isEmpty()) return emptyList()
         if (submitted == null) {
-            return mysql.experiments.filter { it.courseId.inList(courseIdList) }.toList()
+            return experiments
         }
-        val submittedExperiments =
-            mysql.assignments.filter { it.fileId.isNotNull() and it.fileId.notEq(0) }.map { it.experiment.id }.toSet()
+        val submittedExperiments = mysql
+            .from(Assignments)
+            .select(Assignments.expId)
+            .where {
+                Assignments.fileId.isNotNull() and
+                        Assignments.fileId.notEq(0) and
+                        Assignments.expId.inList(experiments.map { it.id })
+            }
+            .map { row -> row[Assignments.expId] }
+            .toSet()
         return if (submitted) {
             experiments.filter { submittedExperiments.contains(it.id) }
         } else {
