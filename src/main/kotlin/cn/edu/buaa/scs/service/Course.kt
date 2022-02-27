@@ -18,13 +18,11 @@ import java.util.concurrent.ConcurrentHashMap
 val ApplicationCall.course get() = CourseService(this)
 
 class CourseService(val call: ApplicationCall) {
-    companion object {
-        private val studentCntMap: MutableMap<Int, Int> = ConcurrentHashMap()
+    private val studentCntMap: MutableMap<Int, Int> = ConcurrentHashMap()
 
-        fun studentCnt(courseId: Int): Int {
-            return studentCntMap.getOrPut(courseId) {
-                mysql.courseStudents.filter { it.courseId eq courseId }.count()
-            }
+    fun studentCnt(courseId: Int): Int {
+        return studentCntMap.getOrPut(courseId) {
+            mysql.courseStudents.filter { it.courseId eq courseId }.count()
         }
     }
 

@@ -21,7 +21,7 @@ fun Route.statRoute() {
 
                 get("/experiments") {
                     call.course.statCourseExps(call.getCourseIdFromPath()).let {
-                        call.respond(convertStatCourseExpsResponse(it))
+                        call.respond(convertStatCourseExpsResponse(call, it))
                     }
                 }
             }
@@ -82,9 +82,12 @@ internal fun convertStatCourseExp(expDetail: CourseService.StatCourseExps.ExpDet
     )
 }
 
-internal fun convertStatCourseExpsResponse(source: CourseService.StatCourseExps): StatCourseExpsResponse {
+internal fun convertStatCourseExpsResponse(
+    call: ApplicationCall,
+    source: CourseService.StatCourseExps
+): StatCourseExpsResponse {
     return StatCourseExpsResponse(
-        course = convertCourseResponse(source.course),
+        course = convertCourseResponse(call, source.course),
         teacher = convertUserModel(source.teacher),
         students = source.students.map { convertUserModel(it) },
         exps = source.expDetails.map { convertStatCourseExp(it) }
