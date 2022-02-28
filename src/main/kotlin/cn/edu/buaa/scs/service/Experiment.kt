@@ -124,7 +124,8 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
             .where {
                 Assignments.fileId.isNotNull() and
                         Assignments.fileId.notEq(0) and
-                        Assignments.expId.inList(experiments.map { it.id })
+                        Assignments.expId.inList(experiments.map { it.id }) and
+                        Assignments.studentId.eq(call.userId())
             }
             .map { row -> row[Assignments.expId] }
             .toSet()
