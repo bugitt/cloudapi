@@ -14,10 +14,36 @@ enum class StoreType {
     S3
 }
 
-enum class FileType {
-    Assignment,
-    CourseResource,
-    ExperimentResource,
+sealed interface FileType {
+    val name: String
+
+    companion object {
+        fun valueOf(name: String): FileType {
+            return when (name) {
+                "Assignment" -> Assignment
+                "CourseResource" -> CourseResource
+                "ExperimentResource" -> ExperimentResource
+                else -> throw IllegalArgumentException("Unknown file type: $name")
+            }
+        }
+    }
+
+    object Assignment : FileType {
+        override val name: String
+            get() = "Assignment"
+    }
+
+    sealed interface Resource : FileType
+
+    object CourseResource : Resource {
+        override val name: String
+            get() = "CourseResource"
+    }
+
+    object ExperimentResource : Resource {
+        override val name: String
+            get() = "ExperimentResource"
+    }
 }
 
 interface File : Entity<File>, IEntity {
