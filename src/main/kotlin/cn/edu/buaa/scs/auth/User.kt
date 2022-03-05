@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.auth
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.id
 
 fun User.authRead(entity: IEntity): Boolean {

@@ -1,12 +1,12 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.CourseResourceListResponse
 import cn.edu.buaa.scs.controller.models.CourseResourceResponse
 import cn.edu.buaa.scs.controller.models.CourseResponse
 import cn.edu.buaa.scs.controller.models.DeleteCourseResourcesRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
+import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.courseResource
 import io.ktor.application.*
@@ -50,8 +50,9 @@ fun Route.courseRoute() {
              * 获取课程资源信息
              */
             get {
-                call.courseResource.getAll(call.getCourseIdFromPath()).let {
-                    call.respond(convertCourseResourceList(it))
+                val type = call.parameters["type"]?.let { FileType.Resource.valueOf(it) }
+                call.courseResource.getAll(call.getCourseIdFromPath(), type).let {
+                    call.respond(it.map { resource -> convertCourseResource(resource) })
                 }
             }
 
@@ -84,13 +85,8 @@ internal fun convertCourseResponse(call: ApplicationCall, course: Course): Cours
 internal fun convertCourseResource(courseResource: CourseResource): CourseResourceResponse {
     return CourseResourceResponse(
         id = courseResource.id,
-        courseId = courseResource.course.id,
+        courseId = courseResource.id,
+        experimentId = courseResource.expId ?: 0,
         file = convertFileResponse(courseResource.file)
-    )
-}
-
-internal fun convertCourseResourceList(courseResourceList: List<CourseResource>): CourseResourceListResponse {
-    return CourseResourceListResponse(
-        resources = courseResourceList.sortedBy { it.file.uploadTime }.map { convertCourseResource(it) }
     )
 }

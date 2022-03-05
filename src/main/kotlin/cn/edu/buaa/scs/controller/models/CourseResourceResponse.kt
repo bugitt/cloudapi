@@ -18,10 +18,13 @@ import cn.edu.buaa.scs.controller.models.FileResponse
  * @param id 
  * @param courseId 
  * @param file 
+ * @param experimentId 当该值为0时，表示该资源不是从属某一门实验的资源
  */
 data class CourseResourceResponse(
     val id: kotlin.Int,
     val courseId: kotlin.Int,
-    val file: FileResponse
+    val file: FileResponse,
+    /* 当该值为0时，表示该资源不是从属某一门实验的资源 */
+    val experimentId: kotlin.Int
 ) 
 
