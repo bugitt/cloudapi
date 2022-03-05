@@ -46,3 +46,5 @@ config.yaml
 
 kubeconfig.yaml
 kubeconfig.yml
+
+benchmark
