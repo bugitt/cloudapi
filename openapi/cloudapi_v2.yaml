@@ -327,11 +327,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourseResourceListResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseResourceResponse'
       operationId: get-course-courseId-resource
       security:
         - Authorization: []
       description: 获取课程所属的所有课程资源
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: type
+          description: '表示获取的课程资源类型，如果该值为空，则表示两种资源都获取。CourseResource, ExperimentResource'
     delete:
       summary: 批量删除课程资源
       operationId: delete-course-courseId-resources
@@ -708,16 +716,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FileResponse'
-    CourseResourceListResponse:
-      title: CourseResourceListResponse
-      type: object
-      properties:
-        resources:
-          type: array
-          items:
-            $ref: '#/components/schemas/CourseResourceResponse'
-      required:
-        - resources
     CourseResourceResponse:
       title: CourseResourceResponse
       type: object
@@ -730,10 +728,14 @@ components:
           format: int32
         file:
           $ref: '#/components/schemas/FileResponse'
+        experimentId:
+          type: integer
+          description: 当该值为0时，表示该资源不是从属某一门实验的资源
       required:
         - id
         - courseId
         - file
+        - experimentId
     DeleteCourseResourcesRequest:
       title: DeleteCourseResourcesRequest
       type: object

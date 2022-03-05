@@ -12,6 +12,7 @@ import io.ktor.application.*
 import io.ktor.features.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
+import org.ktorm.schema.ColumnDeclaring
 import java.util.*
 
 val ApplicationCall.courseResource: CourseResourceService get() = CourseResourceService(this)
@@ -21,20 +22,31 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
         const val bucketName = "scs-course-resource"
     }
 
-    fun getAll(courseId: Int): List<CourseResource> {
+    fun getAll(courseId: Int, resourceType: FileType.Resource?): List<CourseResource> {
         call.user().assertRead(Course.id(courseId))
 
-        return mysql.courseResources.filter {
-            (it.courseId eq courseId) and
-                    (it.fileId.isNotNull() and it.fileId.notEq(0))
-        }.toList()
+        val condition: (CourseResources) -> ColumnDeclaring<Boolean> =
+            if (resourceType == null) {
+                { it.courseId eq courseId }
+            } else {
+                when (resourceType) {
+                    FileType.CourseResource -> {
+                        { it.courseId eq courseId and (it.expId.isNull() or it.expId.eq(0)) }
+                    }
+                    FileType.ExperimentResource -> {
+                        { it.courseId eq courseId and it.expId.isNotNull() and it.expId.notEq(0) }
+                    }
+                }
+            }
+
+        return mysql.courseResources.filter(condition).toList()
     }
 
     suspend fun delete(courseId: Int, resourceId: Int): suspend () -> Unit {
         call.user().assertWrite(Course.id(courseId))
         val resource = CourseResource.id(resourceId)
-        if (resource.course.id != courseId) {
-            throw BadRequestException("course_resource(${resource.id} conflicts with course(${resource.course.id}")
+        if (resource.courseId != courseId) {
+            throw BadRequestException("course_resource(${resource.id} conflicts with course(${resource.courseId}")
         }
         mysql.useTransaction {
             resource.file.delete()
@@ -57,8 +69,8 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
 
         val resources = mysql.courseResources.filter { it.id.inList(idList) }.toList()
         resources.forEach {
-            if (it.course.id != courseId) {
-                throw BadRequestException("course_resource(${it.id} conflicts with course(${it.course.id}")
+            if (it.courseId != courseId) {
+                throw BadRequestException("course_resource(${it.id} conflicts with course(${it.courseId}")
             }
         }
         val fileIds = resources.map { it.file.id }
@@ -114,7 +126,7 @@ class CourseResourceService(private val call: ApplicationCall) : FileService.IFi
     override fun afterCreateOrUpdate(involvedEntity: IEntity, file: File) {
         val course = involvedEntity as Course
         mysql.courseResources.add(CourseResource {
-            this.course = course
+            this.courseId = course.id
             this.file = file
         })
     }
@@ -144,3 +156,6 @@ fun CourseResource.Companion.id(id: Int): CourseResource {
     return mysql.courseResources.find { it.id eq id }
         ?: throw BusinessException("find course_resource($id) from database error")
 }
+
+val CourseResource.course: Course
+    get() = Course.id(courseId)

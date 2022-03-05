@@ -11,7 +11,8 @@ interface CourseResource : Entity<CourseResource>, IEntity {
     companion object : Entity.Factory<CourseResource>()
 
     var id: Int
-    var course: Course
+    var courseId: Int
+    var expId: Int?
     var file: File
 
     override fun entityId(): IntOrString {
@@ -21,10 +22,9 @@ interface CourseResource : Entity<CourseResource>, IEntity {
 
 object CourseResources : Table<CourseResource>("course_resource") {
     val id = int("id").primaryKey().bindTo { it.id }
-    val courseId = int("course_id").references(Courses) { it.course }
+    val courseId = int("course_id").bindTo { it.courseId }
+    val expId = int("exp_id").bindTo { it.expId }
     val fileId = int("file_id").references(Files) { it.file }
-    val course get() = courseId.referenceTable as Courses
-    val file get() = fileId.referenceTable as Files
 }
 
 val Database.courseResources get() = this.sequenceOf(CourseResources)

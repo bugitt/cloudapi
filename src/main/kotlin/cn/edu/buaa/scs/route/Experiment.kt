@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.service.assignment
 import cn.edu.buaa.scs.service.experiment
+import cn.edu.buaa.scs.service.resourceFile
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*

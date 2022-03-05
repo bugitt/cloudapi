@@ -170,8 +170,11 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
 
     override fun afterCreateOrUpdate(involvedEntity: IEntity, file: File) {
         val experiment = involvedEntity as Experiment
-        experiment.resourceFile = file
-        mysql.experiments.update(experiment)
+        mysql.courseResources.add(CourseResource {
+            this.courseId = experiment.course.id
+            this.expId = experiment.id
+            this.file = file
+        })
     }
 }
 
@@ -179,3 +182,9 @@ fun Experiment.Companion.id(id: Int): Experiment {
     return mysql.experiments.find { it.id eq id }
         ?: throw BusinessException("find experiment($id) from database error")
 }
+
+val Experiment.resourceFile: File?
+    get() {
+        val resource = mysql.courseResources.find { it.expId eq this.id }
+        return resource?.file
+    }

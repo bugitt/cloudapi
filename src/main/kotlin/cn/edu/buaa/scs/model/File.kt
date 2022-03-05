@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.utils.IntOrString
+import io.ktor.features.*
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
@@ -23,7 +24,7 @@ sealed interface FileType {
                 "Assignment" -> Assignment
                 "CourseResource" -> CourseResource
                 "ExperimentResource" -> ExperimentResource
-                else -> throw IllegalArgumentException("Unknown file type: $name")
+                else -> throw BadRequestException("Unknown file type: $name")
             }
         }
     }
@@ -33,7 +34,17 @@ sealed interface FileType {
             get() = "Assignment"
     }
 
-    sealed interface Resource : FileType
+    sealed interface Resource : FileType {
+        companion object {
+            fun valueOf(name: String): Resource {
+                return when (name) {
+                    "CourseResource" -> CourseResource
+                    "ExperimentResource" -> ExperimentResource
+                    else -> throw BadRequestException("Unknown resource type: $name")
+                }
+            }
+        }
+    }
 
     object CourseResource : Resource {
         override val name: String

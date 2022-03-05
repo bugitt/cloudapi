@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.CourseService
 import cn.edu.buaa.scs.service.course
+import cn.edu.buaa.scs.service.resourceFile
 import cn.edu.buaa.scs.service.stat
 import io.ktor.application.*
 import io.ktor.features.*
