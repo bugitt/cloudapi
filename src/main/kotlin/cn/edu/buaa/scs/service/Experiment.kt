@@ -102,15 +102,16 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
         } else {
             termId
         }
-        val courseIdList = if (courseId != null && courseId != 0) {
+        val courseIdList: List<Int> = if (courseId != null && courseId != 0) {
             call.user().assertRead(Course.id(courseId))
             listOf(courseId)
         } else {
             mysql.from(Courses)
-                .leftJoin(CourseStudents, on = CourseStudents.courseId.eq(Courses.id)).select()
+                .leftJoin(CourseStudents, on = CourseStudents.courseId.eq(Courses.id))
+                .select(Courses.id)
                 .where { CourseStudents.studentId.eq(call.userId()) and Courses.termId.eq(aTermId) }
-                .map { row -> Courses.createEntity(row) }
-                .map { it.id }
+                .map { row -> row[Courses.id]!! }
+                .toList()
         }
         if (courseIdList.isEmpty()) return emptyList()
 
