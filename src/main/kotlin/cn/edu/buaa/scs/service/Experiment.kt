@@ -15,9 +15,10 @@ import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.util.*
 
-val ApplicationCall.experiment get() = ExperimentService(this)
+val ApplicationCall.experiment get() = ExperimentService.getSvc(this) { ExperimentService(this) }
 
-class ExperimentService(val call: ApplicationCall) : FileService.IFileManageService {
+class ExperimentService(val call: ApplicationCall) : IService, FileService.IFileManageService {
+
     fun create(req: CreateExperimentRequest): Experiment {
         val course = Course.id(req.courseId)
 
@@ -145,7 +146,7 @@ class ExperimentService(val call: ApplicationCall) : FileService.IFileManageServ
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
     }
 
-    companion object {
+    companion object : IService.Caller<ExperimentService>() {
         private const val bucket = "exp-resource"
         private val s3 by lazy { S3(bucket) }
     }

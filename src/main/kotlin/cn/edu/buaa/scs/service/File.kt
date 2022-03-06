@@ -32,11 +32,11 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 val ApplicationCall.file: FileService
-    get() = FileService(this)
+    get() = FileService.getSvc(this) { FileService(this) }
 
-class FileService(val call: ApplicationCall) {
+class FileService(val call: ApplicationCall) : IService {
 
-    companion object {
+    companion object : IService.Caller<FileService>() {
         val scsosS3 = S3("scsos")
     }
 
