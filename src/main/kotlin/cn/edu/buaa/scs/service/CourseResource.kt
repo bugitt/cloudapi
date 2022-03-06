@@ -15,10 +15,12 @@ import org.ktorm.entity.*
 import org.ktorm.schema.ColumnDeclaring
 import java.util.*
 
-val ApplicationCall.courseResource: CourseResourceService get() = CourseResourceService(this)
+val ApplicationCall.courseResource: CourseResourceService
+    get() =
+        CourseResourceService.getSvc(this) { CourseResourceService(this) }
 
-class CourseResourceService(private val call: ApplicationCall) : FileService.IFileManageService {
-    companion object {
+class CourseResourceService(private val call: ApplicationCall) : IService, FileService.IFileManageService {
+    companion object : IService.Caller<CourseResourceService>() {
         const val bucketName = "scs-course-resource"
     }
 

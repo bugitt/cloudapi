@@ -7,9 +7,11 @@ import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
 
-internal val ApplicationCall.stat get() = StatService(this)
+internal val ApplicationCall.stat get() = StatService.getSvc(this) { StatService(this) }
 
-class StatService(val call: ApplicationCall) {
+class StatService(val call: ApplicationCall) : IService {
+    companion object : IService.Caller<StatService>()
+
     fun expAssignments(expId: Int): Map<User, Assignment?> {
         val experiment = Experiment.id(expId)
         call.user().assertWrite(experiment.course)

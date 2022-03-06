@@ -23,11 +23,11 @@ import org.ktorm.entity.*
 import java.util.*
 
 val ApplicationCall.assignment: AssignmentService
-    get() = AssignmentService(this)
+    get() = AssignmentService.getSvc(this) { AssignmentService(this) }
 
-class AssignmentService(val call: ApplicationCall) : FileService.IFileManageService {
+class AssignmentService(val call: ApplicationCall) : IService, FileService.IFileManageService {
 
-    companion object {
+    companion object : IService.Caller<AssignmentService>() {
         private const val bucketName = "scs-assignment"
     }
 

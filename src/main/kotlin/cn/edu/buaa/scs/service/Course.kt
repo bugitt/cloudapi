@@ -18,9 +18,12 @@ import org.ktorm.entity.find
 import org.ktorm.entity.toList
 import java.util.concurrent.ConcurrentHashMap
 
-val ApplicationCall.course get() = CourseService(this)
+val ApplicationCall.course
+    get() = CourseService.getSvc(this) { CourseService(this) }
 
-class CourseService(val call: ApplicationCall) {
+class CourseService(val call: ApplicationCall) : IService {
+    companion object : IService.Caller<CourseService>()
+
     private val studentCntMap: MutableMap<Int, Int> = ConcurrentHashMap()
 
     fun studentCnt(courseId: Int): Int {
