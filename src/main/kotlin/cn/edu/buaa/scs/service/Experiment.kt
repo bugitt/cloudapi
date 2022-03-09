@@ -177,6 +177,8 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
             this.expId = experiment.id
             this.file = file
         })
+        // 删除旧的实验资源record
+        mysql.delete(CourseResources) { it.expId.eq(experiment.id) }
     }
 }
 
