@@ -14,9 +14,12 @@ interface Assignment : Entity<Assignment>, IEntity {
     // TODO: 检查其他的可空字段
     var file: File?
 
-    var experiment: Experiment
+    var experimentId: Int
     var score: Float
-    var course: Course
+    var courseId: Int
+
+    // 有没有被选中用来做互评的评分
+    var mayStandard: Boolean
 
     var createdAt: Long
     var updatedAt: Long
@@ -39,15 +42,15 @@ object Assignments : Table<Assignment>("assignment_v2") {
     val fileId = int("file_id").references(Files) { it.file }
 
     @Suppress("unused")
-    val expId = int("exp_id").references(Experiments) { it.experiment }
+    val expId = int("exp_id").bindTo { it.experimentId }
 
     @Suppress("unused")
-    val courseId = int("course_id").references(Courses) { it.course }
-
-    val course get() = courseId.referenceTable as Courses
+    val courseId = int("course_id").bindTo { it.courseId }
 
     @Suppress("unused")
     val score = float("score").bindTo { it.score }
+
+    val mayStandard = boolean("may_standard").bindTo { it.mayStandard }
 
     @Suppress("unused")
     val createdAt = long("created_at").bindTo { it.createdAt }
