@@ -172,13 +172,13 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
 
     override fun afterCreateOrUpdate(involvedEntity: IEntity, file: File) {
         val experiment = involvedEntity as Experiment
+        // 删除旧的实验资源record
+        mysql.delete(CourseResources) { it.expId.eq(experiment.id) }
         mysql.courseResources.add(CourseResource {
             this.courseId = experiment.course.id
             this.expId = experiment.id
             this.file = file
         })
-        // 删除旧的实验资源record
-        mysql.delete(CourseResources) { it.expId.eq(experiment.id) }
     }
 }
 
