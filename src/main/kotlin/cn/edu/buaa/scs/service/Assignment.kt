@@ -41,8 +41,8 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
         val experiment = Experiment.id(expId)
         val assignment = Assignment {
             this.studentId = owner
-            this.experiment = experiment
-            this.course = experiment.course
+            this.experimentId = experiment.id
+            this.courseId = experiment.course.id
             this.createdAt = System.currentTimeMillis()
             this.updatedAt = System.currentTimeMillis()
         }
@@ -94,11 +94,11 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         val owner = User.id(ownerId)
         val assignment = Assignment.id(involvedId)
-        val expName = assignment.experiment.name.filterNot { it.isWhitespace() }
+        val expName = Experiment.id(assignment.experimentId).name.filterNot { it.isWhitespace() }
         val fileExtension = (originalName ?: "").getFileExtension()
 
         val name = "${owner.name}_${owner.id}_$expName.$fileExtension"
-        val storeName = "exp-${assignment.experiment.id}/${owner.name}_${owner.id}_${UUID.randomUUID()}.$fileExtension"
+        val storeName = "exp-${assignment.experimentId}/${owner.name}_${owner.id}_${UUID.randomUUID()}.$fileExtension"
         return Pair(name, storeName)
     }
 
@@ -112,7 +112,7 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
 
     override fun beforeUploadFile(involvedEntity: IEntity, filePart: FileService.FilePart) {
         val assignment = involvedEntity as Assignment
-        if (System.currentTimeMillis() > assignment.experiment.deadline.toTimestamp()) {
+        if (System.currentTimeMillis() > Experiment.id(assignment.experimentId).deadline.toTimestamp()) {
             throw BadRequestException("已过作业提交截止时间")
         }
     }

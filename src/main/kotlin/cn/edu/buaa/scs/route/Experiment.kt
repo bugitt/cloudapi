@@ -102,6 +102,14 @@ fun Route.experimentRoute() {
                     }
                 }
             }
+
+            route("/selectStandardAssignments") {
+                post {
+                    call.experiment.selectStandardAssignments(call.getExpIdFromPath()).let {
+                        call.respond(convertAssignmentList(it))
+                    }
+                }
+            }
         }
     }
 }
@@ -133,8 +141,8 @@ internal fun convertAssignment(assignment: Assignment): AssignmentResponse {
     return AssignmentResponse(
         id = assignment.id,
         studentId = assignment.studentId,
-        expId = assignment.experiment.id,
-        courseId = assignment.course.id,
+        expId = assignment.experimentId,
+        courseId = assignment.courseId,
         createdAt = assignment.createdAt,
         updatedAt = assignment.updatedAt,
         file = assignment.file?.let { convertFileResponse(it) }

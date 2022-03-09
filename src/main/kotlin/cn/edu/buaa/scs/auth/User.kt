@@ -20,7 +20,7 @@ fun User.authRead(entity: IEntity): Boolean {
             // 学生本人
             entity.studentId == this.id
                     // 或这门课的老师、助教
-                    || entity.course.let { isCourseAssistant(it) || isCourseTeacher(it) }
+                    || Course.id(entity.id).let { isCourseAssistant(it) || isCourseTeacher(it) }
 
         is CourseResource ->
             authRead(entity.course)

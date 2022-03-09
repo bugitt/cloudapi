@@ -20,6 +20,8 @@ tags:
     description: 课程资源相关
   - name: 统计
     description: 获取各种统计信息
+  - name: 互评
+    description: 互评相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -526,6 +528,41 @@ paths:
           in: query
           name: courseId
           description: 指定课程
+  /experiment/selectStandardAssignments:
+    post:
+      summary: 获取需要作为互评标准作业的作业
+      operationId: post-experiment-selectStandardAssignments
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentListResponse'
+      description: 获取需要作为互评标准作业的8份作业，如果没有就创建
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: expId
+          required: true
+      tags:
+        - 互评
+  /peerAssessment:
+    post:
+      summary: 为一项作业评分
+      operationId: post-peerAssessment
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 互评
+      description: 为一项作业评分
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -1081,6 +1118,28 @@ components:
         - endTime
         - deadline
         - enablePeer
+    CreatePeerAssessmentRequest:
+      title: CreatePeerAssessmentRequest
+      type: object
+      properties:
+        studentId:
+          type: string
+        assignmentId:
+          type: integer
+          format: int32
+        experimentId:
+          type: integer
+          format: int32
+        score:
+          type: number
+          format: double
+        reason:
+          type: string
+      required:
+        - studentId
+        - assignmentId
+        - experimentId
+        - score
   securitySchemes:
     Authorization:
       type: apiKey

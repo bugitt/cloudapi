@@ -138,6 +138,44 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
         }
     }
 
+    fun selectStandardAssignments(expId: Int): List<Assignment> {
+        val baseCondition = Assignments.expId.eq(expId) and
+                Assignments.fileId.notEq(0) and
+                Assignments.fileId.isNotNull()
+        val getStandardAssignments: () -> List<Assignment> = {
+            mysql.from(Assignments)
+                .select()
+                .where { baseCondition.and(Assignments.mayStandard.eq(true)) }
+                .map { row -> Assignments.createEntity(row) }
+        }
+
+        call.user().assertWrite(Experiment.id(expId))
+
+        if (mysql.assignments.count { baseCondition } < 8) {
+            throw BadRequestException("已提交作业人数不足8人，无法开启互评")
+        }
+        val mayStandardAssignmentsCnt = mysql.assignments.count {
+            baseCondition.and(Assignments.mayStandard.eq(true))
+        }
+        if (mayStandardAssignmentsCnt < 8) {
+            val randomCourseIdList = mysql
+                .from(Assignments)
+                .select(Assignments.id)
+                .where(baseCondition)
+                .map { row -> row[Assignments.id] as Int }
+                .asSequence()
+                .shuffled()
+                .take(8)
+                .toList()
+            mysql.update(Assignments) {
+                set(Assignments.mayStandard, true)
+                where { Assignments.id.inList(randomCourseIdList) }
+            }
+        }
+
+        return mysql.assignments.filter { baseCondition.and(Assignments.mayStandard.eq(true)) }.toList()
+    }
+
     fun statExp(experiment: Experiment): CourseService.StatCourseExps.ExpDetail {
         // 统计已经交作业的人数
         val submittedAssignmentCnt =
