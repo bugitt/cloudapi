@@ -528,7 +528,7 @@ paths:
           in: query
           name: courseId
           description: 指定课程
-  /experiment/selectStandardAssignments:
+  '/experiment/{experimentId}/selectStandardAssignments':
     post:
       summary: 获取需要作为互评标准作业的作业
       operationId: post-experiment-selectStandardAssignments
@@ -542,18 +542,43 @@ paths:
       description: 获取需要作为互评标准作业的8份作业，如果没有就创建
       security:
         - Authorization: []
-      parameters:
-        - schema:
-            type: integer
-            format: int32
-          in: query
-          name: expId
-          required: true
+      parameters: []
       tags:
         - 互评
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: experimentId
+        in: path
+        required: true
+  '/experiment/{experimentId}/enablePeer':
+    post:
+      summary: 为一项实验正式开启互评
+      operationId: post-experiment-enablePeer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentListResponse'
+      description: 为一项实验正式开启互评
+      security:
+        - Authorization: []
+      parameters: []
+      tags:
+        - 互评
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: experimentId
+        in: path
+        required: true
   /peerAssessment:
     post:
-      summary: 为一项作业评分
+      summary: 为一个作业评分
       operationId: post-peerAssessment
       responses:
         '200':
@@ -563,6 +588,11 @@ paths:
       description: 为一项作业评分
       security:
         - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePeerAssessmentRequest'
 components:
   schemas:
     AssignmentResponse:
@@ -589,6 +619,8 @@ components:
           type: integer
         file:
           $ref: '#/components/schemas/FileResponse'
+        mayStandard:
+          type: boolean
         createdAt:
           type: integer
           format: int64
@@ -1122,12 +1154,7 @@ components:
       title: CreatePeerAssessmentRequest
       type: object
       properties:
-        studentId:
-          type: string
         assignmentId:
-          type: integer
-          format: int32
-        experimentId:
           type: integer
           format: int32
         score:
@@ -1136,9 +1163,7 @@ components:
         reason:
           type: string
       required:
-        - studentId
         - assignmentId
-        - experimentId
         - score
   securitySchemes:
     Authorization:

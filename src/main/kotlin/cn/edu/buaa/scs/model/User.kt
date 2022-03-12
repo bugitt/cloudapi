@@ -77,6 +77,8 @@ interface User : Entity<User>, IEntity {
 
     fun isCourseTeacher(courseId: Int): Boolean = Course.id(courseId).teacher.id == this.id
 
+    fun isCourseAdmin(course: Course): Boolean = isCourseAssistant(course) || isCourseTeacher(course)
+
     override fun entityId(): IntOrString {
         return IntOrString(this.id)
     }
