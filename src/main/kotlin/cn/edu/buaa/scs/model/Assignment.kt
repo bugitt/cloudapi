@@ -18,9 +18,6 @@ interface Assignment : Entity<Assignment>, IEntity {
     var score: Float
     var courseId: Int
 
-    // 有没有被选中用来做互评的评分
-    var mayStandard: Boolean
-
     var createdAt: Long
     var updatedAt: Long
 
@@ -49,8 +46,6 @@ object Assignments : Table<Assignment>("assignment_v2") {
 
     @Suppress("unused")
     val score = float("score").bindTo { it.score }
-
-    val mayStandard = boolean("may_standard").bindTo { it.mayStandard }
 
     @Suppress("unused")
     val createdAt = long("created_at").bindTo { it.createdAt }

@@ -142,38 +142,50 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
         val baseCondition = Assignments.expId.eq(expId) and
                 Assignments.fileId.notEq(0) and
                 Assignments.fileId.isNotNull()
-        val getStandardAssignments: () -> List<Assignment> = {
-            mysql.from(Assignments)
-                .select()
-                .where { baseCondition.and(Assignments.mayStandard.eq(true)) }
-                .map { row -> Assignments.createEntity(row) }
+
+        // 获取标准评分任务列表
+        val peerStandardList = mysql.peerStands.filter { it.expId.eq(expId) }.toList()
+        if (peerStandardList.size >= 8) {
+            // 如果满足条件, 直接返回就好
+            return mysql
+                .assignments
+                .filter { it.id.inList(peerStandardList.map { p -> p.assignmentId }) }
+                .toList()
         }
 
         call.user().assertWrite(Experiment.id(expId))
 
+        // 如果有脏数据，那么先清理一下
+        if (peerStandardList.isNotEmpty()) {
+            mysql.delete(PeerStandards) {
+                it.id.inList(peerStandardList.map { p -> p.id })
+            }
+        }
         if (mysql.assignments.count { baseCondition } < 8) {
             throw BadRequestException("已提交作业人数不足8人，无法开启互评")
         }
-        val mayStandardAssignmentsCnt = mysql.assignments.count {
-            baseCondition.and(Assignments.mayStandard.eq(true))
-        }
-        if (mayStandardAssignmentsCnt < 8) {
-            val randomCourseIdList = mysql
-                .from(Assignments)
-                .select(Assignments.id)
-                .where(baseCondition)
-                .map { row -> row[Assignments.id] as Int }
-                .asSequence()
-                .shuffled()
-                .take(8)
-                .toList()
-            mysql.update(Assignments) {
-                set(Assignments.mayStandard, true)
-                where { Assignments.id.inList(randomCourseIdList) }
+
+        // 选出8份作业
+        val randomAssignmentList = mysql
+            .assignments
+            .filter { baseCondition }
+            .toList()
+            .shuffled()
+            .take(8)
+
+        // 对每份作业创建一个作业互评任务
+        mysql.useTransaction {
+            mysql.batchInsert(PeerStandards) {
+                randomAssignmentList.forEach { assignment ->
+                    item {
+                        set(it.assignmentId, assignment.id)
+                        set(it.expId, assignment.experimentId)
+                        set(it.isCompleted, false)
+                    }
+                }
             }
         }
-
-        return mysql.assignments.filter { baseCondition.and(Assignments.mayStandard.eq(true)) }.toList()
+        return randomAssignmentList
     }
 
     fun statExp(experiment: Experiment): CourseService.StatCourseExps.ExpDetail {

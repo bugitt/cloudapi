@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.service.assignment
 import cn.edu.buaa.scs.service.experiment
+import cn.edu.buaa.scs.service.peer
 import cn.edu.buaa.scs.service.resourceFile
 import io.ktor.application.*
 import io.ktor.request.*
@@ -108,6 +109,13 @@ fun Route.experimentRoute() {
                     call.experiment.selectStandardAssignments(call.getExpIdFromPath()).let {
                         call.respond(convertAssignmentList(it))
                     }
+                }
+            }
+
+            route("/enablePeer") {
+                post {
+                    call.peer.enable(call.getExpIdFromPath())
+                    call.respond("OK")
                 }
             }
         }
