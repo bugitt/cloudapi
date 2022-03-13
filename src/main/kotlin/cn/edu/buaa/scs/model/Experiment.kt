@@ -4,10 +4,7 @@ import cn.edu.buaa.scs.utils.IntOrString
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
-import org.ktorm.schema.Table
-import org.ktorm.schema.boolean
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 
 interface Experiment : Entity<Experiment>, IEntity {
     companion object : Entity.Factory<Experiment>()
@@ -52,7 +49,7 @@ object Experiments : Table<Experiment>("experiment") {
     val type = boolean("type").bindTo { it.type }
 
     @Suppress("unused")
-    val detail = varchar("detail").bindTo { it.detail }
+    val detail = text("detail").bindTo { it.detail }
 
     @Suppress("unused")
     val resource = varchar("resource").bindTo { it.resource }
@@ -91,7 +88,7 @@ object Experiments : Table<Experiment>("experiment") {
     val appealDeadline = varchar("appeal_deadline").bindTo { it.appealDeadline }
 
     @Suppress("unused")
-    val peerAssessmentRules = varchar("peer_assessment_rules").bindTo { it.peerAssessmentRules }
+    val peerAssessmentRules = text("peer_assessment_rules").bindTo { it.peerAssessmentRules }
 
     @Suppress("unused")
     val peerAssessmentStart = boolean("peer_assessment_start").bindTo { it.peerAssessmentStart }

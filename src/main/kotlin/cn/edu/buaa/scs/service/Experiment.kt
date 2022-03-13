@@ -138,19 +138,34 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
         }
     }
 
-    fun selectStandardAssignments(expId: Int): List<Assignment> {
+    fun selectStandardAssignments(expId: Int): List<Pair<Assignment, PeerStandard?>> {
         val baseCondition = Assignments.expId.eq(expId) and
                 Assignments.fileId.notEq(0) and
                 Assignments.fileId.isNotNull()
+
+        val buildPairResult: (List<Assignment>, List<PeerStandard>) -> List<Pair<Assignment, PeerStandard?>> =
+            { assignments, peerStandards ->
+                if (peerStandards.isEmpty() || assignments.size != peerStandards.size) {
+                    assignments.map { Pair(it, null) }
+                } else {
+                    val assignmentMap = assignments.associateBy { it.id }
+                    peerStandards.map { peerStandard ->
+                        Pair(assignmentMap[peerStandard.assignmentId] as Assignment, peerStandard)
+                    }
+                }
+            }
 
         // 获取标准评分任务列表
         val peerStandardList = mysql.peerStands.filter { it.expId.eq(expId) }.toList()
         if (peerStandardList.size >= 8) {
             // 如果满足条件, 直接返回就好
-            return mysql
-                .assignments
-                .filter { it.id.inList(peerStandardList.map { p -> p.assignmentId }) }
-                .toList()
+            return buildPairResult(
+                mysql
+                    .assignments
+                    .filter { it.id.inList(peerStandardList.map { p -> p.assignmentId }) }
+                    .toList(),
+                peerStandardList
+            )
         }
 
         call.user().assertWrite(Experiment.id(expId))
@@ -185,7 +200,7 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
                 }
             }
         }
-        return randomAssignmentList
+        return buildPairResult(randomAssignmentList, listOf())
     }
 
     fun statExp(experiment: Experiment): CourseService.StatCourseExps.ExpDetail {

@@ -106,8 +106,8 @@ fun Route.experimentRoute() {
 
             route("/selectStandardAssignments") {
                 post {
-                    call.experiment.selectStandardAssignments(call.getExpIdFromPath()).let {
-                        call.respond(convertAssignmentList(it))
+                    call.experiment.selectStandardAssignments(call.getExpIdFromPath()).let { list ->
+                        call.respond(list.map { pair -> convertAssignmentWithStandardScore(pair.first, pair.second) })
                     }
                 }
             }
