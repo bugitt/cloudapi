@@ -18,7 +18,15 @@ val ApplicationCall.peer get() = PeerService.getSvc(this) { PeerService(this) }
 class PeerService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<PeerService>()
 
-    fun createOrUpdate(assignmentId: Int, score: Double, reason: String? = null) {
+    data class AssessmentInfo(
+        val assignmentId: Int,
+        val assessorId: String,
+        val assessorName: String,
+        val assessedTime: Long,
+        val score: Double
+    )
+
+    fun createOrUpdate(assignmentId: Int, score: Double, reason: String? = null): AssessmentInfo {
         val assignment = Assignment.id(assignmentId)
         val experiment = Experiment.id(assignment.experimentId)
         val isAdmin = call.user().isAdmin() || call.user().isCourseAdmin(experiment.course)
@@ -29,7 +37,7 @@ class PeerService(val call: ApplicationCall) : IService {
             // 如果没有文件，不能评分
             throw BadRequestException("Assignment has no file")
         }
-        if (isAdmin) {
+        return if (isAdmin) {
             adminCreateOrUpdate(experiment, assignment, score)
         } else {
             nonAdminCreateOrUpdate(experiment, assignment, score, reason)
@@ -106,7 +114,7 @@ class PeerService(val call: ApplicationCall) : IService {
         experiment: Experiment,
         assignment: Assignment,
         score: Double
-    ) {
+    ): AssessmentInfo {
         if (experiment.peerAssessmentStart) {
             // 互评已经开始，管理员不能评分了
             throw BadRequestException("peer assessment has started")
@@ -119,6 +127,7 @@ class PeerService(val call: ApplicationCall) : IService {
         task.createdAt = System.currentTimeMillis()
         task.isCompleted = true
         mysql.peerStands.update(task)
+        return AssessmentInfo(assignment.id, call.userId(), call.user().name, task.createdAt!!, task.score!!)
     }
 
     private fun nonAdminCreateOrUpdate(
@@ -126,7 +135,7 @@ class PeerService(val call: ApplicationCall) : IService {
         assignment: Assignment,
         score: Double,
         srcReason: String? = null
-    ) {
+    ): AssessmentInfo {
         if (!experiment.peerAssessmentStart) {
             // 互评还没开始，此时不能评分
             throw BadRequestException("Peer assessment has not started")
@@ -167,6 +176,7 @@ class PeerService(val call: ApplicationCall) : IService {
                 mysql.peerTasks.update(task)
             }
         }
+        return AssessmentInfo(assignment.id, call.userId(), call.user().name, task.createdAt!!, task.originalScore!!)
     }
 
     private fun adjustScore(originScore: Double, standardScore: Double, selfStandardScore: Double): Double {
