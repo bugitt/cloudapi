@@ -585,6 +585,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentInfoResponse'
       tags:
         - 互评
       description: 为一项作业评分
@@ -1234,6 +1238,26 @@ components:
         - assessor
         - score
         - createdAt
+    AssessmentInfoResponse:
+      title: AssessmentInfoResponse
+      type: object
+      properties:
+        assessor:
+          $ref: '#/components/schemas/SimpleUser'
+        assignmentId:
+          type: integer
+          format: int32
+        score:
+          type: number
+          format: double
+        assessedTime:
+          type: integer
+          format: int64
+      required:
+        - assessor
+        - assignmentId
+        - score
+        - assessedTime
   securitySchemes:
     Authorization:
       type: apiKey

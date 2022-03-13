@@ -1,11 +1,9 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.AssignmentWithStandardScoreResponse
-import cn.edu.buaa.scs.controller.models.CreatePeerAssessmentRequest
-import cn.edu.buaa.scs.controller.models.SimpleUser
-import cn.edu.buaa.scs.controller.models.StandardAssessmentInfo
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.PeerStandard
+import cn.edu.buaa.scs.service.PeerService
 import cn.edu.buaa.scs.service.peer
 import io.ktor.application.*
 import io.ktor.request.*
@@ -19,8 +17,9 @@ fun Route.peerRoute() {
     route("/peerAssessment") {
         post {
             val req = call.receive<CreatePeerAssessmentRequest>()
-            call.peer.createOrUpdate(req.assignmentId, req.score, req.reason)
-            call.respond("OK")
+            call.peer.createOrUpdate(req.assignmentId, req.score, req.reason).let {
+                call.respond(convertAssessmentInfo(it))
+            }
         }
     }
 }
@@ -46,5 +45,14 @@ internal fun convertStandardAssessmentInfo(peerStandard: PeerStandard): Standard
         assessor = SimpleUser(peerStandard.assessorId!!, peerStandard.assessorName!!),
         score = peerStandard.score!!,
         createdAt = peerStandard.createdAt!!
+    )
+}
+
+internal fun convertAssessmentInfo(assessmentInfo: PeerService.AssessmentInfo): AssessmentInfoResponse {
+    return AssessmentInfoResponse(
+        assessor = SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName),
+        score = assessmentInfo.score,
+        assessedTime = assessmentInfo.assessedTime,
+        assignmentId = assessmentInfo.assignmentId
     )
 }
