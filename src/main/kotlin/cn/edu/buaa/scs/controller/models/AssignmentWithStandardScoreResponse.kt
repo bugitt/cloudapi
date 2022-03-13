@@ -12,9 +12,10 @@
 package cn.edu.buaa.scs.controller.models
 
 import cn.edu.buaa.scs.controller.models.FileResponse
+import cn.edu.buaa.scs.controller.models.StandardAssessmentInfo
 
 /**
- * 
+ * 附带“标准成绩”的Assignment Response
  * @param id 
  * @param studentId 
  * @param expId 
@@ -22,8 +23,9 @@ import cn.edu.buaa.scs.controller.models.FileResponse
  * @param createdAt 长整型时间戳
  * @param updatedAt 长整型时间戳
  * @param file 
+ * @param peerInfo 
  */
-data class AssignmentResponse(
+data class AssignmentWithStandardScoreResponse(
     val id: kotlin.Int,
     val studentId: kotlin.String,
     val expId: kotlin.Int,
@@ -32,6 +34,7 @@ data class AssignmentResponse(
     val createdAt: kotlin.Long,
     /* 长整型时间戳 */
     val updatedAt: kotlin.Long,
-    val file: FileResponse? = null
+    val file: FileResponse? = null,
+    val peerInfo: StandardAssessmentInfo? = null
 ) 
 

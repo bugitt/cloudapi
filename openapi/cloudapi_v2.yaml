@@ -538,8 +538,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentListResponse'
-      description: 获取需要作为互评标准作业的8份作业，如果没有就创建
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssignmentWithStandardScoreResponse'
+      description: 获取需要作为互评标准作业的8份作业，如果没有就创建（助教或教师调用）
       security:
         - Authorization: []
       parameters: []
@@ -619,8 +621,6 @@ components:
           type: integer
         file:
           $ref: '#/components/schemas/FileResponse'
-        mayStandard:
-          type: boolean
         createdAt:
           type: integer
           format: int64
@@ -629,6 +629,48 @@ components:
           type: integer
           format: int64
           description: 长整型时间戳
+      required:
+        - id
+        - studentId
+        - expId
+        - courseId
+        - createdAt
+        - updatedAt
+    AssignmentWithStandardScoreResponse:
+      description: 附带“标准成绩”的Assignment Response
+      type: object
+      x-examples:
+        example-1:
+          id: 22
+          studentId: '15131049'
+          fileId: 40
+          expId: 1062
+          courseId: 438
+          createdAt: 1643361519220
+          updatedAt: 1643363133061
+      title: AssignmentWithStandardScoreResponse
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: string
+          minLength: 1
+        expId:
+          type: integer
+        courseId:
+          type: integer
+        file:
+          $ref: '#/components/schemas/FileResponse'
+        createdAt:
+          type: integer
+          format: int64
+          description: 长整型时间戳
+        updatedAt:
+          type: integer
+          format: int64
+          description: 长整型时间戳
+        peerInfo:
+          $ref: '#/components/schemas/StandardAssessmentInfo'
       required:
         - id
         - studentId
@@ -1165,6 +1207,33 @@ components:
       required:
         - assignmentId
         - score
+    SimpleUser:
+      title: SimpleUser
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+    StandardAssessmentInfo:
+      title: StandardAssessmentInfo
+      type: object
+      properties:
+        assessor:
+          $ref: '#/components/schemas/SimpleUser'
+        score:
+          type: number
+          format: double
+        createdAt:
+          type: integer
+          format: int64
+      required:
+        - assessor
+        - score
+        - createdAt
   securitySchemes:
     Authorization:
       type: apiKey
