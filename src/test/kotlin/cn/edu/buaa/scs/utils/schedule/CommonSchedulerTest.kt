@@ -11,12 +11,24 @@ internal class CommonSchedulerTest {
         val max = 10000
         val action: (Int) -> Int = { it * it }
         val list = runBlocking {
-            CommonScheduler.multiCoroutinesProduce(
+            CommonScheduler.multiCoroutinesProduceSync(
                 (0..max).map { { action(it) } },
                 Dispatchers.IO
             )
         }
         assert(list.size == max + 1)
         (0..max).forEach { assert(list.contains(action(it))) }
+    }
+
+    @Test
+    fun multiCoroutinesProduceReturnUnit() {
+        val max = 10000
+        val action: (Int) -> Unit = { println(it) }
+        runBlocking {
+            CommonScheduler.multiCoroutinesProduceSync(
+                (0..max).map { { action(it) } },
+                Dispatchers.IO
+            )
+        }
     }
 }
