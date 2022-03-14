@@ -50,6 +50,10 @@ class PeerService(val call: ApplicationCall) : IService {
     fun enable(expId: Int) {
         val experiment = Experiment.id(expId)
         call.user().authWrite(experiment)
+        // 检查是否开启互评了
+        if (experiment.peerAssessmentStart) {
+            return
+        }
         // 检查是不是已经有8个标准作业了
         val peerStandardList =
             mysql.peerStands.filter { it.expId.eq(expId) and it.isCompleted.eq(true) }.toList()

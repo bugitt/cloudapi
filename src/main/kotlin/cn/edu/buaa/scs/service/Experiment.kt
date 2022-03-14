@@ -155,9 +155,13 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
                 }
             }
 
+        val experiment = Experiment.id(expId)
+
+        call.user().assertWrite(experiment)
+
         // 获取标准评分任务列表
         val peerStandardList = mysql.peerStands.filter { it.expId.eq(expId) }.toList()
-        if (peerStandardList.size >= 8) {
+        if (peerStandardList.size >= 8 || experiment.peerAssessmentStart) {
             // 如果满足条件, 直接返回就好
             return buildPairResult(
                 mysql
@@ -167,8 +171,6 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
                 peerStandardList
             )
         }
-
-        call.user().assertWrite(Experiment.id(expId))
 
         // 如果有脏数据，那么先清理一下
         if (peerStandardList.isNotEmpty()) {
