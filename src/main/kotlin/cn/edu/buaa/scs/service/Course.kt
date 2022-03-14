@@ -60,7 +60,7 @@ class CourseService(val call: ApplicationCall) : IService {
         val teacher = course.teacher
         val students = async { getAllStudents(courseId) }
         val exps = mysql.experiments.filter { it.courseId eq course.id }.toList().sortedBy { it.startTime }
-        val expDetails = CommonScheduler.multiCoroutinesProduce(exps.map { { call.experiment.statExp(it) } })
+        val expDetails = CommonScheduler.multiCoroutinesProduceSync(exps.map { { call.experiment.statExp(it) } })
         StatCourseExps(course, teacher, students.await(), expDetails)
     }
 }
