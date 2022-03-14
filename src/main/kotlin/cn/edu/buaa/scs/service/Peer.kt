@@ -4,9 +4,11 @@ import cn.edu.buaa.scs.auth.authWrite
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
+import kotlinx.coroutines.Dispatchers
 import org.ktorm.dsl.*
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
@@ -47,7 +49,7 @@ class PeerService(val call: ApplicationCall) : IService {
     /**
      * 正式开启互评
      */
-    fun enable(expId: Int) {
+    suspend fun enable(expId: Int) {
         val experiment = Experiment.id(expId)
         call.user().authWrite(experiment)
         // 检查是否开启互评了
@@ -96,18 +98,23 @@ class PeerService(val call: ApplicationCall) : IService {
             val userMap = call.course.getAllStudents(experiment.course.id).associateBy { it.id }
 
             val len = assignments.size
-            mysql.batchInsert(PeerTasks) {
-                for (i in 0 until len) {
-                    // 每个学生选取其后的三个人的作业作为自己的互评任务
-                    val assessor = userMap[assignments[i].studentId] as User
-                    for (j in 1 until 4) {
-                        val target = (i + j) % len
-                        this.buildPeerTask(assessor, assignments[target], false)
+            val batchInsertActionList: MutableList<suspend () -> IntArray> = mutableListOf()
+            for (i in 0 until len) {
+                val action = suspend {
+                    mysql.batchInsert(PeerTasks) {
+                        // 每个学生选取其后的三个人的作业作为自己的互评任务
+                        val assessor = userMap[assignments[i].studentId] as User
+                        for (j in 1 until 4) {
+                            val target = (i + j) % len
+                            this.buildPeerTask(assessor, assignments[target], false)
+                        }
+                        // 除此之外，还应该为该学生添加一个标准作业
+                        this.buildPeerTask(assessor, standardAssignments.random(), true)
                     }
-                    // 除此之外，还应该为该学生添加一个标准作业
-                    this.buildPeerTask(assessor, standardAssignments.random(), true)
                 }
+                batchInsertActionList.add(action)
             }
+            CommonScheduler.multiCoroutinesProduceSync(batchInsertActionList, Dispatchers.IO)
 
             experiment.peerAssessmentStart = true
             mysql.experiments.update(experiment)

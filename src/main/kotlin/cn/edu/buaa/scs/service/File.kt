@@ -168,7 +168,8 @@ class FileService(val call: ApplicationCall) : IService {
             }
         }
 
-        val handlerList = CommonScheduler.multiCoroutinesProduce(fileParts.map { { handleFile(it) } }, Dispatchers.IO)
+        val handlerList =
+            CommonScheduler.multiCoroutinesProduceSync(fileParts.map { { handleFile(it) } }, Dispatchers.IO)
         mysql.useTransaction {
             handlerList.forEach { it.action(it.file) }
         }
