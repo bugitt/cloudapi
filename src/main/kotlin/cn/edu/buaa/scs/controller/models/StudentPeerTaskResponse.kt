@@ -11,17 +11,18 @@
 */
 package cn.edu.buaa.scs.controller.models
 
-import cn.edu.buaa.scs.controller.models.SimpleUser
+import cn.edu.buaa.scs.controller.models.AssessmentInfoResponse
+import cn.edu.buaa.scs.controller.models.FileResponse
 
 /**
  * 
- * @param assessor 
- * @param score 
- * @param createdAt 
+ * @param id 
+ * @param file 
+ * @param peerInfo 
  */
-data class StandardAssessmentInfo(
-    val assessor: SimpleUser,
-    val score: kotlin.Double,
-    val createdAt: kotlin.Long
+data class StudentPeerTaskResponse(
+    val id: kotlin.Int,
+    val file: FileResponse,
+    val peerInfo: AssessmentInfoResponse? = null
 ) 
 

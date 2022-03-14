@@ -33,6 +33,12 @@ class PeerService(val call: ApplicationCall) : IService {
         val score: Double
     )
 
+    data class PeerTaskWithFile(
+        val assignmentId: Int,
+        val file: File,
+        val peerTask: PeerTask
+    )
+
     fun createOrUpdate(assignmentId: Int, score: Double, reason: String? = null): AssessmentInfo {
         val assignment = Assignment.id(assignmentId)
         val experiment = Experiment.id(assignment.experimentId)
@@ -44,10 +50,22 @@ class PeerService(val call: ApplicationCall) : IService {
             // 如果没有文件，不能评分
             throw BadRequestException("Assignment has no file")
         }
-        return if (isAdmin) {
+        return if (isAdmin)
             adminCreateOrUpdate(experiment, assignment, score)
-        } else {
+        else
             nonAdminCreateOrUpdate(experiment, assignment, score, reason)
+    }
+
+    fun getTasks(expId: Int): List<PeerTaskWithFile> {
+        val tasks = mysql.peerTasks.filter { it.expId.eq(expId) and it.assessorId.eq(call.userId()) }.toList()
+        val assignments = mysql.assignments.filter { it.id.inList(tasks.map { t -> t.assignmentId }) }.toList()
+        val taskMap = tasks.associateBy { it.assignmentId }
+        return assignments.map { assignment ->
+            PeerTaskWithFile(
+                assignment.id,
+                assignment.file as File,
+                taskMap[assignment.id] as PeerTask
+            )
         }
     }
 

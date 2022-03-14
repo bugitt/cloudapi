@@ -595,6 +595,32 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreatePeerAssessmentRequest'
+  /peerTasks:
+    get:
+      summary: 获取属于自己的互评任务
+      tags:
+        - 互评
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentPeerTaskResponse'
+      operationId: get-peerTasks
+      description: 学生获取属于自己的互评任务
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: expId
+          required: true
+    parameters: []
 components:
   schemas:
     AssignmentResponse:
@@ -670,7 +696,7 @@ components:
           format: int64
           description: 长整型时间戳
         peerInfo:
-          $ref: '#/components/schemas/StandardAssessmentInfo'
+          $ref: '#/components/schemas/AssessmentInfoResponse'
       required:
         - id
         - studentId
@@ -1218,22 +1244,6 @@ components:
       required:
         - id
         - name
-    StandardAssessmentInfo:
-      title: StandardAssessmentInfo
-      type: object
-      properties:
-        assessor:
-          $ref: '#/components/schemas/SimpleUser'
-        score:
-          type: number
-          format: double
-        createdAt:
-          type: integer
-          format: int64
-      required:
-        - assessor
-        - score
-        - createdAt
     AssessmentInfoResponse:
       title: AssessmentInfoResponse
       type: object
@@ -1254,6 +1264,20 @@ components:
         - assignmentId
         - score
         - assessedTime
+    StudentPeerTaskResponse:
+      title: StudentPeerTaskResponse
+      type: object
+      properties:
+        id:
+          type: integer
+          description: AssignmentId
+        file:
+          $ref: '#/components/schemas/FileResponse'
+        peerInfo:
+          $ref: '#/components/schemas/AssessmentInfoResponse'
+      required:
+        - id
+        - file
   securitySchemes:
     Authorization:
       type: apiKey

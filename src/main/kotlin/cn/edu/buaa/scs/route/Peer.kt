@@ -1,8 +1,10 @@
 package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.*
+import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.PeerStandard
+import cn.edu.buaa.scs.model.PeerTask
 import cn.edu.buaa.scs.service.PeerService
 import cn.edu.buaa.scs.service.peer
 import io.ktor.application.*
@@ -22,6 +24,15 @@ fun Route.peerRoute() {
             }
         }
     }
+    route("/peerTasks") {
+        get {
+            val expId = call.request.queryParameters["expId"]?.toInt()
+                ?: throw BadRequestException("invalid expId")
+            call.respond(
+                call.peer.getTasks(expId).map { convertStudentPeerTask(it) }
+            )
+        }
+    }
 }
 
 internal fun convertAssignmentWithStandardScore(
@@ -36,15 +47,27 @@ internal fun convertAssignmentWithStandardScore(
         createdAt = assignment.createdAt,
         updatedAt = assignment.updatedAt,
         file = assignment.file?.let { convertFileResponse(it) },
-        peerInfo = if (peerStandard != null && peerStandard.isCompleted) convertStandardAssessmentInfo(peerStandard) else null
+        peerInfo = if (peerStandard != null && peerStandard.isCompleted) convertAssessmentInfo(peerStandard) else null
     )
 }
 
-internal fun convertStandardAssessmentInfo(peerStandard: PeerStandard): StandardAssessmentInfo {
-    return StandardAssessmentInfo(
-        assessor = SimpleUser(peerStandard.assessorId!!, peerStandard.assessorName!!),
-        score = peerStandard.score!!,
-        createdAt = peerStandard.createdAt!!
+internal fun convertAssessmentInfo(standard: PeerStandard): AssessmentInfoResponse {
+    return AssessmentInfoResponse(
+        assessor = SimpleUser(standard.assessorId!!, standard.assessorName!!),
+        score = standard.score!!,
+        assessedTime = standard.createdAt!!,
+        assignmentId = standard.assignmentId
+    )
+}
+
+internal fun convertAssessmentInfo(assessmentInfo: PeerTask): AssessmentInfoResponse? {
+    val score = assessmentInfo.originalScore ?: return null
+    val createdAt = assessmentInfo.createdAt ?: return null
+    return AssessmentInfoResponse(
+        assessor = SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName),
+        score = score,
+        assessedTime = createdAt,
+        assignmentId = assessmentInfo.assignmentId
     )
 }
 
@@ -54,5 +77,13 @@ internal fun convertAssessmentInfo(assessmentInfo: PeerService.AssessmentInfo): 
         score = assessmentInfo.score,
         assessedTime = assessmentInfo.assessedTime,
         assignmentId = assessmentInfo.assignmentId
+    )
+}
+
+internal fun convertStudentPeerTask(taskWithFile: PeerService.PeerTaskWithFile): StudentPeerTaskResponse {
+    return StudentPeerTaskResponse(
+        taskWithFile.assignmentId,
+        convertFileResponse(taskWithFile.file),
+        convertAssessmentInfo(taskWithFile.peerTask)
     )
 }
