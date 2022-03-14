@@ -7,7 +7,7 @@ import kotlinx.coroutines.channels.toList
 object CommonScheduler {
     private val defaultDispatcher = Dispatchers.Default
 
-    suspend fun <T> multiCoroutinesProduce(
+    suspend fun <T> multiCoroutinesProduceSync(
         actionList: List<suspend () -> T>,
         dispatcher: CoroutineDispatcher = Dispatchers.Default
     ): List<T> =
