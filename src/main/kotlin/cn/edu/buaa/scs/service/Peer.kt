@@ -4,21 +4,26 @@ import cn.edu.buaa.scs.auth.authWrite
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.getOrPut
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import io.ktor.application.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
 import org.ktorm.dsl.*
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.toList
 import org.ktorm.entity.update
+import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.peer get() = PeerService.getSvc(this) { PeerService(this) }
 
 class PeerService(val call: ApplicationCall) : IService {
-    companion object : IService.Caller<PeerService>()
+    companion object : IService.Caller<PeerService>() {
+        val enableServiceMutexMap: MutableMap<Int, Mutex> = ConcurrentHashMap()
+    }
 
     data class AssessmentInfo(
         val assignmentId: Int,
@@ -50,6 +55,8 @@ class PeerService(val call: ApplicationCall) : IService {
      * 正式开启互评
      */
     suspend fun enable(expId: Int) {
+        val mutex = enableServiceMutexMap.getOrPut(expId) { Mutex() }
+        mutex.lock()
         val experiment = Experiment.id(expId)
         call.user().authWrite(experiment)
         // 检查是否开启互评了
@@ -119,6 +126,7 @@ class PeerService(val call: ApplicationCall) : IService {
             experiment.peerAssessmentStart = true
             mysql.experiments.update(experiment)
         }
+        mutex.unlock()
     }
 
     private fun adminCreateOrUpdate(
