@@ -153,6 +153,8 @@ internal fun convertAssignment(assignment: Assignment): AssignmentResponse {
         courseId = assignment.courseId,
         createdAt = assignment.createdAt,
         updatedAt = assignment.updatedAt,
-        file = assignment.file?.let { convertFileResponse(it) }
+        file = assignment.file?.let { convertFileResponse(it) },
+        finalScore = assignment.finalScore.toDouble(),
+        peerScore = assignment.peerScore
     )
 }

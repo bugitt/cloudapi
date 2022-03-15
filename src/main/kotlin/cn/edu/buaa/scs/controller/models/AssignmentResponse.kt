@@ -22,6 +22,8 @@ import cn.edu.buaa.scs.controller.models.FileResponse
  * @param createdAt 长整型时间戳
  * @param updatedAt 长整型时间戳
  * @param file 
+ * @param peerScore 
+ * @param finalScore 
  */
 data class AssignmentResponse(
     val id: kotlin.Int,
@@ -32,6 +34,8 @@ data class AssignmentResponse(
     val createdAt: kotlin.Long,
     /* 长整型时间戳 */
     val updatedAt: kotlin.Long,
-    val file: FileResponse? = null
+    val file: FileResponse? = null,
+    val peerScore: kotlin.Double? = null,
+    val finalScore: kotlin.Double? = null
 ) 
 
