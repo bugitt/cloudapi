@@ -23,6 +23,17 @@ fun Route.peerRoute() {
                 call.respond(convertAssessmentInfo(it))
             }
         }
+
+        /**
+         * 获取一份作业的所有评分结果
+         */
+        get {
+            val assignmentId = call.request.queryParameters["assignmentId"]?.toInt()
+                ?: throw BadRequestException("invalid assignmentId")
+            call.respond(
+                convertAssignmentPeerAssessmentResult(call.peer.getResult(assignmentId))
+            )
+        }
     }
     route("/peerTasks") {
         get {
@@ -61,13 +72,11 @@ internal fun convertAssessmentInfo(standard: PeerStandard): AssessmentInfoRespon
     )
 }
 
-internal fun convertAssessmentInfo(assessmentInfo: PeerTask): AssessmentInfoResponse? {
-    val score = assessmentInfo.originalScore ?: return null
-    val createdAt = assessmentInfo.createdAt ?: return null
+internal fun convertAssessmentInfo(assessmentInfo: PeerTask, isAdmin: Boolean = true): AssessmentInfoResponse {
     return AssessmentInfoResponse(
-        assessor = SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName),
-        score = score,
-        assessedTime = createdAt,
+        assessor = if (isAdmin) SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName) else null,
+        score = assessmentInfo.originalScore,
+        assessedTime = assessmentInfo.createdAt,
         assignmentId = assessmentInfo.assignmentId,
         reason = assessmentInfo.reason ?: ""
     )
@@ -88,5 +97,14 @@ internal fun convertStudentPeerTask(taskWithFile: PeerService.PeerTaskWithFile):
         taskWithFile.assignmentId,
         convertFileResponse(taskWithFile.file),
         convertAssessmentInfo(taskWithFile.peerTask)
+    )
+}
+
+internal fun convertAssignmentPeerAssessmentResult(result: PeerService.PeerAssessmentResult): AssignmentPeerAssessmentResultResponse {
+    return AssignmentPeerAssessmentResultResponse(
+        result.assignmentId,
+        peerScore = result.peerScore,
+        finalScore = result.finalScore,
+        peerInfoList = result.peerInfoList.map { convertAssessmentInfo(it) }
     )
 }

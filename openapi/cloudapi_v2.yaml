@@ -595,6 +595,26 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreatePeerAssessmentRequest'
+    get:
+      summary: 获取某个作业的互评信息
+      operationId: get-peerAssessment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentPeerAssessmentResultResponse'
+      tags:
+        - 互评
+      description: 获取某个作业的互评信息
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: assignmentId
+          required: true
   /peerTasks:
     get:
       summary: 获取属于自己的互评任务
@@ -1247,6 +1267,7 @@ components:
     AssessmentInfoResponse:
       title: AssessmentInfoResponse
       type: object
+      description: 当学生读取该Model时，assessor为空，表示学生不允许读取是谁评阅了自己的作业
       properties:
         assessor:
           $ref: '#/components/schemas/SimpleUser'
@@ -1256,18 +1277,16 @@ components:
         score:
           type: number
           format: double
+        adjustedScore:
+          type: number
+          format: double
+          description: 调整后的分数
         assessedTime:
           type: integer
           format: int64
         reason:
           type: string
           description: 评分理由，没有理由的也要返回空String
-      required:
-        - assessor
-        - assignmentId
-        - score
-        - assessedTime
-        - reason
     StudentPeerTaskResponse:
       title: StudentPeerTaskResponse
       type: object
@@ -1282,6 +1301,28 @@ components:
       required:
         - id
         - file
+    AssignmentPeerAssessmentResultResponse:
+      title: AssignmentPeerAssessmentResultResponse
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        peerScore:
+          type: number
+          format: double
+          description: 互评得到的分数
+        finalScore:
+          type: number
+          format: double
+          description: 教师干预后的分数
+        peerInfoList:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssessmentInfoResponse'
+      required:
+        - id
+        - peerInfoList
   securitySchemes:
     Authorization:
       type: apiKey

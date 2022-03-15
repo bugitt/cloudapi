@@ -15,7 +15,8 @@ interface Assignment : Entity<Assignment>, IEntity {
     var file: File?
 
     var experimentId: Int
-    var score: Float
+    var finalScore: Float
+    var peerScore: Double
     var peerCompleted: Boolean
     var courseId: Int
 
@@ -46,7 +47,11 @@ object Assignments : Table<Assignment>("assignment_v2") {
     val courseId = int("course_id").bindTo { it.courseId }
 
     @Suppress("unused")
-    val score = float("score").bindTo { it.score }
+    // 这里名称不统一是故意为之
+    val finalScore = float("score").bindTo { it.finalScore }
+
+    @Suppress("unused")
+    val peerScore = double("peer_score").bindTo { it.peerScore }
 
     @Suppress("unused")
     val peerCompleted = boolean("peer_completed").bindTo { it.peerCompleted }
