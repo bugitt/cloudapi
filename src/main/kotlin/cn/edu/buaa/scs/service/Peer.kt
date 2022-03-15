@@ -20,6 +20,7 @@ val ApplicationCall.peer get() = PeerService.getSvc(this) { PeerService(this) }
 class PeerService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<PeerService>() {
         val enableServiceMutexMap: MutableMap<Int, Mutex> = ConcurrentHashMap()
+        val studentPeerTaskMutexMap: MutableMap<String, Mutex> = ConcurrentHashMap()
     }
 
     data class AssessmentInfo(
@@ -171,6 +172,8 @@ class PeerService(val call: ApplicationCall) : IService {
         score: Double,
         srcReason: String? = null
     ): AssessmentInfo {
+        val mutex = studentPeerTaskMutexMap.getOrPut(call.userId()) { Mutex() }
+        mutex.lock()
         if (!experiment.peerAssessmentStart) {
             // 互评还没开始，此时不能评分
             throw BadRequestException("Peer assessment has not started")
@@ -228,6 +231,7 @@ class PeerService(val call: ApplicationCall) : IService {
             }
             CommonScheduler.multiCoroutinesProduceSync(updateAssignmentActionList, Dispatchers.IO)
         }
+        mutex.unlock()
         return AssessmentInfo(
             assignment.id,
             call.userId(),
