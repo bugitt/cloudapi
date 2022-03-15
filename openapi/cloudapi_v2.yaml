@@ -675,6 +675,12 @@ components:
           type: integer
           format: int64
           description: 长整型时间戳
+        peerScore:
+          type: number
+          format: double
+        finalScore:
+          type: number
+          format: double
       required:
         - id
         - studentId
