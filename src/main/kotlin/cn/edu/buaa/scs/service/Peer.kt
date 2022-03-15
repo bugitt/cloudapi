@@ -160,6 +160,22 @@ class PeerService(val call: ApplicationCall) : IService {
                 }
                 batchInsertActionList.add(action)
             }
+            // 特别地，还需要为标准作业的学生分配互评任务
+            val standardLen = standardAssignments.size
+            for (i in 0 until standardLen) {
+                val assessor = userMap[standardAssignments[i].studentId] as User
+                val action = suspend {
+                    val targetAssignmentList = assignments.shuffled().take(3)
+                    mysql.batchInsert(PeerTasks) {
+                        targetAssignmentList.forEach { targetAssignment ->
+                            this.buildPeerTask(assessor, targetAssignment, false)
+                        }
+                        // 然后, 还需要分配一个标准作业
+                        this.buildPeerTask(assessor, standardAssignments[(i + 1) % standardLen], true)
+                    }
+                }
+                batchInsertActionList.add(action)
+            }
             CommonScheduler.multiCoroutinesProduceSync(batchInsertActionList, Dispatchers.IO)
 
             experiment.peerAssessmentStart = true
