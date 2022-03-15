@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.authWrite
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
@@ -38,6 +39,14 @@ class PeerService(val call: ApplicationCall) : IService {
         val peerTask: PeerTask
     )
 
+    data class PeerAssessmentResult(
+        val assignmentId: Int,
+        val finalScore: Double?,
+        val peerScore: Double?,
+        val peerInfoList: List<PeerTask>,
+        val isAdmin: Boolean,
+    )
+
     suspend fun createOrUpdate(assignmentId: Int, score: Double, reason: String? = null): AssessmentInfo {
         val assignment = Assignment.id(assignmentId)
         val experiment = Experiment.id(assignment.experimentId)
@@ -66,6 +75,19 @@ class PeerService(val call: ApplicationCall) : IService {
                 taskMap[assignment.id] as PeerTask
             )
         }
+    }
+
+    fun getResult(assignmentId: Int): PeerAssessmentResult {
+        val assignment = Assignment.id(assignmentId)
+        call.user().assertRead(assignment)
+        val tasks = mysql.peerTasks.filter { it.assignmentId.eq(assignmentId) }.toList()
+        return PeerAssessmentResult(
+            assignment.id,
+            finalScore = assignment.finalScore.toDouble(),
+            peerScore = assignment.peerScore,
+            tasks,
+            call.userId() != assignment.studentId
+        )
     }
 
     /**
@@ -219,12 +241,12 @@ class PeerService(val call: ApplicationCall) : IService {
                 suspend {
                     if (mysql.peerTasks.none { it.assignmentId.eq(task.assignmentId) and it.status.less(2) }) {
                         // 说明该作业的评分都搞完了，算一下平均值
-                        val finalScore =
+                        val peerScore =
                             mysql.peerTasks.filter { it.assignmentId.eq(task.assignmentId) }
                                 .averageBy { it.adjustedScore }
                         mysql.update(Assignments) {
-                            set(it.score, finalScore?.toFloat())
-                            set(it.peerCompleted, finalScore != null)
+                            set(it.peerScore, peerScore)
+                            set(it.peerCompleted, peerScore != null)
                         }
                     }
                 }
