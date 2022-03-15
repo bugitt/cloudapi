@@ -19,11 +19,14 @@ import cn.edu.buaa.scs.controller.models.SimpleUser
  * @param assignmentId 
  * @param score 
  * @param assessedTime 
+ * @param reason 评分理由，没有理由的也要返回空String
  */
 data class AssessmentInfoResponse(
     val assessor: SimpleUser,
     val assignmentId: kotlin.Int,
     val score: kotlin.Double,
-    val assessedTime: kotlin.Long
+    val assessedTime: kotlin.Long,
+    /* 评分理由，没有理由的也要返回空String */
+    val reason: kotlin.String
 ) 
 

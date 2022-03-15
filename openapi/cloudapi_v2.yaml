@@ -1259,11 +1259,15 @@ components:
         assessedTime:
           type: integer
           format: int64
+        reason:
+          type: string
+          description: 评分理由，没有理由的也要返回空String
       required:
         - assessor
         - assignmentId
         - score
         - assessedTime
+        - reason
     StudentPeerTaskResponse:
       title: StudentPeerTaskResponse
       type: object
