@@ -97,7 +97,7 @@ fun Route.experimentRoute() {
                      */
                     patch {
                         val req = call.receive<PatchAssignmentRequest>()
-                        call.assignment.patch(call.getAssignmentIdFromPath(), req.fileId).let {
+                        call.assignment.patch(call.getAssignmentIdFromPath(), req.fileId, req.finalScore).let {
                             call.respond(convertAssignment(it))
                         }
                     }

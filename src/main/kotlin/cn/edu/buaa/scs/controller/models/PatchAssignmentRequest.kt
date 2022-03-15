@@ -15,8 +15,10 @@ package cn.edu.buaa.scs.controller.models
 /**
  * 
  * @param fileId 
+ * @param finalScore 
  */
 data class PatchAssignmentRequest(
-    val fileId: kotlin.Int
+    val fileId: kotlin.Int? = null,
+    val finalScore: kotlin.Double? = null
 ) 
 
