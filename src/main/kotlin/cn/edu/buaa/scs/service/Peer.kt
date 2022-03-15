@@ -30,7 +30,8 @@ class PeerService(val call: ApplicationCall) : IService {
         val assessorId: String,
         val assessorName: String,
         val assessedTime: Long,
-        val score: Double
+        val score: Double,
+        val reason: String
     )
 
     data class PeerTaskWithFile(
@@ -164,7 +165,7 @@ class PeerService(val call: ApplicationCall) : IService {
         task.createdAt = System.currentTimeMillis()
         task.isCompleted = true
         mysql.peerStands.update(task)
-        return AssessmentInfo(assignment.id, call.userId(), call.user().name, task.createdAt!!, task.score!!)
+        return AssessmentInfo(assignment.id, call.userId(), call.user().name, task.createdAt!!, task.score!!, "")
     }
 
     private fun nonAdminCreateOrUpdate(
@@ -213,10 +214,17 @@ class PeerService(val call: ApplicationCall) : IService {
                 mysql.peerTasks.update(task)
             }
         }
-        return AssessmentInfo(assignment.id, call.userId(), call.user().name, task.createdAt!!, task.originalScore!!)
+        return AssessmentInfo(
+            assignment.id,
+            call.userId(),
+            call.user().name,
+            task.createdAt!!,
+            task.originalScore!!,
+            reason
+        )
     }
 
-    private fun adjustScore(originScore: Double, standardScore: Double, selfStandardScore: Double): Double {
+    private fun adjustScore(originScore: Double, selfStandardScore: Double, standardScore: Double): Double {
         val rate = if (selfStandardScore > standardScore) {
             -0.05
         } else if (selfStandardScore < standardScore) {

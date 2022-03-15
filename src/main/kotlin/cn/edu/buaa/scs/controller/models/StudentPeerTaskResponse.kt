@@ -16,11 +16,12 @@ import cn.edu.buaa.scs.controller.models.FileResponse
 
 /**
  * 
- * @param id 
+ * @param id AssignmentId
  * @param file 
  * @param peerInfo 
  */
 data class StudentPeerTaskResponse(
+    /* AssignmentId */
     val id: kotlin.Int,
     val file: FileResponse,
     val peerInfo: AssessmentInfoResponse? = null

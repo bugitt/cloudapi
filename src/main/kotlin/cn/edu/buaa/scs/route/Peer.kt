@@ -56,7 +56,8 @@ internal fun convertAssessmentInfo(standard: PeerStandard): AssessmentInfoRespon
         assessor = SimpleUser(standard.assessorId!!, standard.assessorName!!),
         score = standard.score!!,
         assessedTime = standard.createdAt!!,
-        assignmentId = standard.assignmentId
+        assignmentId = standard.assignmentId,
+        reason = ""
     )
 }
 
@@ -67,7 +68,8 @@ internal fun convertAssessmentInfo(assessmentInfo: PeerTask): AssessmentInfoResp
         assessor = SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName),
         score = score,
         assessedTime = createdAt,
-        assignmentId = assessmentInfo.assignmentId
+        assignmentId = assessmentInfo.assignmentId,
+        reason = assessmentInfo.reason ?: ""
     )
 }
 
@@ -76,7 +78,8 @@ internal fun convertAssessmentInfo(assessmentInfo: PeerService.AssessmentInfo): 
         assessor = SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName),
         score = assessmentInfo.score,
         assessedTime = assessmentInfo.assessedTime,
-        assignmentId = assessmentInfo.assignmentId
+        assignmentId = assessmentInfo.assignmentId,
+        reason = assessmentInfo.reason
     )
 }
 
