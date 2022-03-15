@@ -72,13 +72,14 @@ internal fun convertAssessmentInfo(standard: PeerStandard): AssessmentInfoRespon
     )
 }
 
-internal fun convertAssessmentInfo(assessmentInfo: PeerTask, isAdmin: Boolean = true): AssessmentInfoResponse {
+internal fun convertAssessmentInfo(task: PeerTask, isAdmin: Boolean = true): AssessmentInfoResponse {
     return AssessmentInfoResponse(
-        assessor = if (isAdmin) SimpleUser(assessmentInfo.assessorId, assessmentInfo.assessorName) else null,
-        score = assessmentInfo.originalScore,
-        assessedTime = assessmentInfo.createdAt,
-        assignmentId = assessmentInfo.assignmentId,
-        reason = assessmentInfo.reason ?: ""
+        assessor = if (isAdmin) SimpleUser(task.assessorId, task.assessorName) else null,
+        score = task.originalScore,
+        adjustedScore = task.adjustedScore,
+        assessedTime = task.createdAt,
+        assignmentId = task.assignmentId,
+        reason = task.reason ?: ""
     )
 }
 
