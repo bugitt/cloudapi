@@ -16,6 +16,7 @@ interface Assignment : Entity<Assignment>, IEntity {
 
     var experimentId: Int
     var score: Float
+    var peerCompleted: Boolean
     var courseId: Int
 
     var createdAt: Long
@@ -46,6 +47,9 @@ object Assignments : Table<Assignment>("assignment_v2") {
 
     @Suppress("unused")
     val score = float("score").bindTo { it.score }
+
+    @Suppress("unused")
+    val peerCompleted = boolean("peer_completed").bindTo { it.peerCompleted }
 
     @Suppress("unused")
     val createdAt = long("created_at").bindTo { it.createdAt }

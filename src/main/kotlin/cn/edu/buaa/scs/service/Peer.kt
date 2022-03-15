@@ -12,10 +12,7 @@ import io.ktor.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import org.ktorm.dsl.*
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.toList
-import org.ktorm.entity.update
+import org.ktorm.entity.*
 import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.peer get() = PeerService.getSvc(this) { PeerService(this) }
@@ -40,7 +37,7 @@ class PeerService(val call: ApplicationCall) : IService {
         val peerTask: PeerTask
     )
 
-    fun createOrUpdate(assignmentId: Int, score: Double, reason: String? = null): AssessmentInfo {
+    suspend fun createOrUpdate(assignmentId: Int, score: Double, reason: String? = null): AssessmentInfo {
         val assignment = Assignment.id(assignmentId)
         val experiment = Experiment.id(assignment.experimentId)
         val isAdmin = call.user().isAdmin() || call.user().isCourseAdmin(experiment.course)
@@ -168,7 +165,7 @@ class PeerService(val call: ApplicationCall) : IService {
         return AssessmentInfo(assignment.id, call.userId(), call.user().name, task.createdAt!!, task.score!!, "")
     }
 
-    private fun nonAdminCreateOrUpdate(
+    private suspend fun nonAdminCreateOrUpdate(
         experiment: Experiment,
         assignment: Assignment,
         score: Double,
@@ -213,6 +210,23 @@ class PeerService(val call: ApplicationCall) : IService {
                 task.status = 2
                 mysql.peerTasks.update(task)
             }
+
+            // 检查涉及到的作业是不是都已经评分完成了，如果完成的话，更新该作业的分数
+            val updateAssignmentActionList = tasks.map { task ->
+                suspend {
+                    if (mysql.peerTasks.none { it.assignmentId.eq(task.assignmentId) and it.status.less(2) }) {
+                        // 说明该作业的评分都搞完了，算一下平均值
+                        val finalScore =
+                            mysql.peerTasks.filter { it.assignmentId.eq(task.assignmentId) }
+                                .averageBy { it.adjustedScore }
+                        mysql.update(Assignments) {
+                            set(it.score, finalScore?.toFloat())
+                            set(it.peerCompleted, finalScore != null)
+                        }
+                    }
+                }
+            }
+            CommonScheduler.multiCoroutinesProduceSync(updateAssignmentActionList, Dispatchers.IO)
         }
         return AssessmentInfo(
             assignment.id,
