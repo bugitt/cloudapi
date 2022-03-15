@@ -75,15 +75,20 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
         return assignment
     }
 
-    fun patch(assignmentId: Int, fileId: Int): Assignment {
+    fun patch(assignmentId: Int, fileId: Int?, finalScore: Double?): Assignment {
         val assignment = mysql.assignments.find { it.id eq assignmentId }
             ?: throw NotFoundException("assignment($assignmentId) not found")
         call.user().assertWrite(assignment)
-        val file = File.id(fileId)
-        if (file.owner != assignment.studentId) {
-            throw AuthorizationException("file owner(${file.owner} is conflict with assignment student(${assignment.studentId}")
+        fileId?.let { id ->
+            val file = File.id(id)
+            if (file.owner != assignment.studentId) {
+                throw AuthorizationException("file owner(${file.owner} is conflict with assignment student(${assignment.studentId}")
+            }
+            assignment.file = file
         }
-        assignment.file = file
+        finalScore?.let { score ->
+            assignment.finalScore = score.toFloat()
+        }
         assignment.updatedAt = System.currentTimeMillis()
         mysql.assignments.update(assignment)
         return assignment
