@@ -174,3 +174,7 @@ fun Assignment.Companion.id(id: Int): Assignment {
         ?: throw BusinessException("find course($id) from database error")
 }
 
+fun Assignment.Companion.isPeerTarget(assignmentId: Int, userId: String): Boolean {
+    return mysql.peerTasks.exists { it.assignmentId.eq(assignmentId) and it.assessorId.eq(userId) }
+}
+

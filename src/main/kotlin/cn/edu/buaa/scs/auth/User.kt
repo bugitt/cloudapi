@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.id
+import cn.edu.buaa.scs.service.isPeerTarget
 
 fun User.authRead(entity: IEntity): Boolean {
     if (isAdmin()) return true
@@ -21,6 +22,7 @@ fun User.authRead(entity: IEntity): Boolean {
             entity.studentId == this.id
                     // 或这门课的老师、助教
                     || Course.id(entity.courseId).let { isCourseAssistant(it) || isCourseTeacher(it) }
+                    || Assignment.isPeerTarget(entity.id, this.id)
 
         is CourseResource ->
             authRead(entity.course)
