@@ -263,6 +263,7 @@ class PeerService(val call: ApplicationCall) : IService {
                         mysql.update(Assignments) {
                             set(it.peerScore, peerScore)
                             set(it.peerCompleted, peerScore != null)
+                            where { it.id.eq(task.assignmentId) }
                         }
                     }
                 }
