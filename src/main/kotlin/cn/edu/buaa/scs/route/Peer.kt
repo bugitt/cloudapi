@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.route
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
+import cn.edu.buaa.scs.model.PeerAppeal
 import cn.edu.buaa.scs.model.PeerStandard
 import cn.edu.buaa.scs.model.PeerTask
 import cn.edu.buaa.scs.service.PeerService
@@ -41,6 +42,55 @@ fun Route.peerRoute() {
                 ?: throw BadRequestException("invalid expId")
             call.respond(
                 call.peer.getTasks(expId).map { convertStudentPeerTask(it) }
+            )
+        }
+    }
+    route("/peerAppeal") {
+        post {
+            val req = call.receive<CreatePeerAppealRequest>()
+            call.peer.createAppeal(req.expId, req.content).let {
+                call.respond(convertPeerAppeal(it))
+            }
+        }
+
+        route("/{peerAppealId}") {
+            fun ApplicationCall.getPeerAppealIdFromPath(): Int {
+                return parameters["peerAppealId"]?.toInt()
+                    ?: throw BadRequestException("invalid peerAppealId")
+            }
+            get {
+                call.respond(
+                    convertPeerAppeal(
+                        call.peer.getAppeal(
+                            call.getPeerAppealIdFromPath()
+                        )
+                    )
+                )
+            }
+
+            patch {
+                val req = call.receive<PatchPeerAppealRequest>()
+                call.peer.updateAppeal(
+                    call.getPeerAppealIdFromPath(),
+                    req
+                ).let {
+                    call.respond(convertPeerAppeal(it))
+                }
+            }
+
+            delete {
+                call.peer.deleteAppeal(call.getPeerAppealIdFromPath())
+                call.respond("OK")
+            }
+        }
+    }
+    route("/peerAppeals") {
+        get {
+            val expId = call.request.queryParameters["expId"]?.toInt()
+                ?: throw BadRequestException("invalid expId")
+            val studentId = call.request.queryParameters["studentId"]
+            call.respond(
+                call.peer.getAllAppeal(expId, studentId).map { convertPeerAppeal(it) }
             )
         }
     }
@@ -107,5 +157,19 @@ internal fun convertAssignmentPeerAssessmentResult(result: PeerService.PeerAsses
         peerScore = result.peerScore,
         finalScore = result.finalScore,
         peerInfoList = result.peerInfoList.map { convertAssessmentInfo(it) }
+    )
+}
+
+internal fun convertPeerAppeal(appeal: PeerAppeal): PeerAppealResponse {
+    return PeerAppealResponse(
+        id = appeal.id,
+        studentId = appeal.studentId,
+        expId = appeal.expId,
+        content = appeal.content,
+        appealedAt = appeal.appealedAt,
+        processor = appeal.processorId?.let { SimpleUser(it, appeal.processorName!!) },
+        processStatus = appeal.processStatus,
+        processContent = appeal.processContent,
+        processedAt = appeal.processedAt,
     )
 }

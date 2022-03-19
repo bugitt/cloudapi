@@ -34,6 +34,10 @@ fun User.authRead(entity: IEntity): Boolean {
                 FileType.ExperimentResource -> authRead(Experiment.id(entity.involvedId))
             }
 
+        is PeerAppeal ->
+            entity.studentId == this.id
+                    || authWrite(Experiment.id(entity.expId))
+
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
 }
@@ -67,6 +71,10 @@ fun User.authWrite(entity: IEntity): Boolean {
                 FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
                 FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
             }
+
+        is PeerAppeal ->
+            entity.studentId == this.id
+                    || authWrite(Experiment.id(entity.expId))
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
@@ -104,6 +112,10 @@ fun User.authAdmin(entity: IEntity): Boolean {
                 FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
                 FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
             }
+
+        is PeerAppeal ->
+            entity.studentId == this.id
+                    || authWrite(Experiment.id(entity.expId))
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
