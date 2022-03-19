@@ -1,8 +1,13 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.auth.assertAdmin
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.authWrite
+import cn.edu.buaa.scs.controller.models.PatchPeerAppealRequest
+import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.error.BusinessException
+import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.getOrPut
@@ -14,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
+import org.ktorm.schema.ColumnDeclaring
 import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.peer get() = PeerService.getSvc(this) { PeerService(this) }
@@ -292,4 +298,94 @@ class PeerService(val call: ApplicationCall) : IService {
         val score = originScore * (1.0 + rate)
         return if (score > 100) 100.0 else if (score < 0) 0.0 else score
     }
+
+    fun createAppeal(expId: Int, content: String): PeerAppeal {
+        val peerAppeal = PeerAppeal {
+            this.expId = expId
+            this.studentId = call.userId()
+            this.content = content
+            this.appealedAt = System.currentTimeMillis()
+            this.processStatus = 0
+        }
+        call.user().assertAdmin(peerAppeal)
+        mysql.peerAppeals.add(peerAppeal)
+        return peerAppeal
+    }
+
+    fun getAllAppeal(expId: Int, studentId: String?): List<PeerAppeal> {
+        val course = Experiment.id(expId).course
+        val isAdmin = call.user().isCourseAdmin(course)
+        val stuId = if (!isAdmin) call.userId() else studentId
+        val condition: (PeerAppeals) -> ColumnDeclaring<Boolean> = stuId?.let { id ->
+            { it.expId.eq(expId) and it.studentId.eq(id) }
+        } ?: { it.expId.eq(expId) }
+        return mysql.peerAppeals.filter(condition).toList().sortedBy { it.appealedAt }
+    }
+
+    fun getAppeal(id: Int): PeerAppeal {
+        val appeal = mysql.peerAppeals.find { it.id.eq(id) }
+            ?: throw NotFoundException("找不到该申诉")
+        call.user().assertRead(appeal)
+        return appeal
+    }
+
+    fun updateAppeal(appealId: Int, req: PatchPeerAppealRequest): PeerAppeal {
+        val appeal = mysql.peerAppeals.find { it.id.eq(appealId) }
+            ?: throw NotFoundException("找不到该申诉")
+        return if (req.content != null) {
+            patchAppeal(appeal, req.content)
+        } else {
+            processAppeal(
+                appeal,
+                req.processStatus ?: throw BadRequestException("invalid processStatus"),
+                req.processContent
+            )
+        }
+    }
+
+    /**
+     * 修改申诉的内容
+     */
+    private fun patchAppeal(appeal: PeerAppeal, content: String): PeerAppeal {
+        if (appeal.studentId != call.userId() && !call.user().isAdmin()) {
+            throw AuthorizationException("您没有权限修改该申诉")
+        }
+        appeal.content = content
+        mysql.peerAppeals.update(appeal)
+        return appeal
+    }
+
+    /**
+     * 处理申诉
+     */
+    private fun processAppeal(appeal: PeerAppeal, processStatus: Int, processContent: String?): PeerAppeal {
+        val experiment = Experiment.id(appeal.expId)
+        if (!call.user().isCourseAdmin(experiment.course)) {
+            throw AuthorizationException("您没有权限处理该申诉")
+        }
+        appeal.processStatus = processStatus
+        appeal.processContent = processContent ?: ""
+        appeal.processedAt = System.currentTimeMillis()
+        appeal.processorId = call.userId()
+        appeal.processorName = call.user().name
+        mysql.peerAppeals.update(appeal)
+        return appeal
+    }
+
+    /**
+     * 删除申诉
+     */
+    fun deleteAppeal(appealId: Int) {
+        val appeal = mysql.peerAppeals.find { it.id.eq(appealId) }
+            ?: throw NotFoundException("找不到该申诉")
+        if (appeal.studentId != call.userId() && !call.user().isAdmin()) {
+            throw AuthorizationException("您没有权限删除该申诉")
+        }
+        mysql.delete(PeerAppeals) { it.id.eq(appealId) }
+    }
+}
+
+fun PeerAppeal.Companion.id(pid: Int): PeerAppeal {
+    return mysql.peerAppeals.find { it.id eq pid }
+        ?: throw BusinessException("find peerAppeal($pid) from database error")
 }

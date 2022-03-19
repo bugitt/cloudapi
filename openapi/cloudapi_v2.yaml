@@ -646,6 +646,111 @@ paths:
           name: expId
           required: true
     parameters: []
+  /peerAppeal:
+    post:
+      summary: 提起申诉
+      operationId: post-peerAppeal
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeerAppealResponse'
+      tags:
+        - 互评
+      description: 学生提起申诉
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePeerAppealRequest'
+  '/peerAppeal/{peerAppealId}':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: peerAppealId
+        in: path
+        required: true
+    get:
+      summary: 查看一项互评申诉
+      tags:
+        - 互评
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeerAppealResponse'
+      operationId: get-peerAppeal-peerAppealId
+      security:
+        - Authorization: []
+      description: 查看一项互评申诉
+    delete:
+      summary: 删除一项互评申诉
+      operationId: delete-peerAppeal-peerAppealId
+      responses:
+        '200':
+          description: OK
+      security:
+        - Authorization: []
+      tags:
+        - 互评
+      description: 删除一项互评申诉（学生主动撤销）
+    patch:
+      summary: 修改互评申诉
+      operationId: patch-peerAppeal-peerAppealId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeerAppealResponse'
+      tags:
+        - 互评
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchPeerAppealRequest'
+      description: 两种应用场景：学生修改申诉的内容；教师或助教处理申诉
+      security:
+        - Authorization: []
+  /peerAppeals:
+    get:
+      summary: 获取互评申诉列表
+      tags:
+        - 互评
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PeerAppealResponse'
+      operationId: get-peerAppeals
+      description: 获取互评申诉列表
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: expId
+          required: true
+        - schema:
+            type: integer
+          in: query
+          name: studentId
+          description: 如果调用者为学生，那么即使设置了该字段，也会被忽略
 components:
   schemas:
     AssignmentResponse:
@@ -1335,6 +1440,67 @@ components:
       required:
         - id
         - peerInfoList
+    PeerAppealResponse:
+      title: PeerAppealResponse
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        expId:
+          type: integer
+          format: int32
+        studentId:
+          type: string
+        content:
+          type: string
+        appealedAt:
+          type: integer
+          format: int64
+        processor:
+          $ref: '#/components/schemas/SimpleUser'
+        processContent:
+          type: string
+        processStatus:
+          type: integer
+          description: |-
+            0: 未处理
+            1: 批准
+            2: 驳回
+          format: int32
+        processedAt:
+          type: integer
+          format: int64
+      required:
+        - id
+        - expId
+        - studentId
+        - content
+        - appealedAt
+        - processStatus
+    CreatePeerAppealRequest:
+      title: CreatePeerAppealRequest
+      type: object
+      properties:
+        content:
+          type: string
+        expId:
+          type: integer
+          format: int32
+      required:
+        - content
+        - expId
+    PatchPeerAppealRequest:
+      title: PatchPeerAppealRequest
+      type: object
+      properties:
+        content:
+          type: string
+        processStatus:
+          type: integer
+          format: int32
+        processContent:
+          type: string
   securitySchemes:
     Authorization:
       type: apiKey
