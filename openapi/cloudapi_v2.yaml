@@ -1098,8 +1098,6 @@ components:
         detail:
           type: string
           minLength: 1
-        resourceFile:
-          $ref: '#/components/schemas/FileResponse'
         createTime:
           type: string
           minLength: 1
@@ -1216,10 +1214,6 @@ components:
           $ref: '#/components/schemas/CourseResponse'
         teacher:
           $ref: '#/components/schemas/UserModel'
-        students:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserModel'
         exps:
           type: array
           items:
@@ -1227,7 +1221,6 @@ components:
       required:
         - course
         - teacher
-        - students
         - exps
     UserModel:
       title: UserModel

@@ -19,13 +19,11 @@ import cn.edu.buaa.scs.controller.models.UserModel
  * 某门课程中所有实验的详细统计信息
  * @param course 
  * @param teacher 
- * @param students 
  * @param exps 
  */
 data class StatCourseExpsResponse(
     val course: CourseResponse,
     val teacher: UserModel,
-    val students: kotlin.collections.List<UserModel>,
     val exps: kotlin.collections.List<StatCourseExp>
 ) 
 
