@@ -88,6 +88,7 @@ internal fun convertStatCourseExpsResponse(
     return StatCourseExpsResponse(
         course = convertCourseResponse(call, source.course),
         teacher = convertUserModel(source.teacher),
+        studentCnt = source.studentCnt,
         exps = source.expDetails.map { convertStatCourseExp(it) }
     )
 }
