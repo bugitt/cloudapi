@@ -1218,10 +1218,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StatCourseExp'
+        studentCnt:
+          type: integer
+          format: int32
       required:
         - course
         - teacher
         - exps
+        - studentCnt
     UserModel:
       title: UserModel
       type: object
