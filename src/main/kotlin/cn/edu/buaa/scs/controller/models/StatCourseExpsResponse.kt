@@ -20,10 +20,12 @@ import cn.edu.buaa.scs.controller.models.UserModel
  * @param course 
  * @param teacher 
  * @param exps 
+ * @param studentCnt 
  */
 data class StatCourseExpsResponse(
     val course: CourseResponse,
     val teacher: UserModel,
-    val exps: kotlin.collections.List<StatCourseExp>
+    val exps: kotlin.collections.List<StatCourseExp>,
+    val studentCnt: kotlin.Int
 ) 
 
