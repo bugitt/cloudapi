@@ -9,13 +9,9 @@ import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import io.ktor.application.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import org.ktorm.dsl.eq
-import org.ktorm.entity.count
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.toList
+import org.ktorm.dsl.*
+import org.ktorm.entity.*
 import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.course
@@ -35,7 +31,6 @@ class CourseService(val call: ApplicationCall) : IService {
     data class StatCourseExps(
         val course: Course,
         val teacher: User,
-        val students: List<User>,
         val expDetails: List<ExpDetail>,
     ) {
         data class ExpDetail(
@@ -58,10 +53,23 @@ class CourseService(val call: ApplicationCall) : IService {
     suspend fun statCourseExps(courseId: Int): StatCourseExps = withContext(Dispatchers.Default) {
         val course = Course.id(courseId)
         val teacher = course.teacher
-        val students = async { getAllStudents(courseId) }
         val exps = mysql.experiments.filter { it.courseId eq course.id }.toList().sortedBy { it.startTime }
-        val expDetails = CommonScheduler.multiCoroutinesProduceSync(exps.map { { call.experiment.statExp(it) } })
-        StatCourseExps(course, teacher, students.await(), expDetails)
+        
+        // 统计一下交作业的人数
+        val assignmentMap =
+            mysql.assignments.filter { it.courseId.eq(courseId) and it.fileId.isNotNull() and it.fileId.notEq(0) }
+                .groupingBy { it.expId }.aggregateColumns { count(it.id) }
+
+        val expDetails =
+            CommonScheduler.multiCoroutinesProduceSync(exps.map {
+                {
+                    call.experiment.statExp(
+                        it,
+                        assignmentMap[it.id] ?: 0
+                    )
+                }
+            }, Dispatchers.IO)
+        StatCourseExps(course, teacher, expDetails)
     }
 }
 

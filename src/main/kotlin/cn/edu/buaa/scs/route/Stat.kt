@@ -5,7 +5,6 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.CourseService
 import cn.edu.buaa.scs.service.course
-import cn.edu.buaa.scs.service.resourceFile
 import cn.edu.buaa.scs.service.stat
 import io.ktor.application.*
 import io.ktor.features.*
@@ -61,7 +60,6 @@ internal fun convertStatCourseExp(expDetail: CourseService.StatCourseExps.ExpDet
         name = experiment.name,
         type = experiment.type,
         detail = experiment.detail,
-        resourceFile = experiment.resourceFile?.let { convertFileResponse(it) },
         createTime = experiment.createTime,
         startTime = experiment.startTime,
         endTime = experiment.endTime,
@@ -90,7 +88,6 @@ internal fun convertStatCourseExpsResponse(
     return StatCourseExpsResponse(
         course = convertCourseResponse(call, source.course),
         teacher = convertUserModel(source.teacher),
-        students = source.students.map { convertUserModel(it) },
         exps = source.expDetails.map { convertStatCourseExp(it) }
     )
 }

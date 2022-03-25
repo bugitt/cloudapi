@@ -12,7 +12,6 @@
 package cn.edu.buaa.scs.controller.models
 
 import cn.edu.buaa.scs.controller.models.ExpVmInfo
-import cn.edu.buaa.scs.controller.models.FileResponse
 
 /**
  * 
@@ -31,7 +30,6 @@ import cn.edu.buaa.scs.controller.models.FileResponse
  * @param peerAssessmentStart 
  * @param sentEmail 
  * @param submittedAssignmentsCnt 已提交作业的人数
- * @param resourceFile 
  * @param vm 
  */
 data class StatCourseExp(
@@ -52,7 +50,6 @@ data class StatCourseExp(
     val sentEmail: kotlin.Boolean,
     /* 已提交作业的人数 */
     val submittedAssignmentsCnt: kotlin.Int,
-    val resourceFile: FileResponse? = null,
     val vm: ExpVmInfo? = null
 ) 
 

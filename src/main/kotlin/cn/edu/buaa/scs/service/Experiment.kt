@@ -205,10 +205,7 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
         return buildPairResult(randomAssignmentList, listOf())
     }
 
-    fun statExp(experiment: Experiment): CourseService.StatCourseExps.ExpDetail {
-        // 统计已经交作业的人数
-        val submittedAssignmentCnt =
-            mysql.assignments.count { it.expId.eq(experiment.id) and it.fileId.isNotNull() and it.fileId.notEq(0) }
+    fun statExp(experiment: Experiment, submittedAssignmentCnt: Int): CourseService.StatCourseExps.ExpDetail {
         // TODO: 统计虚拟机数量
         val vmCnt = 0
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
