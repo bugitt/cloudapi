@@ -31,6 +31,7 @@ class CourseService(val call: ApplicationCall) : IService {
     data class StatCourseExps(
         val course: Course,
         val teacher: User,
+        val studentCnt: Int,
         val expDetails: List<ExpDetail>,
     ) {
         data class ExpDetail(
@@ -54,7 +55,7 @@ class CourseService(val call: ApplicationCall) : IService {
         val course = Course.id(courseId)
         val teacher = course.teacher
         val exps = mysql.experiments.filter { it.courseId eq course.id }.toList().sortedBy { it.startTime }
-        
+
         // 统计一下交作业的人数
         val assignmentMap =
             mysql.assignments.filter { it.courseId.eq(courseId) and it.fileId.isNotNull() and it.fileId.notEq(0) }
@@ -69,7 +70,7 @@ class CourseService(val call: ApplicationCall) : IService {
                     )
                 }
             }, Dispatchers.IO)
-        StatCourseExps(course, teacher, expDetails)
+        StatCourseExps(course, teacher, call.course.studentCnt(courseId), expDetails)
     }
 }
 
