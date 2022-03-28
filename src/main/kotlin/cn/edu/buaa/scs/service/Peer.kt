@@ -238,39 +238,42 @@ class PeerService(val call: ApplicationCall) : IService {
             task.status = if (task.isStandard) 2 else 1
             mysql.peerTasks.update(task)
 
-            // 进行善后工作
-            // 如果都评分完成，修正之前左右的评分
+            // 进行若干善后工作
+
+            // 拿到当前学生所有的评分任务
             val tasks =
-                mysql.peerTasks.filter { it.expId.eq(experiment.id) and (it.status.notEq(0)) }.toList()
-
-            if (tasks.size < 4) {
-                // 评分还没完成，没必要调整
-                return@useTransaction
-            }
-            // 否则，需要调整之前所有的分数
+                mysql.peerTasks.filter {
+                    it.expId.eq(experiment.id) and
+                            it.assessorId.eq(call.userId()) and
+                            (it.status.notEq(0))
+                }.toList()
             val standardTask = tasks.find { it.isStandard } as PeerTask
-            val standardScore =
-                (mysql.peerStands.find { it.assignmentId.eq(standardTask.assignmentId) } as PeerStandard).score
-            tasks.forEach { task ->
-                val adjustedScore = adjustScore(task.originalScore!!, standardTask.originalScore!!, standardScore!!)
-                task.adjustedScore = adjustedScore
-                task.status = 2
-                mysql.peerTasks.update(task)
+
+            if (standardTask.status != 0) {
+                // 如果已经给标准作业打分了，那么就可以调整之前所有的分数了
+                val standardScore =
+                    (mysql.peerStands.find { it.assignmentId.eq(standardTask.assignmentId) } as PeerStandard).score
+                tasks.forEach { task ->
+                    if (task.status == 0) return@forEach    // 如果是未评分的，则不需要调整
+
+                    val adjustedScore = adjustScore(task.originalScore!!, standardTask.originalScore!!, standardScore!!)
+                    task.adjustedScore = adjustedScore
+                    task.status = 2
+                    mysql.peerTasks.update(task)
+                }
             }
 
-            // 检查涉及到的作业是不是都已经评分完成了，如果完成的话，更新该作业的分数
+            // 实时计算一下当前这个学生所有的评分任务所涉及到的作业的互评平均分
             val updateAssignmentActionList = tasks.map { task ->
                 suspend {
-                    if (mysql.peerTasks.none { it.assignmentId.eq(task.assignmentId) and it.status.less(2) }) {
-                        // 说明该作业的评分都搞完了，算一下平均值
-                        val peerScore =
-                            mysql.peerTasks.filter { it.assignmentId.eq(task.assignmentId) }
-                                .averageBy { it.adjustedScore }
-                        mysql.update(Assignments) {
-                            set(it.peerScore, peerScore)
-                            set(it.peerCompleted, peerScore != null)
-                            where { it.id.eq(task.assignmentId) }
-                        }
+                    val peerScore =
+                        mysql.peerTasks.filter { it.assignmentId.eq(task.assignmentId) and it.status.eq(2) }
+                            .averageBy { it.adjustedScore }
+                    val completed = mysql.peerTasks.none { it.assignmentId.eq(task.assignmentId) and it.status.less(2) }
+                    mysql.update(Assignments) {
+                        set(it.peerScore, peerScore)
+                        set(it.peerCompleted, completed)
+                        where { it.id.eq(task.assignmentId) }
                     }
                 }
             }
