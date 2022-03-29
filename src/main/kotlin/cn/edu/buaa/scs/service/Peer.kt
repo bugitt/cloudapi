@@ -247,9 +247,11 @@ class PeerService(val call: ApplicationCall) : IService {
                             it.assessorId.eq(call.userId()) and
                             (it.status.notEq(0))
                 }.toList()
-            val standardTask = tasks.find { it.isStandard } as PeerTask
 
-            if (standardTask.status != 0) {
+            if (tasks.isEmpty()) return@useTransaction
+
+            val standardTask = tasks.find { it.isStandard }
+            if (standardTask != null && standardTask.status != 0) {
                 // 如果已经给标准作业打分了，那么就可以调整之前所有的分数了
                 val standardScore =
                     (mysql.peerStands.find { it.assignmentId.eq(standardTask.assignmentId) } as PeerStandard).score
