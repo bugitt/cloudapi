@@ -1,4 +1,3 @@
-val ktor_version: String by project
 val kotlin_version: String by project
 
 plugins {
@@ -26,6 +25,10 @@ dependencies {
     // ktor server
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
+
+    // ktor client
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
 
     // coroutine
     val coroutine_version = "1.6.0"
