@@ -1,6 +1,5 @@
 val ktor_version: String by project
 val kotlin_version: String by project
-val logback_version: String by project
 
 plugins {
     application
@@ -33,8 +32,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutine_version")
 
     // kotlin-log
-    implementation("io.github.microutils:kotlin-logging:2.0.11")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("io.github.microutils:kotlin-logging:2.1.21")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
 
     // auth
     implementation("io.ktor:ktor-auth:$ktor_version")
