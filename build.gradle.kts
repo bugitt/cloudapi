@@ -44,11 +44,7 @@ dependencies {
     implementation("io.ktor:ktor-auth:$ktor_version")
 
     // serialization
-    val jackson_version = "2.13.0"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
     implementation("io.ktor:ktor-jackson:$ktor_version")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jackson_version")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
 
     // Redis
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
