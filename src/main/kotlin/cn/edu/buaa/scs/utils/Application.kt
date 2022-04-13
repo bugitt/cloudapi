@@ -9,6 +9,7 @@ fun Application.getConfigString(name: String, default: String = ""): String =
 fun Application.getConfigList(name: String, default: List<String> = listOf()): List<String> =
     this.environment.config.propertyOrNull(name)?.getList() ?: default
 
+@Suppress("unused")
 fun Application.getFile(filename: String): InputStream {
     return this.javaClass.getResourceAsStream(filename)!!
 }

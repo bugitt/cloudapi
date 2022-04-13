@@ -5,7 +5,7 @@ import io.fabric8.kubernetes.client.Watcher
 import io.fabric8.kubernetes.client.WatcherException
 import io.ktor.application.*
 import io.ktor.server.testing.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 class KubeTest {
