@@ -19,7 +19,7 @@ data class DeployOption(
 
     // controller options
     val needInternet: Boolean = false,
-    val controllerType: ControllerType = ControllerType.DEPLOYMENT,
+    val workloadType: WorkloadType = WorkloadType.DEPLOYMENT,
     val controllerLabels: Map<String, String> = mapOf(),
     val controllerAnnotations: Map<String, String> = mapOf(),
 

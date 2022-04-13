@@ -5,27 +5,27 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.StatefulSet
 import io.fabric8.kubernetes.api.model.batch.v1.Job
 
-sealed interface Controller {
+sealed interface Workload {
 
 }
 
-class DeploymentController(deployment: Deployment) : Controller {
+class DeploymentWorkload(deployment: Deployment) : Workload {
 
 }
 
-class StatefulSetController(statefulSet: StatefulSet) : Controller {
+class StatefulSetWorkload(statefulSet: StatefulSet) : Workload {
 
 }
 
-class DaemonSetController(daemonSet: DaemonSet) : Controller {
+class DaemonSetWorkload(daemonSet: DaemonSet) : Workload {
 
 }
 
-class JobController(job: Job) : Controller {
+class JobWorkload(job: Job) : Workload {
 
 }
 
-enum class ControllerType {
+enum class WorkloadType {
     DEPLOYMENT,
     STATEFUL,
     DAEMON,

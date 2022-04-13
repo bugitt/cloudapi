@@ -14,19 +14,19 @@ import java.util.*
 object Kube {
 
     data class ParsedResult(
-        val controller: Controller,
+        val workload: Workload,
         val service: Service? = null,
         val pvcs: List<PersistentVolumeClaim>? = null,
     )
 
     private fun makeController(
-        type: ControllerType,
+        type: WorkloadType,
         pod: PodTemplateSpec,
         meta: ObjectMeta,
         podSelector: LabelSelector
-    ): Controller =
+    ): Workload =
         when (type) {
-            ControllerType.DEPLOYMENT -> DeploymentController(
+            WorkloadType.DEPLOYMENT -> DeploymentWorkload(
                 Deployment().apply {
                     metadata = meta
                     spec {
@@ -37,7 +37,7 @@ object Kube {
                 }
             )
 
-            ControllerType.STATEFUL -> StatefulSetController(
+            WorkloadType.STATEFUL -> StatefulSetWorkload(
                 StatefulSet().apply {
                     metadata = meta
                     spec {
@@ -49,7 +49,7 @@ object Kube {
             )
 
 
-            ControllerType.DAEMON -> DaemonSetController(
+            WorkloadType.DAEMON -> DaemonSetWorkload(
                 DaemonSet().apply {
                     metadata = meta
                     spec {
@@ -59,7 +59,7 @@ object Kube {
                 }
             )
 
-            ControllerType.JOB -> JobController(
+            WorkloadType.JOB -> JobWorkload(
                 KubeJob().apply {
                     metadata = meta
                     spec = JobSpec().apply {
@@ -149,7 +149,7 @@ object Kube {
             labels = opt.controllerLabels + baseLabels
         }
 
-        val controller = makeController(opt.controllerType, pod, controllerMeta, podSelector)
+        val controller = makeController(opt.workloadType, pod, controllerMeta, podSelector)
 
         // 需要创建的pvc
         val pvcs = opt.mounts.filter { it.key is VolumeType.AUTO }.map {
@@ -170,7 +170,7 @@ object Kube {
         // 如果ports为空, 则无需创建service
         if (opt.ports.isEmpty()) {
             return ParsedResult(
-                controller = controller,
+                workload = controller,
                 pvcs = pvcs,
             )
         }
@@ -198,7 +198,7 @@ object Kube {
 
         return ParsedResult(
             service = service,
-            controller = controller,
+            workload = controller,
             pvcs = pvcs,
         )
     }
