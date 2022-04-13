@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.kube
 
+import cn.edu.buaa.scs.error.BusinessException
 import com.fkorotkov.kubernetes.*
 import com.fkorotkov.kubernetes.apps.spec
 import io.fabric8.kubernetes.api.model.*
@@ -7,11 +8,13 @@ import io.fabric8.kubernetes.api.model.apps.DaemonSet
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.StatefulSet
 import io.fabric8.kubernetes.api.model.batch.v1.JobSpec
-import kotlinx.coroutines.coroutineScope
-import java.util.*
-
+import kotlin.reflect.KClass
 
 object Kube {
+
+    private const val BUZTIME_LABEL = "buztime.cloud.scs"
+    private const val CREATOR_LABEL = "creator.cloud.scs"
+    private const val ID_LABEL = "id.cloud.scs"
 
     data class ParsedResult(
         val workload: Workload,
@@ -20,13 +23,13 @@ object Kube {
     )
 
     private fun makeController(
-        type: WorkloadType,
+        type: KClass<out Workload>,
         pod: PodTemplateSpec,
         meta: ObjectMeta,
         podSelector: LabelSelector
     ): Workload =
         when (type) {
-            WorkloadType.DEPLOYMENT -> DeploymentWorkload(
+            DeploymentWorkload::class -> DeploymentWorkload(
                 Deployment().apply {
                     metadata = meta
                     spec {
@@ -37,7 +40,7 @@ object Kube {
                 }
             )
 
-            WorkloadType.STATEFUL -> StatefulSetWorkload(
+            StatefulSetWorkload::class -> StatefulSetWorkload(
                 StatefulSet().apply {
                     metadata = meta
                     spec {
@@ -48,8 +51,7 @@ object Kube {
                 }
             )
 
-
-            WorkloadType.DAEMON -> DaemonSetWorkload(
+            DaemonSetWorkload::class -> DaemonSetWorkload(
                 DaemonSet().apply {
                     metadata = meta
                     spec {
@@ -59,7 +61,7 @@ object Kube {
                 }
             )
 
-            WorkloadType.JOB -> JobWorkload(
+            JobWorkload::class -> JobWorkload(
                 KubeJob().apply {
                     metadata = meta
                     spec = JobSpec().apply {
@@ -68,107 +70,111 @@ object Kube {
                     }
                 }
             )
+
+            else -> throw BusinessException("unsupported workload type")
         }
 
-    fun parseDeployOption(opt: DeployOption): ParsedResult {
+    private fun parseDeployOption(opt: DeployOption): ParsedResult {
         val getVolName = fun(type: VolumeType) = when (type) {
             is VolumeType.AUTO -> opt.name
             is VolumeType.EXISTED -> type.value
         }
-        val baseLabels: Map<String, String> = mapOf(
-            "scs-clout-api-id" to UUID.randomUUID().toString()
+
+        val baseMeta: Map<String, String> = mapOf(
+            ID_LABEL to opt.id,
+            CREATOR_LABEL to opt.creator,
+            BUZTIME_LABEL to System.currentTimeMillis().toString(),
         )
-        val baseAnnotations: Map<String, String> = mapOf(
-            "scs-clout-api-id" to UUID.randomUUID().toString()
-        )
+        val baseLabels: Map<String, String> = HashMap(baseMeta)
+        val baseAnnotations: Map<String, String> = HashMap(baseMeta)
         val podSelector = newLabelSelector {
             matchLabels = mapOf("scs-cloud-api-selector" to opt.name)
         }
-        // parse pod
+        val objectMeta = newObjectMeta {
+            namespace = opt.namespace
+            name = opt.name
+            annotations = baseAnnotations
+            labels = baseLabels
+        }
+
         // pod依赖的volumes
-        val podVolumes = opt.mounts.flatMap { (volType, mountPoints) ->
-            val volName = getVolName(volType)
-            List(mountPoints.size) { i ->
-                newVolume {
-                    name = "$volName-$i"
-                    persistentVolumeClaim {
-                        claimName = volName
+        val podVolumes = opt.containers.flatMap { containerOpt ->
+            containerOpt.mounts.flatMap { (volType, mountPoints) ->
+                val volName = getVolName(volType)
+                List(mountPoints.size) { i ->
+                    newVolume {
+                        name = "$volName-$i"
+                        persistentVolumeClaim {
+                            claimName = volName
+                        }
                     }
                 }
             }
         }
-        // container中的挂载点
-        val containerVolumeMounts = opt.mounts.flatMap { (volType, mountPoints) ->
-            val volName = getVolName(volType)
-            mountPoints.mapIndexed { i, mount ->
-                newVolumeMount {
-                    name = "$volName-$i"
-                    mountPath = mount.path
-                    subPath = mount.subPath
-                    readOnly = mount.readOnly
+
+        val containerList = opt.containers.map { containerOpt ->
+            // container中的挂载点
+            val containerVolumeMounts = containerOpt.mounts.flatMap { (volType, mountPoints) ->
+                val volName = getVolName(volType)
+                mountPoints.mapIndexed { i, mount ->
+                    newVolumeMount {
+                        name = "$volName-$i"
+                        mountPath = mount.path
+                        subPath = mount.subPath
+                        readOnly = mount.readOnly
+                    }
                 }
             }
-        }
-        // container 对外暴露的port
-        val containerPorts = opt.ports.map { port ->
-            newContainerPort {
-                containerPort = port.containerPort
-                name = port.name
-                protocol = port.type.value
+
+            // container 对外暴露的port
+            val containerPorts = containerOpt.ports.map { port ->
+                newContainerPort {
+                    containerPort = port.containerPort
+                    name = port.name
+                    protocol = port.type.value
+                }
+            }
+
+            newContainer {
+                image = containerOpt.image
+                env = containerOpt.envs.map { (k, v) ->
+                    EnvVar().apply { name = k; value = v }
+                }
+                command = containerOpt.command
+                volumeMounts = containerVolumeMounts
+                ports = containerPorts
             }
         }
-        // build container
-        val container = newContainer {
-            image = opt.image
-            env = opt.envs.map { (k, v) ->
-                EnvVar().apply { name = k; value = v }
-            }
-            command = opt.command
-            volumeMounts = containerVolumeMounts
-            ports = containerPorts
-        }
+
         // build pod
         val pod = newPodTemplateSpec {
-            metadata {
-                name = opt.name
-                namespace = opt.namespace
-                annotations = opt.podAnnotations + baseAnnotations
-                labels = opt.podLabels + baseLabels
-            }
+            metadata = objectMeta
             spec {
-                containers = listOf(container)
+                containers = containerList
                 volumes = podVolumes
             }
         }
 
-        // build controller
-        val controllerMeta = ObjectMeta().apply {
-            name = opt.name
-            namespace = opt.namespace
-            annotations = opt.controllerAnnotations + baseAnnotations
-            labels = opt.controllerLabels + baseLabels
-        }
-
-        val controller = makeController(opt.workloadType, pod, controllerMeta, podSelector)
+        val controller = makeController(opt.workloadType, pod, objectMeta, podSelector)
 
         // 需要创建的pvc
-        val pvcs = opt.mounts.filter { it.key is VolumeType.AUTO }.map {
-            newPersistentVolumeClaim {
-                metadata {
-                    name = name
-                }
-                spec {
-                    storageClassName = "nfs"
-                    accessModes = listOf("ReadWriteMany")
-                    resources {
-                        requests = mapOf("storage" to Quantity("1Gi"))
+        val pvcs = opt.containers
+            .mapNotNull { it.mounts[VolumeType.AUTO] }
+            .flatten()
+            .map {
+                newPersistentVolumeClaim {
+                    metadata = objectMeta
+                    spec {
+                        accessModes = listOf("ReadWriteMany")
+                        resources {
+                            requests = mapOf("storage" to Quantity("1Gi"))
+                        }
                     }
                 }
             }
-        }
 
         // 如果ports为空, 则无需创建service
-        if (opt.ports.isEmpty()) {
+        if (opt.containers.flatMap { it.ports }.isEmpty()) {
             return ParsedResult(
                 workload = controller,
                 pvcs = pvcs,
@@ -176,15 +182,10 @@ object Kube {
         }
 
         val service = newService {
-            metadata {
-                name = opt.name
-                namespace = opt.namespace
-                annotations = opt.serviceAnnotations + baseAnnotations
-                labels = opt.serviceLabels + baseLabels
-            }
+            metadata = objectMeta
             spec {
                 selector = podSelector.matchLabels
-                ports = containerPorts.map { containerPort ->
+                ports = containerList.flatMap { it.ports }.map { containerPort ->
                     newServicePort {
                         name = containerPort.name
                         targetPort = IntOrString(containerPort.containerPort)
@@ -203,8 +204,11 @@ object Kube {
         )
     }
 
-    suspend fun syncDeploy(opt: DeployOption): Result<DeployResult> = coroutineScope {
+    suspend fun asyncDeploy(opt: DeployOption): DeployResult {
+        val result = parseDeployOption(opt)
+        // create the pvcs
+        // deploy the workload
 
-        TODO()
+        return DeployResult(opt.id)
     }
 }

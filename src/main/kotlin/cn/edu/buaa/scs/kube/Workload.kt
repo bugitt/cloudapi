@@ -24,10 +24,3 @@ class DaemonSetWorkload(daemonSet: DaemonSet) : Workload {
 class JobWorkload(job: Job) : Workload {
 
 }
-
-enum class WorkloadType {
-    DEPLOYMENT,
-    STATEFUL,
-    DAEMON,
-    JOB
-}

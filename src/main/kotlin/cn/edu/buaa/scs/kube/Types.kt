@@ -1,5 +1,7 @@
 package cn.edu.buaa.scs.kube
 
+import kotlin.reflect.KClass
+
 data class BuildOption(
     // TODO
     val name: String,
@@ -8,31 +10,31 @@ data class BuildOption(
 data class DeployOption(
     val name: String,
     val namespace: String,
-    val image: String,
+    val id: String,
+    val creator: String,
 
-    // pod options
-    val podLabels: Map<String, String> = mapOf(),
-    val podAnnotations: Map<String, String> = mapOf(),
-    val envs: Map<String, String> = mapOf(),
-    val command: List<String> = listOf(),
-    val mounts: Map<VolumeType, List<MountPoint>> = mapOf(),
+    // pod option
+    val containers: List<ContainerOption> = listOf(),
 
     // controller options
     val needInternet: Boolean = false,
-    val workloadType: WorkloadType = WorkloadType.DEPLOYMENT,
-    val controllerLabels: Map<String, String> = mapOf(),
-    val controllerAnnotations: Map<String, String> = mapOf(),
+    val workloadType: KClass<out Workload> = DeploymentWorkload::class,
+)
 
+data class ContainerOption(
+    val image: String,
+    val isInitContainer: Boolean,
+    val envs: Map<String, String> = mapOf(),
+    val command: List<String> = listOf(),
+    val mounts: Map<VolumeType, List<MountPoint>> = mapOf(),
     // export ports
     val ports: List<Port> = listOf(),
-    val serviceLabels: Map<String, String> = mapOf(),
-    val serviceAnnotations: Map<String, String> = mapOf(),
 )
 
 typealias KubeJob = io.fabric8.kubernetes.api.model.batch.v1.Job
 
 data class DeployResult(
-    val uuid: String,
+    val uuid: String
 )
 
 sealed class VolumeType {
