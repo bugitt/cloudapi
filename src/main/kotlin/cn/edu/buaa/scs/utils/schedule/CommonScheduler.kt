@@ -23,4 +23,12 @@ object CommonScheduler {
             output.close()
             output.toList()
         }
+
+    suspend fun <O, T> multiCoroutinesProduceSync(
+        originalList: List<O>,
+        dispatcher: CoroutineDispatcher = Dispatchers.Default,
+        action: (O) -> T,
+    ): List<T> {
+        return multiCoroutinesProduceSync(originalList.map { { action.invoke(it) } }, dispatcher)
+    }
 }

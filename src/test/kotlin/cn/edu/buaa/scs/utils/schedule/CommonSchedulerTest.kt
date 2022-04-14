@@ -31,4 +31,15 @@ internal class CommonSchedulerTest {
             )
         }
     }
+
+    @Test
+    fun multiCoroutinesProduceUseActionFunction() {
+        val max = 10000
+        val action: (Int) -> Int = { it * it }
+        val list = runBlocking {
+            CommonScheduler.multiCoroutinesProduceSync(List(max + 1) { it }) { it * it }
+        }
+        assert(list.size == max + 1)
+        (0..max).forEach { assert(list.contains(action(it))) }
+    }
 }
