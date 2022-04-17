@@ -74,6 +74,10 @@ dependencies {
     implementation("io.fabric8:kubernetes-client:$kubernetes_client_version")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.1.1")
 
+    // arrow
+    implementation(platform("io.arrow-kt:arrow-stack:1.0.1"))
+    implementation("io.arrow-kt:arrow-core")
+
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
