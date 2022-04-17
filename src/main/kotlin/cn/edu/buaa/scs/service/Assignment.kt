@@ -166,7 +166,30 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
 
             FileService.PackageResult(files, readme.await(), filename)
         }
+}
 
+val ApplicationCall.assignmentReview: AssignmentReviewService
+    get() = AssignmentReviewService.getSvc(this) { AssignmentReviewService(this) }
+
+class AssignmentReviewService(val call: ApplicationCall) : IService {
+
+    companion object : IService.Caller<AssignmentReviewService>()
+
+    fun post(assignmentId: Int, fileId: Int): AssignmentReview {
+        val assignment = Assignment.id(assignmentId)
+        call.user().assertWrite(Experiment.id(assignment.experimentId))
+        val assignmentReview = AssignmentReview {
+            this.assignmentId = assignmentId
+            this.fileId = fileId
+            this.reviewedAt = System.currentTimeMillis()
+        }
+        mysql.useTransaction {
+            mysql.assignmentReviews.add(assignmentReview)
+            assignment.assignmentReview = assignmentReview
+            mysql.assignments.update(assignment)
+        }
+        return assignmentReview
+    }
 }
 
 fun Assignment.Companion.id(id: Int): Assignment {
