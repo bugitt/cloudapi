@@ -170,11 +170,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssignmentResponse'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchAssignmentRequest'
   '/file/{fileId}':
     parameters:
       - schema:
@@ -791,6 +786,9 @@ components:
         finalScore:
           type: number
           format: double
+        reviewedFile:
+          type: integer
+          format: int32
       required:
         - id
         - studentId
