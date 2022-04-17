@@ -3,11 +3,9 @@ package cn.edu.buaa.scs.route
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
+import cn.edu.buaa.scs.model.AssignmentReview
 import cn.edu.buaa.scs.model.Experiment
-import cn.edu.buaa.scs.service.assignment
-import cn.edu.buaa.scs.service.experiment
-import cn.edu.buaa.scs.service.peer
-import cn.edu.buaa.scs.service.resourceFile
+import cn.edu.buaa.scs.service.*
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -120,6 +118,15 @@ fun Route.experimentRoute() {
             }
         }
     }
+
+    route("/assignmentReviews") {
+        post {
+            val req = call.receive<AssignmentReviewRequest>()
+            call.assignmentReview.post(req.assignmentId, req.fileId).let {
+                call.respond(convertAssignmentReview(it))
+            }
+        }
+    }
 }
 
 internal fun convertExperimentResponse(call: ApplicationCall, experiment: Experiment): ExperimentResponse =
@@ -154,7 +161,16 @@ internal fun convertAssignment(assignment: Assignment): AssignmentResponse {
         createdAt = assignment.createdAt,
         updatedAt = assignment.updatedAt,
         file = assignment.file?.let { convertFileResponse(it) },
+        assignmentReview = assignment.assignmentReview?.let { convertAssignmentReview(it) },
         finalScore = assignment.finalScore.toDouble(),
         peerScore = assignment.peerScore
     )
 }
+
+internal fun convertAssignmentReview(assignmentReview: AssignmentReview): AssignmentReviewResponse =
+    AssignmentReviewResponse(
+        id = assignmentReview.id,
+        assignmentId = assignmentReview.assignmentId,
+        fileId = assignmentReview.fileId,
+        reviewedAt = assignmentReview.reviewedAt,
+    )
