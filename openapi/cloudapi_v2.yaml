@@ -22,6 +22,8 @@ tags:
     description: 获取各种统计信息
   - name: 互评
     description: 互评相关接口
+  - name: 鉴权
+    description: 身份认证相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -390,7 +392,8 @@ paths:
         required: true
     get:
       summary: 获取课程信息
-      tags: [ ]
+      tags:
+        - 课程
       responses:
         '200':
           description: OK
@@ -767,6 +770,24 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AssignmentReviewRequest'
+  /authentications:
+    get:
+      summary: 校验token
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Authentication'
+      operationId: get-authentications
+      description: 校验token
+      security:
+        - Authorization: [ ]
+      tags:
+        - 鉴权
 components:
   schemas:
     AssignmentResponse:
@@ -1549,6 +1570,18 @@ components:
       required:
         - assignmentId
         - fileId
+    Authentication:
+      title: Authentication
+      type: object
+      properties:
+        id:
+          type: string
+          description: 用户的学工号，小写
+        token:
+          type: string
+      required:
+        - id
+        - token
   securitySchemes:
     Authorization:
       type: apiKey
