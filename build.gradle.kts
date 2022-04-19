@@ -2,8 +2,8 @@ val kotlin_version: String by project
 
 plugins {
     application
-    kotlin("jvm") version "1.5.31"
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("jvm") version "1.6.20"
+    kotlin("plugin.serialization") version "1.6.20"
 
     // 打包用的插件
     id("com.github.johnrengelman.shadow") version "7.0.0"
@@ -31,7 +31,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktor_version")
 
     // coroutine
-    val coroutine_version = "1.6.0"
+    val coroutine_version = "1.6.1"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutine_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutine_version")
