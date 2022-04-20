@@ -171,9 +171,11 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
 val ApplicationCall.assignmentReview: AssignmentReviewService
     get() = AssignmentReviewService.getSvc(this) { AssignmentReviewService(this) }
 
-class AssignmentReviewService(val call: ApplicationCall) : IService {
+class AssignmentReviewService(val call: ApplicationCall) : IService, FileService.IFileManageService {
 
-    companion object : IService.Caller<AssignmentReviewService>()
+    companion object : IService.Caller<AssignmentReviewService>() {
+        private const val bucketName = "scs-reviewed-assignments"
+    }
 
     fun post(assignmentId: Int, fileId: Int): AssignmentReview {
         val assignment = Assignment.id(assignmentId)
@@ -189,6 +191,26 @@ class AssignmentReviewService(val call: ApplicationCall) : IService {
             mysql.assignments.update(assignment)
         }
         return assignmentReview
+    }
+
+    private val s3 = S3(bucketName)
+
+    override fun manager(): S3 {
+        return s3
+    }
+
+    override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
+        val subStoreName = "${originalName ?: ""}-${UUID.randomUUID()}.${originalName?.getFileExtension() ?: ""}"
+        val storeName = "assignment-${involvedId}/$subStoreName"
+        return Pair(originalName!!, storeName)
+    }
+
+    override fun checkPermission(ownerId: String, involvedId: Int): Boolean {
+        return true
+    }
+
+    override fun storePath(): String {
+        return bucketName
     }
 }
 

@@ -32,6 +32,7 @@ fun User.authRead(entity: IEntity): Boolean {
                 FileType.Assignment -> authRead(Assignment.id(entity.involvedId))
                 FileType.CourseResource -> authRead(Course.id(entity.involvedId))
                 FileType.ExperimentResource -> authRead(Experiment.id(entity.involvedId))
+                FileType.AssignmentReview -> authRead(Assignment.id(entity.involvedId))
             }
 
         is PeerAppeal ->
@@ -70,6 +71,7 @@ fun User.authWrite(entity: IEntity): Boolean {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
                 FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
                 FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
+                FileType.AssignmentReview -> authWrite(Experiment.id(Assignment.id(entity.involvedId).experimentId))
             }
 
         is PeerAppeal ->
@@ -111,6 +113,7 @@ fun User.authAdmin(entity: IEntity): Boolean {
                 FileType.Assignment -> authWrite(Assignment.id(entity.involvedId))
                 FileType.CourseResource -> authWrite(Course.id(entity.involvedId))
                 FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
+                FileType.AssignmentReview -> authWrite(Experiment.id(Assignment.id(entity.involvedId).experimentId))
             }
 
         is PeerAppeal ->
