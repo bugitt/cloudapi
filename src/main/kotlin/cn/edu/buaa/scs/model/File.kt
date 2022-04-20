@@ -24,6 +24,7 @@ sealed interface FileType {
                 "Assignment" -> Assignment
                 "CourseResource" -> CourseResource
                 "ExperimentResource" -> ExperimentResource
+                "AssignmentReview" -> AssignmentReview
                 else -> throw BadRequestException("Unknown file type: $name")
             }
         }
@@ -54,6 +55,11 @@ sealed interface FileType {
     object ExperimentResource : Resource {
         override val name: String
             get() = "ExperimentResource"
+    }
+
+    object AssignmentReview : FileType {
+        override val name: String
+            get() = "AssignmentReview"
     }
 }
 

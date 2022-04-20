@@ -74,7 +74,7 @@ class FileService(val call: ApplicationCall) : IService {
         return "https://scs.buaa.edu.cn/scsos/public/$fileName"
     }
 
-    interface IFileManageService {
+    sealed interface IFileManageService {
 
         fun manager(): S3
 
@@ -279,6 +279,8 @@ class FileService(val call: ApplicationCall) : IService {
                 call.user().assertRead(Course.id(involvedId))
             FileType.ExperimentResource ->
                 call.user().assertRead(Experiment.id(involvedId))
+            FileType.AssignmentReview ->
+                Unit
         }
         // get files
         val service = fileType.manageService()
@@ -307,6 +309,7 @@ class FileService(val call: ApplicationCall) : IService {
             FileType.Assignment -> call.assignment
             FileType.CourseResource -> call.courseResource
             FileType.ExperimentResource -> call.experiment
+            FileType.AssignmentReview -> call.assignmentReview
         }
 
     private fun FileType.getInvolvedEntity(involvedId: Int): IEntity =
@@ -314,6 +317,7 @@ class FileService(val call: ApplicationCall) : IService {
             FileType.Assignment -> Assignment.id(involvedId)
             FileType.CourseResource -> Course.id(involvedId)
             FileType.ExperimentResource -> Experiment.id(involvedId)
+            FileType.AssignmentReview -> Assignment.id(involvedId)
         }
 }
 
