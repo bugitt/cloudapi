@@ -6,6 +6,7 @@ import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
 import org.ktorm.schema.int
 import org.ktorm.schema.long
+import org.ktorm.schema.varchar
 
 interface AssignmentReview : Entity<AssignmentReview> {
     companion object : Entity.Factory<AssignmentReview>()
@@ -14,6 +15,8 @@ interface AssignmentReview : Entity<AssignmentReview> {
     var assignmentId: Int
     var fileId: Int
     var reviewedAt: Long
+    var reviewerId: String
+    var reviewerName: String
 }
 
 object AssignmentReviews : Table<AssignmentReview>("assignment_review") {
@@ -21,6 +24,8 @@ object AssignmentReviews : Table<AssignmentReview>("assignment_review") {
     val assignmentId = int("assignment_id").bindTo { it.assignmentId }
     val fileId = int("file_id").bindTo { it.fileId }
     val reviewAt = long("reviewed_at").bindTo { it.reviewedAt }
+    val reviewerId = varchar("reviewer_id").bindTo { it.reviewerId }
+    val reviewerName = varchar("reviewerName").bindTo { it.reviewerName }
 }
 
 val Database.assignmentReviews

@@ -189,6 +189,8 @@ class AssignmentReviewService(val call: ApplicationCall) : IService, FileService
             this.assignmentId = assignmentId
             this.fileId = fileId
             this.reviewedAt = System.currentTimeMillis()
+            this.reviewerId = call.user().id
+            this.reviewerName = call.user().name
         }
         mysql.useTransaction {
             mysql.assignmentReviews.add(assignmentReview)
