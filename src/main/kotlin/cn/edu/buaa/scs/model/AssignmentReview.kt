@@ -25,7 +25,7 @@ object AssignmentReviews : Table<AssignmentReview>("assignment_review") {
     val fileId = int("file_id").bindTo { it.fileId }
     val reviewAt = long("reviewed_at").bindTo { it.reviewedAt }
     val reviewerId = varchar("reviewer_id").bindTo { it.reviewerId }
-    val reviewerName = varchar("reviewerName").bindTo { it.reviewerName }
+    val reviewerName = varchar("reviewer_name").bindTo { it.reviewerName }
 }
 
 val Database.assignmentReviews
