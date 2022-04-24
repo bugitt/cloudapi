@@ -199,8 +199,13 @@ class AssignmentReviewService(val call: ApplicationCall) : IService, FileService
     }
 
     fun delete(assignmentId: Int) {
-        assertAdminPermission(assignmentId)
-        mysql.delete(AssignmentReviews) { it.assignmentId eq assignmentId }
+        val assignment = assertAdminPermission(assignmentId)
+        mysql.useTransaction {
+            mysql.delete(AssignmentReviews) { it.assignmentId eq assignmentId }
+            assignment.assignmentReview = null
+            mysql.assignments.update(assignment)
+        }
+
     }
 
     private val s3 = S3(bucketName)
