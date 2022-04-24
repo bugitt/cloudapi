@@ -133,6 +133,14 @@ fun Route.experimentRoute() {
             call.assignmentReview.delete(assignmentId)
             call.respond("OK")
         }
+
+        get {
+            val assignmentId = call.request.queryParameters["assignmentId"]?.toInt()
+                ?: throw BadRequestException("assignmentId is required")
+            call.respond(
+                call.assignmentReview.get(assignmentId).map { convertAssignmentReview(it) }
+            )
+        }
     }
 }
 

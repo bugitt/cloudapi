@@ -205,7 +205,12 @@ class AssignmentReviewService(val call: ApplicationCall) : IService, FileService
             assignment.assignmentReview = null
             mysql.assignments.update(assignment)
         }
+    }
 
+    fun get(assignmentId: Int): List<AssignmentReview> {
+        val assignment = Assignment.id(assignmentId)
+        call.user().assertRead(assignment)
+        return mysql.assignmentReviews.filter { it.assignmentId eq assignmentId }.toList()
     }
 
     private val s3 = S3(bucketName)
