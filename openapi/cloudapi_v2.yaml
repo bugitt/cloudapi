@@ -787,6 +787,29 @@ paths:
             format: int32
           in: query
           name: assignmentId
+    get:
+      summary: 获取一项作业的评阅记录
+      operationId: get-assignmentReviews
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssignmentReviewResponse'
+      tags:
+        - 作业
+      description: 获取一项作业的评阅记录
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: assignmentId
   /authentications:
     get:
       summary: 校验token
