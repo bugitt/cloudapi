@@ -177,9 +177,14 @@ class AssignmentReviewService(val call: ApplicationCall) : IService, FileService
         private const val bucketName = "scs-reviewed-assignments"
     }
 
-    fun post(assignmentId: Int, fileId: Int): AssignmentReview {
+    private fun assertAdminPermission(assignmentId: Int): Assignment {
         val assignment = Assignment.id(assignmentId)
         call.user().assertWrite(Experiment.id(assignment.experimentId))
+        return assignment
+    }
+
+    fun post(assignmentId: Int, fileId: Int): AssignmentReview {
+        val assignment = assertAdminPermission(assignmentId)
         val assignmentReview = AssignmentReview {
             this.assignmentId = assignmentId
             this.fileId = fileId
@@ -191,6 +196,11 @@ class AssignmentReviewService(val call: ApplicationCall) : IService, FileService
             mysql.assignments.update(assignment)
         }
         return assignmentReview
+    }
+
+    fun delete(assignmentId: Int) {
+        assertAdminPermission(assignmentId)
+        mysql.delete(AssignmentReviews) { it.assignmentId eq assignmentId }
     }
 
     private val s3 = S3(bucketName)

@@ -770,6 +770,23 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AssignmentReviewRequest'
+    delete:
+      summary: 删除某个作业的所有评阅记录
+      operationId: delete-assignmentReviews
+      responses:
+        '200':
+          description: OK
+      description: 删除某个作业的所有评阅记录
+      tags:
+        - 作业
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: assignmentId
   /authentications:
     get:
       summary: 校验token
