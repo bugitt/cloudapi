@@ -1592,11 +1592,17 @@ components:
         reviewedAt:
           type: integer
           format: int64
+        reviewerId:
+          type: string
+        reviewerName:
+          type: string
       required:
         - id
         - assignmentId
         - fileId
         - reviewedAt
+        - reviewerId
+        - reviewerName
     AssignmentReviewRequest:
       title: AssignmentReviewRequest
       type: object

@@ -188,4 +188,6 @@ internal fun convertAssignmentReview(assignmentReview: AssignmentReview): Assign
         assignmentId = assignmentReview.assignmentId,
         fileId = assignmentReview.fileId,
         reviewedAt = assignmentReview.reviewedAt,
+        reviewerId = assignmentReview.reviewerId,
+        reviewerName = assignmentReview.reviewerName,
     )

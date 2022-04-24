@@ -18,11 +18,15 @@ package cn.edu.buaa.scs.controller.models
  * @param assignmentId
  * @param fileId
  * @param reviewedAt
+ * @param reviewerId
+ * @param reviewerName
  */
 data class AssignmentReviewResponse(
     val id: kotlin.Int,
     val assignmentId: kotlin.Int,
     val fileId: kotlin.Int,
-    val reviewedAt: kotlin.Long
+    val reviewedAt: kotlin.Long,
+    val reviewerId: kotlin.String,
+    val reviewerName: kotlin.String
 ) 
 
