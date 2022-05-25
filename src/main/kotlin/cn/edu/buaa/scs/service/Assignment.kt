@@ -90,7 +90,15 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
             assignment.finalScore = score.toFloat()
         }
         assignment.updatedAt = System.currentTimeMillis()
-        mysql.assignments.update(assignment)
+        mysql.useTransaction {
+            mysql.assignments.update(assignment)
+            if (fileId != null) {
+                // 说明是新提交的作业，清除之前可能存在的评阅记录
+                mysql.delete(AssignmentReviews) {
+                    it.assignmentId eq assignmentId
+                }
+            }
+        }
         return assignment
     }
 
