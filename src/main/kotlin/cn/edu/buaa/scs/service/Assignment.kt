@@ -143,6 +143,14 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
                 .toList()
 
             val files = validAssignments.mapNotNull { it.file }
+            files.forEach {
+                if (it.name.first().code >= 256) {
+                    // 如果作业的文件名是 姓名_学号_xxx 这种形式的，要改成 学号_姓名_xxx 这种
+                    val strList = it.name.split("_")
+                    it.name =
+                        "${strList[1]}_${strList[0]}_" + strList.subList(2, strList.size).joinToString(separator = "_")
+                }
+            }
 
             val readme = async {
                 val validStudentIds = validAssignments.map { it.studentId }
