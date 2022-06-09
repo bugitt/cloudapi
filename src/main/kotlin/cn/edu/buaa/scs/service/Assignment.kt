@@ -110,7 +110,7 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
         val expName = Experiment.id(assignment.experimentId).name.filterNot { it.isWhitespace() }
         val fileExtension = (originalName ?: "").getFileExtension()
 
-        val name = "${owner.name}_${owner.id}_$expName.$fileExtension"
+        val name = "${owner.id}_${owner.name}_$expName.$fileExtension"
         val storeName = "exp-${assignment.experimentId}/${owner.name}_${owner.id}_${UUID.randomUUID()}.$fileExtension"
         return Pair(name, storeName)
     }
