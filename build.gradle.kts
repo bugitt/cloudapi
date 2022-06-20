@@ -74,6 +74,9 @@ dependencies {
     implementation("io.fabric8:kubernetes-client:$kubernetes_client_version")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.1.1")
 
+    // vm
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
@@ -85,6 +88,7 @@ tasks {
         manifest {
             attributes(Pair("Main-Class", "cn.edu.buaa.scs.ApplicationKt"))
         }
+        isZip64 = true
     }
 
     "test"(Test::class) {
