@@ -1,0 +1,77 @@
+package cn.edu.buaa.scs.model
+
+import cn.edu.buaa.scs.utils.jsonMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.vmware.vim25.ManagedEntityStatus
+import com.vmware.vim25.VirtualMachinePowerState
+import org.ktorm.database.Database
+import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
+import org.ktorm.schema.*
+
+interface VirtualMachine : Entity<VirtualMachine>, IEntity {
+    companion object : Entity.Factory<VirtualMachine>()
+
+    data class NetInfo(
+        val macAddress: String,
+        val ipList: List<String>
+    )
+
+    // meta
+    var uuid: String
+    var platform: String // eg: vcenter, kvm, openstack
+    var name: String
+    var isTemplate: Boolean
+    var host: String
+
+    // course related
+    var adminId: String
+    var studentId: String
+    var teacherId: String
+    var isExperimental: Boolean
+    var experimentId: Int
+    var applyId: String
+
+
+    var memory: Int // MB
+    var cpu: Int
+    var osFullName: String
+    var diskNum: Int
+    var diskSize: Long  // bytes
+    var powerState: VirtualMachinePowerState
+    var overallStatus: ManagedEntityStatus
+    var netInfos: List<NetInfo>
+}
+
+object VirtualMachines : Table<VirtualMachine>("vm") {
+    val uuid = varchar("uuid").primaryKey().bindTo { it.uuid }
+    val platform = varchar("platform").bindTo { it.platform }
+    val name = varchar("name").bindTo { it.name }
+    val isTemplate = boolean("is_template").bindTo { it.isTemplate }
+    val host = varchar("host").bindTo { it.host }
+    val adminId = varchar("admin_id").bindTo { it.adminId }
+    val studentId = varchar("student_id").bindTo { it.studentId }
+    val teacherId = varchar("teacher_id").bindTo { it.teacherId }
+    val isExperimental = boolean("is_experimental").bindTo { it.isExperimental }
+    val experimentId = int("experiment_id").bindTo { it.experimentId }
+    val applyId = varchar("apply_id").bindTo { it.applyId }
+    val memory = int("memory").bindTo { it.memory }
+    val cpu = int("cpu").bindTo { it.cpu }
+    val osFullName = varchar("os_full_name").bindTo { it.osFullName }
+    val diskNum = int("disk_num").bindTo { it.diskNum }
+    val diskSize = long("disk_size").bindTo { it.diskSize }
+    val powerState = varchar("power_state").transform({ VirtualMachinePowerState.fromValue(it) }, { it.value() })
+        .bindTo { it.powerState }
+    val overallStatus = varchar("overall_status").transform({ ManagedEntityStatus.fromValue(it) }, { it.value() })
+        .bindTo { it.overallStatus }
+    val netInfos = text("net_info")
+        .transform(
+            {
+                val netInfos: List<VirtualMachine.NetInfo> = jsonMapper.readValue(it)
+                netInfos
+            },
+            { jsonMapper.writeValueAsString(it) })
+        .bindTo { it.netInfos }
+}
+
+val Database.virtualMachines get() = this.sequenceOf(VirtualMachines)
