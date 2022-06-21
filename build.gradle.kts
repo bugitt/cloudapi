@@ -51,7 +51,7 @@ dependencies {
 
     // database
     val ktorm_version = "3.4.1"
-    implementation("com.zaxxer:HikariCP:5.0.0")
+    implementation("com.zaxxer:HikariCP:4.0.3")
     implementation("org.ktorm:ktorm-core:$ktorm_version")
     implementation("org.ktorm:ktorm-jackson:$ktorm_version")
     implementation("org.ktorm:ktorm-support-mysql:$ktorm_version")
@@ -67,6 +67,7 @@ dependencies {
 
     // common utils
     implementation("com.google.guava:guava:31.0.1-jre")
+    implementation("io.netty:netty-all:4.1.78.Final")
 
     // kubernetes
     val kubernetes_client_version = "5.12.1"
@@ -75,7 +76,8 @@ dependencies {
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.1.1")
 
     // vm
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    implementation("com.vmware.photon.controller:photon-vsphere-adapter-util:0.6.60")
 
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
