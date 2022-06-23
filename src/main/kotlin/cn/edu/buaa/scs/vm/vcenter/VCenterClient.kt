@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.vm.vcenter
 
+import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
@@ -11,6 +12,7 @@ import cn.edu.buaa.scs.vm.IVMClient
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.BasicConnection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Connection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.GetMoRef
+import com.vmware.photon.controller.model.adapters.vsphere.util.connection.WaitForValues
 import com.vmware.vim25.*
 import io.ktor.application.*
 import kotlinx.coroutines.*
@@ -30,7 +32,9 @@ typealias TaskFunc = suspend (Connection) -> Unit
 
 object VCenterClient : IVMClient {
 
-    lateinit var vcenterConnect: () -> Connection
+    private lateinit var vcenterConnect: () -> Connection
+
+    private const val detention = 500L
 
     fun initialize(application: Application) {
         val entrypoint = application.getConfigString("vm.vcenter.entrypoint")
@@ -75,10 +79,11 @@ object VCenterClient : IVMClient {
 
                     // launch a coroutine to update database
                     launch {
+                        val connection = vcenterConnect()
                         while (true) {
                             // update vmList to database
                             try {
-                                updateVMsToDB(getAllVMs())
+                                updateVMsToDB(getAllVmsFromVCenter(connection))
                             } catch (e: Exception) {
                                 logger("vm-worker-update-db")().error { e.stackTraceToString() }
                             }
@@ -147,44 +152,112 @@ object VCenterClient : IVMClient {
         }
     }
 
-    override suspend fun getAllVMs(): List<VirtualMachine> {
-        val resultChannel = Channel<List<VirtualMachine>>()
-        taskChannel.send { connection ->
-//            connection.vimPort.findByUuid()
-            // 找到数据中心
-            val datacenterRef =
-                connection.vimPort.findByInventoryPath(connection.serviceContent.searchIndex, "datacenter")
-            val getMoRef = GetMoRef(connection)
-            val hostList =
-                getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("name"), RetrieveOptions())
-            val finalVirtualMachineList = mutableListOf<VirtualMachine>()
-            hostList.forEach { (hostRef, hostProps) ->
-                try {
-                    val host = hostProps["name"]!!
-                    val vmList = getMoRef.inContainerByType(
-                        hostRef,
-                        "VirtualMachine",
-                        arrayOf("summary", "config.hardware.device", "guest.net"),
-                        RetrieveOptions()
-                    )
-                    vmList?.forEach { (_, vmProps) ->
-                        val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
-                        val guestNicInfoList = vmProps["guest.net"]!! as ArrayOfGuestNicInfo
-                        val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice
-                        val vm = convertVMModel(host as String, vmSummary, guestNicInfoList, devices)
-                        finalVirtualMachineList.add(vm)
-                    }
-                } catch (e: Exception) {
-                    logger("get-all-vms")().error { e.stackTraceToString() }
+    override suspend fun getAllVMs(): Result<List<VirtualMachine>> {
+        return baseSyncTask { connection ->
+            getAllVmsFromVCenter(connection)
+        }
+    }
+
+    override suspend fun getVM(uuid: String): Result<VirtualMachine> {
+        var vm = mysql.virtualMachines.find { it.uuid eq uuid }
+        if (vm == null) {
+            delay(detention)
+            vm = mysql.virtualMachines.find { it.uuid eq uuid }
+        }
+        return if (vm == null) Result.failure(NotFoundException("virtualMachine($uuid) not found"))
+        else Result.success(vm)
+    }
+
+    override suspend fun powerOnSync(uuid: String): Result<Unit> {
+        return baseSyncTask { connection ->
+            val vimPort = connection.vimPort
+            val vmRef = vimPort.findByUuid(
+                connection.serviceContent.searchIndex,
+                getDatacenter(connection),
+                uuid,
+                true,
+                false
+            )
+            val task = vimPort.powerOnVMTask(vmRef, null)
+            waitForTaskResult(connection, task)
+        }
+    }
+
+    override suspend fun powerOnAsync(uuid: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun powerOffSync(uuid: String): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun powerOffAsync(uuid: String) {
+        TODO("Not yet implemented")
+    }
+
+    private fun getDatacenter(connection: Connection): ManagedObjectReference {
+        return connection.vimPort.findByInventoryPath(connection.serviceContent.searchIndex, "datacenter")
+    }
+
+    private fun getAllVmsFromVCenter(connection: Connection): List<VirtualMachine> {
+        val datacenterRef = getDatacenter(connection)
+        val getMoRef = GetMoRef(connection)
+        val hostList =
+            getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("name"), RetrieveOptions())
+        val finalVirtualMachineList = mutableListOf<VirtualMachine>()
+        hostList.forEach { (hostRef, hostProps) ->
+            try {
+                val hostName = hostProps["name"]!! as String
+                val vmList = getMoRef.inContainerByType(
+                    hostRef,
+                    "VirtualMachine",
+                    arrayOf("summary", "config.hardware.device", "guest.net"),
+                    RetrieveOptions()
+                )
+                vmList?.forEach { (_, vmProps) ->
+                    val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
+                    val guestNicInfoList = vmProps["guest.net"]!! as ArrayOfGuestNicInfo
+                    val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice
+                    val vm = convertVMModel(hostName, vmSummary, guestNicInfoList, devices)
+                    finalVirtualMachineList.add(vm)
                 }
+            } catch (e: Exception) {
+                logger("get-all-vms")().error { e.stackTraceToString() }
             }
-            resultChannel.send(finalVirtualMachineList)
+        }
+        return finalVirtualMachineList
+    }
+
+    private suspend fun <T> baseSyncTask(action: suspend (Connection) -> T): Result<T> {
+        val resultChannel = Channel<Result<T>>()
+        taskChannel.send { connection ->
+            try {
+                resultChannel.send(Result.success(action(connection)))
+            } catch (e: Exception) {
+                resultChannel.send(Result.failure(e))
+            } finally {
+                resultChannel.close()
+            }
         }
         return resultChannel.receive()
     }
 
-    override suspend fun getVM(uuid: String): VirtualMachine? {
-        return mysql.virtualMachines.find { it.uuid eq uuid }
+    private fun waitForTaskResult(connection: Connection, task: ManagedObjectReference): Result<Unit> {
+        val waitForValues = WaitForValues(connection)
+        val result: Array<Any> = waitForValues.wait(
+            task,
+            arrayOf("info.state", "info.error"),
+            arrayOf("info.state"),
+            arrayOf(arrayOf<Any>(TaskInfoState.SUCCESS, TaskInfoState.ERROR))
+        )
+        return if (result[0] == TaskInfoState.SUCCESS) {
+            return Result.success(Unit)
+        } else {
+            when (val fault = result[1]) {
+                is LocalizedMethodFault -> Result.failure(RuntimeException(fault.localizedMessage))
+                else -> Result.failure(RuntimeException("unknown error"))
+            }
+        }
     }
 
     class TrustAllTrustManager : TrustManager, X509TrustManager {
