@@ -11,8 +11,18 @@ class VMClientTest {
     fun testGetAllVMs() {
         withApplication(testEnv) {
             runBlocking {
-                vmClient.getAllVMs().forEach { println(it.toString()) }
+                vmClient.getAllVMs().getOrNull()?.forEach { println(it) }
                 delay(100000L)
+            }
+        }
+    }
+
+    @Test
+    fun testPowerOnSync() {
+        withApplication(testEnv) {
+            runBlocking {
+                val result = vmClient.powerOnSync("420700fa-85cd-c8a8-1b95-de8c169613ed")
+                result.getOrThrow()
             }
         }
     }
