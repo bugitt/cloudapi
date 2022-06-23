@@ -68,7 +68,7 @@ object VCenterClient : IVMClient {
                                 try {
                                     connection = vcenterConnect()
                                     taskFunc(connection)
-                                } catch (e: Exception) {
+                                } catch (e: Throwable) {
                                     logger("vm-worker-$it")().error { e.stackTraceToString() }
                                 } finally {
                                     connection?.close()
@@ -84,7 +84,7 @@ object VCenterClient : IVMClient {
                             // update vmList to database
                             try {
                                 updateVMsToDB(getAllVmsFromVCenter(connection))
-                            } catch (e: Exception) {
+                            } catch (e: Throwable) {
                                 logger("vm-worker-update-db")().error { e.stackTraceToString() }
                             }
                             delay(500L)
@@ -170,44 +170,42 @@ object VCenterClient : IVMClient {
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
-            val vimPort = connection.vimPort
-            val vmRef = vimPort.findByUuid(
-                connection.serviceContent.searchIndex,
-                getDatacenter(connection),
-                uuid,
-                true,
-                false
-            )
-            val task = vimPort.powerOnVMTask(vmRef, null)
+            val task = connection.vimPort.powerOnVMTask(getVMRefFromVCenter(connection, uuid), null)
             waitForTaskResult(connection, task)
         }
     }
 
     override suspend fun powerOnAsync(uuid: String) {
-        TODO("Not yet implemented")
+        taskChannel.send { connection ->
+            connection.vimPort.powerOnVMTask(getVMRefFromVCenter(connection, uuid), null)
+        }
     }
 
     override suspend fun powerOffSync(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
-            val vimPort = connection.vimPort
-            val vmRef = vimPort.findByUuid(
-                connection.serviceContent.searchIndex,
-                getDatacenter(connection),
-                uuid,
-                true,
-                false
-            )
-            val task = vimPort.powerOffVMTask(vmRef)
+            val task = connection.vimPort.powerOffVMTask(getVMRefFromVCenter(connection, uuid))
             waitForTaskResult(connection, task)
         }
     }
 
     override suspend fun powerOffAsync(uuid: String) {
-        TODO("Not yet implemented")
+        taskChannel.send { connection ->
+            connection.vimPort.powerOffVMTask(getVMRefFromVCenter(connection, uuid))
+        }
     }
 
     private fun getDatacenter(connection: Connection): ManagedObjectReference {
         return connection.vimPort.findByInventoryPath(connection.serviceContent.searchIndex, "datacenter")
+    }
+
+    private fun getVMRefFromVCenter(connection: Connection, uuid: String): ManagedObjectReference? {
+        return connection.vimPort.findByUuid(
+            connection.serviceContent.searchIndex,
+            getDatacenter(connection),
+            uuid,
+            true,
+            false
+        )
     }
 
     private fun getAllVmsFromVCenter(connection: Connection): List<VirtualMachine> {
@@ -232,7 +230,7 @@ object VCenterClient : IVMClient {
                     val vm = convertVMModel(hostName, vmSummary, guestNicInfoList, devices)
                     finalVirtualMachineList.add(vm)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 logger("get-all-vms")().error { e.stackTraceToString() }
             }
         }
@@ -244,7 +242,7 @@ object VCenterClient : IVMClient {
         taskChannel.send { connection ->
             try {
                 resultChannel.send(Result.success(action(connection)))
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 resultChannel.send(Result.failure(e))
             } finally {
                 resultChannel.close()
