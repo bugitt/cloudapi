@@ -26,4 +26,14 @@ class VMClientTest {
             }
         }
     }
+
+    @Test
+    fun testPowerOffSync() {
+        withApplication(testEnv) {
+            runBlocking {
+                val result = vmClient.powerOffSync("420700fa-85cd-c8a8-1b95-de8c169613ed")
+                result.getOrThrow()
+            }
+        }
+    }
 }

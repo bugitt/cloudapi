@@ -188,7 +188,18 @@ object VCenterClient : IVMClient {
     }
 
     override suspend fun powerOffSync(uuid: String): Result<Unit> {
-        TODO("Not yet implemented")
+        return baseSyncTask { connection ->
+            val vimPort = connection.vimPort
+            val vmRef = vimPort.findByUuid(
+                connection.serviceContent.searchIndex,
+                getDatacenter(connection),
+                uuid,
+                true,
+                false
+            )
+            val task = vimPort.powerOffVMTask(vmRef)
+            waitForTaskResult(connection, task)
+        }
     }
 
     override suspend fun powerOffAsync(uuid: String) {
