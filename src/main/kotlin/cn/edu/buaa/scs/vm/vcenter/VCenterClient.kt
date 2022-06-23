@@ -18,6 +18,7 @@ import kotlinx.coroutines.channels.Channel
 import org.ktorm.dsl.batchInsert
 import org.ktorm.dsl.batchUpdate
 import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import org.ktorm.entity.map
 import java.net.URI
 import java.security.cert.X509Certificate
@@ -149,6 +150,7 @@ object VCenterClient : IVMClient {
     override suspend fun getAllVMs(): List<VirtualMachine> {
         val resultChannel = Channel<List<VirtualMachine>>()
         taskChannel.send { connection ->
+//            connection.vimPort.findByUuid()
             // 找到数据中心
             val datacenterRef =
                 connection.vimPort.findByInventoryPath(connection.serviceContent.searchIndex, "datacenter")
@@ -179,6 +181,10 @@ object VCenterClient : IVMClient {
             resultChannel.send(finalVirtualMachineList)
         }
         return resultChannel.receive()
+    }
+
+    override suspend fun getVM(uuid: String): VirtualMachine? {
+        return mysql.virtualMachines.find { it.uuid eq uuid }
     }
 
     class TrustAllTrustManager : TrustManager, X509TrustManager {
