@@ -2,11 +2,11 @@ package cn.edu.buaa.scs.vm.vcenter
 
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.getConfigString
-import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.IVMClient
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.BasicConnection
@@ -35,6 +35,8 @@ object VCenterClient : IVMClient {
     private lateinit var vcenterConnect: () -> Connection
 
     private const val detention = 500L
+
+    private fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
 
     fun initialize(application: Application) {
         val entrypoint = application.getConfigString("vm.vcenter.entrypoint")
@@ -109,6 +111,7 @@ object VCenterClient : IVMClient {
                         set(it.adminId, vm.adminId)
                         set(it.studentId, vm.studentId)
                         set(it.teacherId, vm.teacherId)
+                        set(it.experimentId, vm.experimentId)
                         set(it.isExperimental, vm.isExperimental)
                         set(it.applyId, vm.applyId)
                         set(it.memory, vm.memory)
@@ -136,6 +139,7 @@ object VCenterClient : IVMClient {
                         set(it.adminId, vm.adminId)
                         set(it.studentId, vm.studentId)
                         set(it.teacherId, vm.teacherId)
+                        set(it.experimentId, vm.experimentId)
                         set(it.isExperimental, vm.isExperimental)
                         set(it.applyId, vm.applyId)
                         set(it.memory, vm.memory)
@@ -164,14 +168,14 @@ object VCenterClient : IVMClient {
             delay(detention)
             vm = mysql.virtualMachines.find { it.uuid eq uuid }
         }
-        return if (vm == null) Result.failure(NotFoundException("virtualMachine($uuid) not found"))
+        return if (vm == null) Result.failure(vmNotFound(uuid))
         else Result.success(vm)
     }
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
             val task = connection.vimPort.powerOnVMTask(getVMRefFromVCenter(connection, uuid), null)
-            waitForTaskResult(connection, task)
+            waitForTaskResult(connection, task).getOrThrow()
         }
     }
 
@@ -184,13 +188,26 @@ object VCenterClient : IVMClient {
     override suspend fun powerOffSync(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
             val task = connection.vimPort.powerOffVMTask(getVMRefFromVCenter(connection, uuid))
-            waitForTaskResult(connection, task)
+            waitForTaskResult(connection, task).getOrThrow()
         }
     }
 
     override suspend fun powerOffAsync(uuid: String) {
         taskChannel.send { connection ->
             connection.vimPort.powerOffVMTask(getVMRefFromVCenter(connection, uuid))
+        }
+    }
+
+    override suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit> {
+        return baseSyncTask { connection ->
+            val vmRef = getVMRefFromVCenter(connection, uuid) ?: throw vmNotFound(uuid)
+            val vm = getVM(uuid).getOrThrow()
+            val vmConfigSpec = VirtualMachineConfigSpec()
+            val vmExtraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(vm)
+            experimentId?.let { vmExtraInfo.experimentId = it; vmExtraInfo.isExperimental = true }
+            vmConfigSpec.annotation = vmExtraInfo.toJson()
+            val task = connection.vimPort.reconfigVMTask(vmRef, vmConfigSpec)
+            waitForTaskResult(connection, task).getOrThrow()
         }
     }
 
@@ -283,7 +300,7 @@ object VCenterClient : IVMClient {
     }
 }
 
-fun convertVMModel(
+internal fun convertVMModel(
     host: String,
     vmSummary: VirtualMachineSummary,
     guestNicInfoList: ArrayOfGuestNicInfo,
@@ -318,13 +335,13 @@ fun convertVMModel(
         VirtualMachine.NetInfo(it.macAddress, it.ipAddress)
     }
 
-    val extraInfo = vmConfig.annotation?.let { jsonMapper.readTree(it) }
-    vm.adminId = extraInfo?.get("adminID")?.asText() ?: "default"
-    vm.studentId = extraInfo?.get("studentID")?.asText() ?: "default"
-    vm.teacherId = extraInfo?.get("teacherID")?.asText() ?: "default"
-    vm.isExperimental = extraInfo?.get("isExperimental")?.asBoolean() ?: false
-    vm.experimentId = extraInfo?.get("experimentID")?.asInt() ?: 0
-    vm.applyId = extraInfo?.get("applyID")?.asText() ?: "default"
+    val extraInfo = VirtualMachineExtraInfo.valueFromJson(vmConfig.annotation)
+    vm.adminId = extraInfo.adminId ?: "default"
+    vm.studentId = extraInfo.studentId ?: "default"
+    vm.teacherId = extraInfo.teacherId ?: "default"
+    vm.isExperimental = extraInfo.isExperimental ?: false
+    vm.experimentId = extraInfo.experimentId ?: 0
+    vm.applyId = extraInfo.applyId ?: "default"
 
     return vm
 }

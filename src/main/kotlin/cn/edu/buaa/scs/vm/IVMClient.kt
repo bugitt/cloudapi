@@ -14,4 +14,7 @@ interface IVMClient {
     suspend fun powerOffSync(uuid: String): Result<Unit>
 
     suspend fun powerOffAsync(uuid: String)
+
+    // TODO: 添加更多配置项
+    suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit>
 }

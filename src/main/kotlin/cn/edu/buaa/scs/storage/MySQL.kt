@@ -6,7 +6,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.application.*
 import org.ktorm.database.Database
-import org.ktorm.logging.Slf4jLoggerAdapter
+import org.ktorm.logging.Logger
 
 lateinit var mysql: Database
 
@@ -25,7 +25,50 @@ fun Application.mysqlModule() {
             addDataSourceProperty("useUnicode", "true")
             addDataSourceProperty("characterEncoding", "utf8")
         }),
-        logger = Slf4jLoggerAdapter(logger("mainDB")().underlyingLogger)
+        logger = DBLogger(logger("mainDB")().underlyingLogger)
     )
     logger("mainDB")().info { "main database connected" }
+}
+
+internal class DBLogger(private val logger: org.slf4j.Logger) : Logger {
+
+    override fun isTraceEnabled(): Boolean {
+        return false
+    }
+
+    override fun trace(msg: String, e: Throwable?) {
+        logger.trace(msg, e)
+    }
+
+    override fun isDebugEnabled(): Boolean {
+        return false
+    }
+
+    override fun debug(msg: String, e: Throwable?) {
+        logger.debug(msg, e)
+    }
+
+    override fun isInfoEnabled(): Boolean {
+        return false
+    }
+
+    override fun info(msg: String, e: Throwable?) {
+        logger.info(msg, e)
+    }
+
+    override fun isWarnEnabled(): Boolean {
+        return true
+    }
+
+    override fun warn(msg: String, e: Throwable?) {
+        logger.warn(msg, e)
+    }
+
+    override fun isErrorEnabled(): Boolean {
+        return true
+    }
+
+    override fun error(msg: String, e: Throwable?) {
+        logger.error(msg, e)
+    }
 }
