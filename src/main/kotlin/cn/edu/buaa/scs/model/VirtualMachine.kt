@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.utils.jsonMapper
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vmware.vim25.ManagedEntityStatus
 import com.vmware.vim25.VirtualMachinePowerState
@@ -8,6 +9,38 @@ import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
+
+data class VirtualMachineExtraInfo(
+    @JsonProperty("adminID") var adminId: String?,
+    @JsonProperty("studentID") var studentId: String?,
+    @JsonProperty("teacherID") var teacherId: String?,
+    @JsonProperty("isExperimental") var isExperimental: Boolean?,
+    @JsonProperty("experimentID") var experimentId: Int?,
+    @JsonProperty("applyID") var applyId: String?
+) {
+    companion object {
+        fun valueFromJson(jsonStr: String?): VirtualMachineExtraInfo {
+            if (jsonStr == null) return VirtualMachineExtraInfo(null, null, null, null, null, null)
+            return try {
+                jsonMapper.readValue(jsonStr)
+            } catch (e: Exception) {
+                VirtualMachineExtraInfo(null, null, null, null, null, null)
+            }
+        }
+
+        fun valueFromVirtualMachine(vm: VirtualMachine) =
+            VirtualMachineExtraInfo(
+                vm.adminId,
+                vm.studentId,
+                vm.teacherId,
+                vm.isExperimental,
+                vm.experimentId,
+                vm.applyId
+            )
+    }
+
+    fun toJson(): String = jsonMapper.writeValueAsString(this)
+}
 
 interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     companion object : Entity.Factory<VirtualMachine>()
