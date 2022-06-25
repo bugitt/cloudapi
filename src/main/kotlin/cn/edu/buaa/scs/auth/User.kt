@@ -6,6 +6,17 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.isPeerTarget
+import cn.edu.buaa.scs.storage.mysql
+import org.ktorm.dsl.eq
+import org.ktorm.entity.filter
+import org.ktorm.entity.map
+
+fun User.hasAccessToStudent(studentId: String): Boolean {
+    if (this.id == studentId) return true
+    if (isAdmin()) return true
+    return mysql.courseStudents.filter { it.studentId.eq(this.id) }.map { it.courseId }.distinct()
+        .any { this.isCourseTeacher(it) || this.isCourseAssistant(it) }
+}
 
 fun User.authRead(entity: IEntity): Boolean {
     if (isAdmin()) return true

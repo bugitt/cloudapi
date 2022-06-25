@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.User
+import cn.edu.buaa.scs.model.UserRole
 import cn.edu.buaa.scs.model.Users
 import cn.edu.buaa.scs.utils.*
 import io.ktor.application.*
@@ -15,6 +16,7 @@ val adminUser = User {
     id = "admin"
     name = "admin"
     email = "admin@buaa.edu.cn"
+    role = UserRole.SYS
 }
 
 /**

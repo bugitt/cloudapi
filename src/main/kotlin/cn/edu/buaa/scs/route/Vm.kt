@@ -23,6 +23,15 @@ fun Route.vmRoute() {
 
         }
     }
+
+    route("/vms") {
+        get {
+            val studentId = call.request.queryParameters["studentId"]
+            val teacherId = call.request.queryParameters["teacherId"]
+            val experimentId = call.request.queryParameters["experimentId"]?.toInt()
+            call.respond(call.vm.getVms(studentId, teacherId, experimentId).map { convertVirtualMachineResponse(it) })
+        }
+    }
 }
 
 internal fun convertVirtualMachineResponse(vm: VirtualMachine) = cn.edu.buaa.scs.controller.models.VirtualMachine(
