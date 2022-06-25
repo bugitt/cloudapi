@@ -212,7 +212,7 @@ object VCenterClient : IVMClient {
         }
     }
 
-    suspend fun createVM(name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long) {
+    override suspend fun createVM(name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long) {
         taskChannel.send { connection ->
             clone(connection, name, tempPath, adminID, studentID, teacherID, isExperimental, cpuNum, memoryMb, diskSizeMb)
         }
