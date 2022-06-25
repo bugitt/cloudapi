@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.getConfigString
+import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.IVMClient
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.BasicConnection
@@ -27,6 +28,7 @@ import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+
 
 typealias TaskFunc = suspend (Connection) -> Unit
 
@@ -210,6 +212,12 @@ object VCenterClient : IVMClient {
         }
     }
 
+    suspend fun createVM(name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long) {
+        taskChannel.send { connection ->
+            clone(connection, name, tempPath, adminID, studentID, teacherID, isExperimental, cpuNum, memoryMb, diskSizeMb)
+        }
+    }
+
     private fun getDatacenter(connection: Connection): ManagedObjectReference {
         return connection.vimPort.findByInventoryPath(connection.serviceContent.searchIndex, "datacenter")
     }
@@ -251,6 +259,116 @@ object VCenterClient : IVMClient {
             }
         }
         return finalVirtualMachineList
+    }
+
+    private fun clone(connection: Connection, name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long): ManagedObjectReference {
+        val datacenterRef = getDatacenter(connection)
+        val getMoRef = GetMoRef(connection)
+        val vimPort = connection.vimPort
+        /*
+        * 配置虚拟机克隆的目标位置信息
+        * 在主机列表中找到第一个磁盘空间充足的作为目标位置
+        * */
+        val relocateSpec = VirtualMachineRelocateSpec()
+        val hostList =
+            getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("datastore", "summary", "name"), RetrieveOptions())
+        var host: ManagedObjectReference? = null
+        var datastore: ManagedObjectReference? = null
+        val diskRequired = Long.MIN_VALUE
+        hostList.forEach{ (hostRef, hostProps) ->
+            val hostSummary = hostProps["summary"]!! as HostListSummary
+            if (hostSummary.runtime.connectionState === HostSystemConnectionState.CONNECTED) {
+                val dataStores = (hostProps["datastore"] as ArrayOfManagedObjectReference?)!!.managedObjectReference
+                for (ds in dataStores) {
+                    val datastoreSummary = getMoRef.entityProps(ds, "summary")["summary"]!! as DatastoreSummary
+                    if (datastoreSummary.isAccessible && datastoreSummary.freeSpace / (1024 * 1024) > 1024 * 1024 && datastoreSummary.freeSpace > diskRequired) {
+                        host = hostRef
+                        datastore = datastoreSummary.datastore
+                    }
+                }
+            }
+        }
+        if (host == null) {
+            throw IllegalAccessError("error :无符合条件的物理主机，无法创建虚拟机。")
+        }
+        val crmor = getMoRef.entityProps(host, "parent")["parent"]!! as ManagedObjectReference
+        relocateSpec.host = host
+        relocateSpec.pool = getMoRef.entityProps(crmor, "resourcePool")["resourcePool"] as ManagedObjectReference
+        relocateSpec.datastore = datastore
+        // 找到待克隆的虚拟机模板
+        val vmFolderRef = getMoRef.entityProps(datacenterRef, "vmFolder") as ManagedObjectReference
+        var subFolder = getMoRef.inContainerByType(vmFolderRef, "Folder", RetrieveOptions())["other"]
+        if (subFolder == null) {
+            subFolder = vimPort.createFolder(vmFolderRef, "other")
+        }
+        var templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, tempPath)
+        var newTempPath: String
+        if (templateRef == null) {
+            val pathArray = tempPath.split("/")
+            val vmName = pathArray[pathArray.size - 1]
+            newTempPath = "Datacenter/vm/other/$vmName"
+            templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, newTempPath)
+            if (templateRef == null) {
+                newTempPath = "Datacenter/vm/Template/$vmName"
+                templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, newTempPath)
+            }
+            if (templateRef == null) {
+                newTempPath = "Datacenter/vm/$vmName"
+                templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, newTempPath)
+            }
+            if (templateRef == null) throw NotFoundException("Template($vmName) not found")
+        }
+        /*
+        * 配置虚拟机的元信息
+        * 元信息包括：CPU核心数、内存大小、磁盘大小、拥有者id、使用者id、是否为实验虚拟机等
+        * */
+        val configSpec = VirtualMachineConfigSpec()
+        configSpec.numCoresPerSocket = cpuNum
+        configSpec.numCPUs = cpuNum
+        configSpec.memoryMB = memoryMb
+        var diskConfig: VirtualDiskConfigSpec
+        val devices = (getMoRef.entityProps(templateRef, "config.hardware.device")["config.hardware.device"]!!
+                as ArrayOfVirtualDevice).virtualDevice
+        for (vd in devices) {
+            if (vd is VirtualDisk) {
+                if (vd.capacityInKB < diskSizeMb * 1024) {
+                    vd.capacityInKB = diskSizeMb * 1024
+                }
+                diskConfig = VirtualDiskConfigSpec()
+                diskConfig.device = vd
+                diskConfig.operation = VirtualDeviceConfigSpecOperation.EDIT
+                configSpec.deviceChange.add(diskConfig)
+            }
+        }
+        val externalInfo = HashMap<String, Any>()
+        externalInfo["adminID"] = adminID?: "default"
+        externalInfo["studentID"] = studentID?: "default"
+        externalInfo["teacherID"] = teacherID?: "default"
+        externalInfo["isExperimental"] = isExperimental
+        configSpec.annotation = jsonMapper.writeValueAsString(externalInfo)
+        /*
+        * 配置虚拟机的自定义策略信息
+        * 根据Windows和Linux分类讨论
+        * */
+        var customSpec: CustomizationSpec? = null
+        val templateSummary = getMoRef.entityProps(templateRef, "summary")["summary"]!! as VirtualMachineSummary
+        if (templateSummary.config.guestId.startsWith("centos") || templateSummary.config.guestId.startsWith("fedora") ||
+            templateSummary.config.guestId.startsWith("freebsd") || templateSummary.config.guestId.startsWith("ubuntu")) {
+            customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "open").spec
+        } else if (templateSummary.config.guestId.startsWith("win")) {
+            customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "group").spec
+        }
+        /*
+        * 配置"克隆"这一动作属性：①克隆完成后开机；②不标记为模板
+        * 并且将目标位置、元信息、自定义策略挂载到克隆配置上
+        * */
+        val cloneSpec = VirtualMachineCloneSpec()
+        cloneSpec.location = relocateSpec
+        cloneSpec.isPowerOn = true
+        cloneSpec.isTemplate = false
+        cloneSpec.config = configSpec
+        cloneSpec.customization = customSpec
+        return vimPort.cloneVMTask(templateRef, subFolder, name, cloneSpec)
     }
 
     private suspend fun <T> baseSyncTask(action: suspend (Connection) -> T): Result<T> {
