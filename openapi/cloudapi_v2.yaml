@@ -853,6 +853,38 @@ paths:
       security:
         - Authorization: [ ]
       description: 根据UUID获取虚拟机信息
+  /vms:
+    get:
+      summary: get Virtual Machine list
+      tags:
+        - 虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualMachine'
+      operationId: get-vms
+      description: 获取符合条件的所有虚拟机
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: studentId
+        - schema:
+            type: string
+          in: query
+          name: teacherId
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: experimentId
 components:
   schemas:
     AssignmentResponse:

@@ -53,7 +53,9 @@ interface User : Entity<User>, IEntity {
     var isAccepted: Boolean
     var acceptTime: String
 
-    fun isTeacher(): Boolean = this.role.level() >= 2
+    fun isTeacher(): Boolean = this.role.level() == 2
+
+    fun isStudent(): Boolean = this.role.level() == 1
 
     fun isAdmin(): Boolean = this.id == "admin"
 
