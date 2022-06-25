@@ -21,6 +21,7 @@ fun Application.configureRouting() {
             fileRoute()
             statRoute()
             peerRoute()
+            vmRoute()
             // 添加其他的 route
         }
 
