@@ -17,4 +17,6 @@ interface IVMClient {
 
     // TODO: 添加更多配置项
     suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit>
+
+    suspend fun createVM(name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long)
 }
