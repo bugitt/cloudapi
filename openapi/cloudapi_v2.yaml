@@ -24,6 +24,8 @@ tags:
     description: 互评相关接口
   - name: 鉴权
     description: 身份认证相关接口
+  - name: 虚拟机
+    description: 虚拟机相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -828,6 +830,29 @@ paths:
         - Authorization: [ ]
       tags:
         - 鉴权
+  '/vm/{vmId}':
+    parameters:
+      - schema:
+          type: string
+        name: vmId
+        in: path
+        required: true
+        description: vm uuid
+    get:
+      summary: get vm by uuid
+      tags:
+        - 虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualMachine'
+      operationId: get-vm-vmId
+      security:
+        - Authorization: [ ]
+      description: 根据UUID获取虚拟机信息
 components:
   schemas:
     AssignmentResponse:
@@ -1273,17 +1298,7 @@ components:
         assignments:
           type: array
           items:
-            type: object
-            properties:
-              studentId:
-                type: string
-              studentName:
-                type: string
-              assignment:
-                $ref: '#/components/schemas/AssignmentResponse'
-            required:
-              - studentId
-              - studentName
+            $ref: '#/components/schemas/StatExpAssignmentResponseAssignments'
     StatCourseExpsResponse:
       title: StatCourseExpsResponse
       type: object
@@ -1628,6 +1643,105 @@ components:
       required:
         - id
         - token
+    VmNetInfo:
+      title: VmNetInfo
+      type: object
+      properties:
+        macAddress:
+          type: string
+        ipList:
+          type: array
+          items:
+            type: string
+      required:
+        - macAddress
+        - ipList
+    VirtualMachine:
+      title: VirtualMachine
+      type: object
+      properties:
+        uuid:
+          type: string
+        platform:
+          type: string
+        name:
+          type: string
+        isTemplate:
+          type: boolean
+        host:
+          type: string
+        adminId:
+          type: string
+        studentId:
+          type: string
+        teacherId:
+          type: string
+        isExperimental:
+          type: boolean
+        experimentId:
+          type: integer
+          format: int32
+        applyId:
+          type: string
+        memory:
+          type: integer
+          format: int32
+          description: MB
+        cpu:
+          type: integer
+          format: int32
+        osFullName:
+          type: string
+        diskNum:
+          type: integer
+          format: int32
+        diskSize:
+          type: integer
+          format: int64
+          description: byte
+        powerState:
+          type: string
+          description: 'suspended, poweredOn, poweredOff'
+        overallStatus:
+          type: string
+          description: 'gray, green, yellow, red'
+        netInfos:
+          type: array
+          items:
+            $ref: '#/components/schemas/VmNetInfo'
+      required:
+        - uuid
+        - platform
+        - name
+        - isTemplate
+        - host
+        - adminId
+        - studentId
+        - teacherId
+        - isExperimental
+        - experimentId
+        - applyId
+        - memory
+        - cpu
+        - osFullName
+        - diskNum
+        - diskSize
+        - powerState
+        - overallStatus
+        - netInfos
+    StatExpAssignmentResponseAssignments:
+      title: StatExpAssignmentResponseAssignments
+      type: object
+      properties:
+        studentId:
+          type: string
+        studentName:
+          type: string
+        assignment:
+          $ref: '#/components/schemas/AssignmentResponse'
+      required:
+        - studentId
+        - studentName
   securitySchemes:
     Authorization:
       type: apiKey
