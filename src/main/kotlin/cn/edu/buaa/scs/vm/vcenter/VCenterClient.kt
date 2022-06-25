@@ -89,7 +89,6 @@ object VCenterClient : IVMClient {
                             } catch (e: Throwable) {
                                 logger("vm-worker-update-db")().error { e.stackTraceToString() }
                             }
-                            delay(500L)
                         }
                     }
                 }

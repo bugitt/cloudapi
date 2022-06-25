@@ -39,6 +39,11 @@ fun User.authRead(entity: IEntity): Boolean {
             entity.studentId == this.id
                     || authWrite(Experiment.id(entity.expId))
 
+        is VirtualMachine ->
+            entity.studentId == this.id // 学生自己
+                    || entity.teacherId == this.id // 实验虚拟机的任课老师
+                    || entity.experimentId != 0 && authWrite(Experiment.id(entity.experimentId)) // 对实验虚拟机所属的实验有写权限的人，包括教师和助教
+
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
 }
