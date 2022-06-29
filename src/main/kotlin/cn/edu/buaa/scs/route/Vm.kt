@@ -21,6 +21,18 @@ fun Route.vmRoute() {
                 call.respond(convertVirtualMachineResponse(call.vm.getVmByUUID(vmId)))
             }
 
+            route("/power") {
+                patch {
+                    val vmId = call.getVmIdFromPath()
+                    call.vm.vmPower(
+                        vmId,
+                        call.request.queryParameters["action"] ?: "",
+                        call.request.queryParameters["sync"]?.toBoolean() ?: false
+                    )
+                    call.respond("OK")
+                }
+            }
+
         }
     }
 
