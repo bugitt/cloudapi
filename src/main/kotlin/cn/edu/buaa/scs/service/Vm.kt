@@ -11,6 +11,7 @@ import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
+import cn.edu.buaa.scs.vm.vmClient
 import io.ktor.application.*
 import io.ktor.features.*
 import org.ktorm.dsl.and
@@ -27,11 +28,23 @@ val ApplicationCall.vm
 class VmService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<VmService>()
 
-    fun getVmByUUID(uuid: String): VirtualMachine {
+    private fun assertRead(uuid: String): VirtualMachine {
         val vm = mysql.virtualMachines.find { it.uuid.eq(uuid) }
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
         call.user().assertRead(vm)
         return vm
+    }
+
+    suspend fun vmPower(uuid: String, action: String, sync: Boolean = false) {
+        assertRead(uuid)
+        when (action) {
+            "powerOn" -> if (sync) vmClient.powerOnSync(uuid).getOrThrow() else vmClient.powerOnAsync(uuid)
+            "powerOff" -> if (sync) vmClient.powerOffSync(uuid).getOrThrow() else vmClient.powerOffAsync(uuid)
+        }
+    }
+
+    fun getVmByUUID(uuid: String): VirtualMachine {
+        return assertRead(uuid)
     }
 
     fun getVms(studentId: String?, teacherId: String?, experimentId: Int?): List<VirtualMachine> {

@@ -853,6 +853,37 @@ paths:
       security:
         - Authorization: [ ]
       description: 根据UUID获取虚拟机信息
+  '/vm/{vmId}/power':
+    parameters:
+      - schema:
+          type: string
+        name: vmId
+        in: path
+        required: true
+        description: vm uuid
+    patch:
+      summary: 虚拟机开关机
+      operationId: patch-vm-vmId-power
+      responses:
+        '200':
+          description: OK
+      description: 对虚拟机进行开关机操作
+      tags:
+        - 虚拟机
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: action
+          required: true
+          description: powerOn 表示开机；powerOff 表示关机
+        - schema:
+            type: boolean
+          in: query
+          name: sync
+          description: 表示该请求是否同步返回，默认为false，即默认异步。client需要在后续查询具体的执行情况
   /vms:
     get:
       summary: get Virtual Machine list
