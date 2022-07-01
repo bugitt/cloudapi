@@ -916,6 +916,26 @@ paths:
             format: int32
           in: query
           name: experimentId
+  /file/package/result:
+    get:
+      summary: 查询文件打包的结果
+      tags:
+        - 文件
+      responses:
+        '201':
+          description: Created
+        '204':
+          description: No Content
+      operationId: get-file-package-result
+      description: 获取文件打包的结果
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: packageId
+          required: true
 components:
   schemas:
     AssignmentResponse:
