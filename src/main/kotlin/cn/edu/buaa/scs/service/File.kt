@@ -18,6 +18,7 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.content.*
 import io.ktor.request.*
+import io.ktor.response.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
@@ -28,6 +29,7 @@ import org.ktorm.entity.update
 import java.io.*
 import java.net.URLEncoder
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -38,6 +40,7 @@ class FileService(val call: ApplicationCall) : IService {
 
     companion object : IService.Caller<FileService>() {
         val scsosS3 = S3("scsos")
+        val packageResult = ConcurrentHashMap<String, Boolean>()
     }
 
     /**
@@ -268,7 +271,12 @@ class FileService(val call: ApplicationCall) : IService {
         return { inputStream.use { it.copyTo(this) } }
     }
 
-    suspend fun `package`(fileType: FileType, involvedId: Int, fileIdList: List<Int>?): FilePackageResponse {
+    fun getPackageResult(packageId: String): Boolean {
+        return packageResult[packageId]
+            ?: throw cn.edu.buaa.scs.error.BadRequestException("no such packageId($packageId)")
+    }
+
+    suspend fun `package`(fileType: FileType, involvedId: Int, fileIdList: List<Int>?) {
         // check permission
         when (fileType) {
             FileType.Assignment ->
@@ -285,8 +293,11 @@ class FileService(val call: ApplicationCall) : IService {
         // get files
         val service = fileType.manageService()
         val (files, readme, zipFilename) = service.packageFiles(involvedId, fileIdList)
-        val packageId = withContext(Dispatchers.IO) {
-            val zipFile = java.io.File("${UUID.randomUUID()}.package.tmp")
+        val packageId = "${UUID.randomUUID()}.package.tmp"
+        packageResult[packageId] = false
+        call.respond(FilePackageResponse(packageId, zipFilename))
+        withContext(Dispatchers.IO) {
+            val zipFile = java.io.File(packageId)
             zipFile.createNewFile()
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
                 files.forEach { file ->
@@ -299,9 +310,8 @@ class FileService(val call: ApplicationCall) : IService {
                 zipOut.putNextEntry(ZipEntry("README"))
                 zipOut.write(readme.toByteArray())
             }
-            zipFile.name
+            packageResult[packageId] = true
         }
-        return FilePackageResponse(packageId, zipFilename)
     }
 
     private fun FileType.manageService(): IFileManageService =

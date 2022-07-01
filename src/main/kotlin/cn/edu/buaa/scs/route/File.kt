@@ -102,8 +102,18 @@ fun Route.fileRoute() {
 
             post {
                 val req = call.receive<FilePackageRequest>()
-                call.file.`package`(FileType.valueOf(req.fileType), req.involvedId, req.fileIdList).let {
-                    call.respond(it)
+                call.file.`package`(FileType.valueOf(req.fileType), req.involvedId, req.fileIdList)
+            }
+
+            route("/result") {
+                get {
+                    val packageId = call.request.queryParameters["packageId"]
+                        ?: throw BadRequestException("please check your request parameters")
+                    if (call.file.getPackageResult(packageId)) {
+                        call.respond(HttpStatusCode.Created)
+                    } else {
+                        call.respond(HttpStatusCode.NoContent)
+                    }
                 }
             }
         }
