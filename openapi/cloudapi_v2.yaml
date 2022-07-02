@@ -936,6 +936,93 @@ paths:
           in: query
           name: packageId
           required: true
+  /vms/apply:
+    post:
+      summary: 创建虚拟机申请
+      operationId: post-vms-apply
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVmApplyResponse'
+      tags:
+        - 虚拟机
+      description: |-
+        学生、教师为自己申请虚拟机
+        或教师或助教为实验课程申请虚拟机
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVmApplyRequest'
+    get:
+      summary: 查看“创建虚拟机的申请”
+      operationId: get-vms-apply
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateVmApplyResponse'
+      tags:
+        - 虚拟机
+      description: |-
+        用户查看所有与自己有关的创建虚拟机的申请
+        ！！！注意，该接口返回的是一个数组！！！
+      security:
+        - Authorization: [ ]
+  '/vms/apply/{applyId}':
+    get:
+      summary: 查看“创建虚拟机的申请”
+      operationId: get-vm-apply
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateVmApplyResponse'
+      tags:
+        - 虚拟机
+      description: 查看“创建虚拟机的申请”
+      security:
+        - Authorization: [ ]
+    patch:
+      summary: 管理员处理“创建虚拟机的申请”
+      operationId: patch-vms-apply
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVmApplyResponse'
+      tags:
+        - 虚拟机
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: approve
+          required: true
+      description: 管理员处理“创建虚拟机的申请”
+    parameters:
+      - schema:
+          type: string
+        name: applyId
+        in: path
+        required: true
 components:
   schemas:
     AssignmentResponse:
@@ -1825,6 +1912,127 @@ components:
       required:
         - studentId
         - studentName
+    CreateVmApplyRequest:
+      title: CreateVmApplyRequest
+      x-stoplight:
+        id: qnrdg9ok6otgh
+      type: object
+      description: ''
+      properties:
+        studentId:
+          type: string
+          description: 当学生为自己申请一个不与实验相关的虚拟机时，需设置此字段
+        teacherId:
+          type: string
+          description: 当教师为自己申请一个不与实验相关的虚拟机时，需设置此字段
+        experimentId:
+          type: integer
+          format: int32
+          description: 当教师或助教为实验申请虚拟机时，需要使用此字段，并且，如果设置了此字段，同样要设置 studentIdList 字段，表示具体为哪些学生分配虚拟机
+        studentIdList:
+          type: array
+          description: 表示具体为哪些学生分配虚拟机。需要与experimentId字段结合使用
+          items:
+            type: string
+        cpu:
+          type: integer
+          format: int32
+        memory:
+          type: integer
+          format: int32
+          description: MB
+        diskSize:
+          type: integer
+          format: int64
+          description: bytes
+        templateUuid:
+          type: string
+          description: 创建虚拟机所使用的模板的UUID
+        description:
+          type: string
+          description: 申请理由
+      required:
+        - cpu
+        - memory
+        - diskSize
+        - templateUuid
+        - description
+    CreateVmApplyResponse:
+      title: CreateVmApplyResponse
+      x-stoplight:
+        id: qnrdg9ok6otgh
+      type: object
+      description: ''
+      properties:
+        id:
+          type: string
+        studentId:
+          type: string
+        teacherId:
+          type: string
+        experimentId:
+          type: integer
+          format: int32
+        studentIdList:
+          type: array
+          items:
+            type: string
+        cpu:
+          type: integer
+          format: int32
+        memory:
+          type: integer
+          format: int32
+          description: MB
+        diskSize:
+          type: integer
+          format: int64
+          description: bytes
+        templateUuid:
+          type: string
+          description: 创建虚拟机所使用的模板的UUID
+        description:
+          type: string
+          description: 申请理由
+        applyTime:
+          type: integer
+          format: int64
+          description: 发起申请时的时间戳
+        status:
+          type: integer
+          format: int32
+          description: |-
+            0，表示还没有被处理
+            1，表示允许同意申请
+            2，表示拒绝申请
+        handleTime:
+          type: integer
+          format: int64
+          description: 管理员处理该申请的时间，时间戳
+        expectedNum:
+          type: integer
+          format: int32
+          description: 预期希望得到的虚拟机个数
+        actualNum:
+          type: integer
+          format: int32
+          description: 当前实际的虚拟机个数
+      required:
+        - id
+        - studentId
+        - teacherId
+        - experimentId
+        - studentIdList
+        - cpu
+        - memory
+        - diskSize
+        - templateUuid
+        - description
+        - applyTime
+        - status
+        - handleTime
+        - expectedNum
+        - actualNum
   securitySchemes:
     Authorization:
       type: apiKey
