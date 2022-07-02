@@ -1,28 +1,29 @@
 package cn.edu.buaa.scs.vm.vcenter
 
+import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getConfigString
-import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.logger
+import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.IVMClient
+import cn.edu.buaa.scs.vm.applyExtraInfo
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.BasicConnection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Connection
-import com.vmware.photon.controller.model.adapters.vsphere.util.connection.GetMoRef
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.WaitForValues
 import com.vmware.vim25.*
 import io.ktor.application.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import org.ktorm.dsl.batchInsert
-import org.ktorm.dsl.batchUpdate
-import org.ktorm.dsl.eq
+import org.ktorm.dsl.*
 import org.ktorm.entity.find
 import org.ktorm.entity.map
+import org.ktorm.schema.ColumnDeclaring
 import java.net.URI
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -38,7 +39,7 @@ object VCenterClient : IVMClient {
 
     private const val detention = 500L
 
-    private fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
+    internal fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
 
     fun initialize(application: Application) {
         val entrypoint = application.getConfigString("vm.vcenter.entrypoint")
@@ -61,7 +62,7 @@ object VCenterClient : IVMClient {
     private val taskChannel = Channel<TaskFunc>(100)
 
     private fun start() {
-        Thread() {
+        Thread {
             runBlocking {
                 withContext(Dispatchers.IO) {
                     // launch 20 workers to receive and handle task
@@ -180,33 +181,33 @@ object VCenterClient : IVMClient {
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
-            val task = connection.vimPort.powerOnVMTask(getVMRefFromVCenter(connection, uuid), null)
+            val task = connection.vimPort.powerOnVMTask(connection.getVmRefByUuid(uuid), null)
             waitForTaskResult(connection, task).getOrThrow()
         }
     }
 
     override suspend fun powerOnAsync(uuid: String) {
         taskChannel.send { connection ->
-            connection.vimPort.powerOnVMTask(getVMRefFromVCenter(connection, uuid), null)
+            connection.vimPort.powerOnVMTask(connection.getVmRefByUuid(uuid), null)
         }
     }
 
     override suspend fun powerOffSync(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
-            val task = connection.vimPort.powerOffVMTask(getVMRefFromVCenter(connection, uuid))
+            val task = connection.vimPort.powerOffVMTask(connection.getVmRefByUuid(uuid))
             waitForTaskResult(connection, task).getOrThrow()
         }
     }
 
     override suspend fun powerOffAsync(uuid: String) {
         taskChannel.send { connection ->
-            connection.vimPort.powerOffVMTask(getVMRefFromVCenter(connection, uuid))
+            connection.vimPort.powerOffVMTask(connection.getVmRefByUuid(uuid))
         }
     }
 
     override suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit> {
         return baseSyncTask { connection ->
-            val vmRef = getVMRefFromVCenter(connection, uuid) ?: throw vmNotFound(uuid)
+            val vmRef = connection.getVmRefByUuid(uuid)
             val vm = getVM(uuid).getOrThrow()
             val vmConfigSpec = VirtualMachineConfigSpec()
             val vmExtraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(vm)
@@ -217,29 +218,49 @@ object VCenterClient : IVMClient {
         }
     }
 
-    override suspend fun createVM(name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long) {
-        taskChannel.send { connection ->
-            clone(connection, name, tempPath, adminID, studentID, teacherID, isExperimental, cpuNum, memoryMb, diskSizeMb)
+    override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> {
+        val predicate: (VirtualMachines) -> ColumnDeclaring<Boolean> = {
+            it.name.eq(options.name)
+                .and(it.studentId.eq(options.studentId))
+                .and(it.teacherId.eq(options.teacherId))
+                .and(it.experimentId.eq(options.experimentId))
+        }
+        // 首先检查是不是有同名vm
+        if (mysql.virtualMachines.exists(predicate)) {
+            return Result.failure(BadRequestException("there is already a VirtualMachine with the same name"))
+        }
+        return baseSyncTask { connection ->
+            val task = clone(
+                connection,
+                options.name,
+                options.templateUuid,
+                VirtualMachineExtraInfo(
+                    options.adminId,
+                    options.studentId,
+                    options.teacherId,
+                    options.isExperimental,
+                    options.experimentId,
+                    options.applyId,
+                ),
+                options.cpu,
+                options.memory,
+                options.diskSize,
+                options.powerOn,
+            )
+            waitForTaskResult(connection, task).getOrThrow()
+            // wait to find the vm in db
+            withTimeout(10000L) {
+                while (!mysql.virtualMachines.exists(predicate)) {
+                    delay(10L)
+                }
+                mysql.virtualMachines.find(predicate)!!
+            }
         }
     }
 
-    private fun getDatacenter(connection: Connection): ManagedObjectReference {
-        return connection.vimPort.findByInventoryPath(connection.serviceContent.searchIndex, "datacenter")
-    }
-
-    private fun getVMRefFromVCenter(connection: Connection, uuid: String): ManagedObjectReference? {
-        return connection.vimPort.findByUuid(
-            connection.serviceContent.searchIndex,
-            getDatacenter(connection),
-            uuid,
-            true,
-            false
-        )
-    }
-
     private fun getAllVmsFromVCenter(connection: Connection): List<VirtualMachine> {
-        val datacenterRef = getDatacenter(connection)
-        val getMoRef = GetMoRef(connection)
+        val datacenterRef = connection.getDatacenterRef()
+        val getMoRef = connection.getMoRef()
         val hostList =
             getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("name"), RetrieveOptions())
         val finalVirtualMachineList = mutableListOf<VirtualMachine>()
@@ -266,21 +287,35 @@ object VCenterClient : IVMClient {
         return finalVirtualMachineList
     }
 
-    private fun clone(connection: Connection, name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long): ManagedObjectReference {
-        val datacenterRef = getDatacenter(connection)
-        val getMoRef = GetMoRef(connection)
+    private fun clone(
+        connection: Connection,
+        name: String,
+        templateUuid: String,
+        vmExtraInfo: VirtualMachineExtraInfo,
+        cpuNum: Int,
+        memoryMb: Int,
+        diskSizeBytes: Long,
+        powerOn: Boolean,
+    ): ManagedObjectReference {
+        val datacenterRef = connection.getDatacenterRef()
+        val getMoRef = connection.getMoRef()
         val vimPort = connection.vimPort
         /*
         * 配置虚拟机克隆的目标位置信息
-        * 在主机列表中找到第一个磁盘空间充足的作为目标位置
+        * 在主机列表中找到第一个磁盘空间充足的主机作为目标位置
         * */
         val relocateSpec = VirtualMachineRelocateSpec()
         val hostList =
-            getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("datastore", "summary", "name"), RetrieveOptions())
+            getMoRef.inContainerByType(
+                datacenterRef,
+                "HostSystem",
+                arrayOf("datastore", "summary", "name"),
+                RetrieveOptions()
+            )
         var host: ManagedObjectReference? = null
         var datastore: ManagedObjectReference? = null
         val diskRequired = Long.MIN_VALUE
-        hostList.forEach{ (hostRef, hostProps) ->
+        hostList.forEach { (hostRef, hostProps) ->
             val hostSummary = hostProps["summary"]!! as HostListSummary
             if (hostSummary.runtime.connectionState === HostSystemConnectionState.CONNECTED) {
                 val dataStores = (hostProps["datastore"] as ArrayOfManagedObjectReference?)!!.managedObjectReference
@@ -301,28 +336,7 @@ object VCenterClient : IVMClient {
         relocateSpec.pool = getMoRef.entityProps(crmor, "resourcePool")["resourcePool"] as ManagedObjectReference
         relocateSpec.datastore = datastore
         // 找到待克隆的虚拟机模板
-        val vmFolderRef = getMoRef.entityProps(datacenterRef, "vmFolder") as ManagedObjectReference
-        var subFolder = getMoRef.inContainerByType(vmFolderRef, "Folder", RetrieveOptions())["other"]
-        if (subFolder == null) {
-            subFolder = vimPort.createFolder(vmFolderRef, "other")
-        }
-        var templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, tempPath)
-        var newTempPath: String
-        if (templateRef == null) {
-            val pathArray = tempPath.split("/")
-            val vmName = pathArray[pathArray.size - 1]
-            newTempPath = "Datacenter/vm/other/$vmName"
-            templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, newTempPath)
-            if (templateRef == null) {
-                newTempPath = "Datacenter/vm/Template/$vmName"
-                templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, newTempPath)
-            }
-            if (templateRef == null) {
-                newTempPath = "Datacenter/vm/$vmName"
-                templateRef = vimPort.findByInventoryPath(connection.serviceContent.searchIndex, newTempPath)
-            }
-            if (templateRef == null) throw NotFoundException("Template($vmName) not found")
-        }
+        val templateRef = connection.getVmRefByUuid(templateUuid)
         /*
         * 配置虚拟机的元信息
         * 元信息包括：CPU核心数、内存大小、磁盘大小、拥有者id、使用者id、是否为实验虚拟机等
@@ -330,14 +344,14 @@ object VCenterClient : IVMClient {
         val configSpec = VirtualMachineConfigSpec()
         configSpec.numCoresPerSocket = cpuNum
         configSpec.numCPUs = cpuNum
-        configSpec.memoryMB = memoryMb
+        configSpec.memoryMB = memoryMb.toLong()
         var diskConfig: VirtualDiskConfigSpec
         val devices = (getMoRef.entityProps(templateRef, "config.hardware.device")["config.hardware.device"]!!
                 as ArrayOfVirtualDevice).virtualDevice
         for (vd in devices) {
             if (vd is VirtualDisk) {
-                if (vd.capacityInKB < diskSizeMb * 1024) {
-                    vd.capacityInKB = diskSizeMb * 1024
+                if (vd.capacityInKB < diskSizeBytes) {
+                    vd.capacityInKB = diskSizeBytes
                 }
                 diskConfig = VirtualDiskConfigSpec()
                 diskConfig.device = vd
@@ -345,12 +359,7 @@ object VCenterClient : IVMClient {
                 configSpec.deviceChange.add(diskConfig)
             }
         }
-        val externalInfo = HashMap<String, Any>()
-        externalInfo["adminID"] = adminID?: "default"
-        externalInfo["studentID"] = studentID?: "default"
-        externalInfo["teacherID"] = teacherID?: "default"
-        externalInfo["isExperimental"] = isExperimental
-        configSpec.annotation = jsonMapper.writeValueAsString(externalInfo)
+        configSpec.annotation = vmExtraInfo.toString()
         /*
         * 配置虚拟机的自定义策略信息
         * 根据Windows和Linux分类讨论
@@ -358,7 +367,8 @@ object VCenterClient : IVMClient {
         var customSpec: CustomizationSpec? = null
         val templateSummary = getMoRef.entityProps(templateRef, "summary")["summary"]!! as VirtualMachineSummary
         if (templateSummary.config.guestId.startsWith("centos") || templateSummary.config.guestId.startsWith("fedora") ||
-            templateSummary.config.guestId.startsWith("freebsd") || templateSummary.config.guestId.startsWith("ubuntu")) {
+            templateSummary.config.guestId.startsWith("freebsd") || templateSummary.config.guestId.startsWith("ubuntu")
+        ) {
             customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "open").spec
         } else if (templateSummary.config.guestId.startsWith("win")) {
             customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "group").spec
@@ -369,11 +379,11 @@ object VCenterClient : IVMClient {
         * */
         val cloneSpec = VirtualMachineCloneSpec()
         cloneSpec.location = relocateSpec
-        cloneSpec.isPowerOn = true
+        cloneSpec.isPowerOn = powerOn
         cloneSpec.isTemplate = false
         cloneSpec.config = configSpec
         cloneSpec.customization = customSpec
-        return vimPort.cloneVMTask(templateRef, subFolder, name, cloneSpec)
+        return vimPort.cloneVMTask(templateRef, connection.getCreateVmSubFolder(), name, cloneSpec)
     }
 
     private suspend fun <T> baseSyncTask(action: suspend (Connection) -> T): Result<T> {
@@ -457,13 +467,7 @@ internal fun convertVMModel(
         VirtualMachine.NetInfo(it.macAddress, it.ipAddress)
     }
 
-    val extraInfo = VirtualMachineExtraInfo.valueFromJson(vmConfig.annotation)
-    vm.adminId = extraInfo.adminId ?: "default"
-    vm.studentId = extraInfo.studentId ?: "default"
-    vm.teacherId = extraInfo.teacherId ?: "default"
-    vm.isExperimental = extraInfo.isExperimental ?: false
-    vm.experimentId = extraInfo.experimentId ?: 0
-    vm.applyId = extraInfo.applyId ?: "default"
+    vm.applyExtraInfo(VirtualMachineExtraInfo.valueFromJson(vmConfig.annotation))
 
     return vm
 }

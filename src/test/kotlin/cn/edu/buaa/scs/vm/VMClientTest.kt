@@ -36,4 +36,23 @@ class VMClientTest {
             }
         }
     }
+
+    @Test
+    fun testCreateVm() {
+        withApplication(testEnv) {
+            runBlocking {
+                val result = vmClient.createVM(
+                    CreateVmOptions(
+                        name = "loheagn-test",
+                        templateUuid = "4207e974-8edd-8555-abdc-a664fabf92a3",
+                        applyId = "test-apply-id",
+                        memory = 8192,
+                        cpu = 8,
+                        diskSize = 16106127360,
+                    )
+                )
+                result.getOrThrow()
+            }
+        }
+    }
 }
