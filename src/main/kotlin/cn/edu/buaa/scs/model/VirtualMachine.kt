@@ -11,20 +11,20 @@ import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
 data class VirtualMachineExtraInfo(
-    @JsonProperty("adminID") var adminId: String?,
-    @JsonProperty("studentID") var studentId: String?,
-    @JsonProperty("teacherID") var teacherId: String?,
-    @JsonProperty("isExperimental") var isExperimental: Boolean?,
-    @JsonProperty("experimentID") var experimentId: Int?,
-    @JsonProperty("applyID") var applyId: String?
+    @JsonProperty("adminID") var adminId: String = "default",
+    @JsonProperty("studentID") var studentId: String = "default",
+    @JsonProperty("teacherID") var teacherId: String = "default",
+    @JsonProperty("isExperimental") var isExperimental: Boolean = false,
+    @JsonProperty("experimentID") var experimentId: Int = 0,
+    @JsonProperty("applyID") var applyId: String = "default",
 ) {
     companion object {
         fun valueFromJson(jsonStr: String?): VirtualMachineExtraInfo {
-            if (jsonStr == null) return VirtualMachineExtraInfo(null, null, null, null, null, null)
+            if (jsonStr == null) return VirtualMachineExtraInfo()
             return try {
                 jsonMapper.readValue(jsonStr)
             } catch (e: Exception) {
-                VirtualMachineExtraInfo(null, null, null, null, null, null)
+                VirtualMachineExtraInfo()
             }
         }
 

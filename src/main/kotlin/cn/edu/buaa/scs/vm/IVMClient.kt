@@ -18,5 +18,25 @@ interface IVMClient {
     // TODO: 添加更多配置项
     suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit>
 
-    suspend fun createVM(name: String, tempPath: String, adminID: String?, studentID: String?, teacherID: String?, isExperimental: Boolean, cpuNum: Int, memoryMb: Long, diskSizeMb: Long)
+    suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine>
 }
+
+data class CreateVmOptions(
+    val name: String,
+    val templateUuid: String,
+
+    // course related
+    val adminId: String = "default",
+    val studentId: String = "default",
+    val teacherId: String = "default",
+    val isExperimental: Boolean = false,
+    val experimentId: Int = 0,
+    val applyId: String,
+
+    val memory: Int, // MB
+    val cpu: Int,
+    val disNum: Int = 1,
+    val diskSize: Long, // bytes
+
+    val powerOn: Boolean = false,
+)
