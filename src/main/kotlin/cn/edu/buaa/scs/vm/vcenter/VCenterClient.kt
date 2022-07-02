@@ -154,6 +154,11 @@ object VCenterClient : IVMClient {
                     }
                 }
             }
+
+            // 删除数据库中不应该存在的虚拟机
+            mysql.delete(VirtualMachines) {
+                it.uuid.notInList(vmList.map { vm -> vm.uuid })
+            }
         }
     }
 
