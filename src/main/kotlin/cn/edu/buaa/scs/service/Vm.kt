@@ -84,9 +84,12 @@ class VmService(val call: ApplicationCall) : IService {
             it.studentId.eq(call.userId())
                 .or(it.teacherId.eq(call.userId()))
         }.toList()
-        applyList += mysql.vmApplyList.filter {
-            it.experimentId.inList(call.user().getAllManagedExperimentIdList())
-        }.toList()
+        val experimentIdList = call.user().getAllManagedExperimentIdList()
+        if (experimentIdList.isNotEmpty()) {
+            applyList += mysql.vmApplyList.filter {
+                it.experimentId.inList()
+            }.toList()
+        }
         return applyList
     }
 
