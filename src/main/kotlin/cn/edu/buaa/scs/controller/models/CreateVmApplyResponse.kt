@@ -29,6 +29,7 @@ package cn.edu.buaa.scs.controller.models
  * @param handleTime 管理员处理该申请的时间，时间戳
  * @param expectedNum 预期希望得到的虚拟机个数
  * @param actualNum 当前实际的虚拟机个数
+ * @param namePrefix 最终生成的虚拟机的名称的前缀
  */
 data class CreateVmApplyResponse(
     val id: kotlin.String,
@@ -54,6 +55,8 @@ data class CreateVmApplyResponse(
     /* 预期希望得到的虚拟机个数 */
     val expectedNum: kotlin.Int,
     /* 当前实际的虚拟机个数 */
-    val actualNum: kotlin.Int
+    val actualNum: kotlin.Int,
+    /* 最终生成的虚拟机的名称的前缀 */
+    val namePrefix: kotlin.String
 ) 
 

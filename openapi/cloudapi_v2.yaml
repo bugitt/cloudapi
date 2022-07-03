@@ -1951,12 +1951,16 @@ components:
         description:
           type: string
           description: 申请理由
+        namePrefix:
+          type: string
+          description: 生成的虚拟机的名称的前缀
       required:
         - cpu
         - memory
         - diskSize
         - templateUuid
         - description
+        - namePrefix
     CreateVmApplyResponse:
       title: CreateVmApplyResponse
       x-stoplight:
@@ -2017,6 +2021,9 @@ components:
           type: integer
           format: int32
           description: 当前实际的虚拟机个数
+        namePrefix:
+          type: string
+          description: 最终生成的虚拟机的名称的前缀
       required:
         - id
         - studentId
@@ -2033,6 +2040,7 @@ components:
         - handleTime
         - expectedNum
         - actualNum
+        - namePrefix
   securitySchemes:
     Authorization:
       type: apiKey

@@ -3,11 +3,9 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.auth.hasAccessToStudent
+import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
-import cn.edu.buaa.scs.model.Experiment
-import cn.edu.buaa.scs.model.VirtualMachine
-import cn.edu.buaa.scs.model.VirtualMachines
-import cn.edu.buaa.scs.model.virtualMachines
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
@@ -17,10 +15,12 @@ import io.ktor.features.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.isNotNull
+import org.ktorm.entity.add
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.toList
 import org.ktorm.schema.ColumnDeclaring
+import java.util.*
 
 val ApplicationCall.vm
     get() = VmService.getSvc(this) { VmService(this) }
@@ -77,5 +77,59 @@ class VmService(val call: ApplicationCall) : IService {
         finalTeacherId?.let { condition = condition.and(VirtualMachines.teacherId.eq(it)) }
         finalExpId?.let { condition = condition.and((VirtualMachines.experimentId.eq(it))) }
         return mysql.virtualMachines.filter { condition }.toList()
+    }
+
+    fun createVmApply(request: CreateVmApplyRequest): VmApply {
+        val vmApply = VmApply {
+            this.id = UUID.randomUUID().toString()
+            this.namePrefix = request.namePrefix
+            this.studentId = "default"
+            this.teacherId = "default"
+            this.experimentId = 0
+            this.studentIdList = listOf()
+            this.cpu = request.cpu
+            this.memory = request.memory
+            this.diskSize = request.diskSize
+            this.templateUuid = request.templateUuid
+            this.description = request.description
+            this.applyTime = System.currentTimeMillis()
+            this.status = 0
+            this.handleTime = 0L
+        }
+        when {
+            request.studentId != null ->
+                if (call.user().isAdmin()
+                    || call.user().isStudent() && call.userId() == request.studentId
+                ) {
+                    vmApply.studentId = request.studentId
+                    vmApply.expectedNum = 1
+                } else {
+                    throw AuthorizationException()
+                }
+
+            request.teacherId != null ->
+                if (call.user().isAdmin()
+                    || call.user().isTeacher() && call.userId() == request.teacherId
+                ) {
+                    vmApply.teacherId = request.teacherId
+                    vmApply.expectedNum = 1
+                } else {
+                    throw AuthorizationException()
+                }
+
+            request.experimentId != null && request.experimentId != 0 && request.studentIdList != null -> {
+                val experiment = Experiment.id(request.experimentId)
+                if (call.user().isAdmin()
+                    || call.user().isCourseAssistant(experiment.course) || call.user()
+                        .isCourseTeacher(experiment.course)
+                ) {
+                    vmApply.experimentId = request.experimentId
+                    vmApply.studentIdList = request.studentIdList
+                    vmApply.expectedNum = request.studentIdList.size
+                }
+            }
+        }
+        mysql.vmApplyList.add(vmApply)
+        return vmApply
     }
 }
