@@ -12,9 +12,7 @@ import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.vm.vmClient
 import io.ktor.application.*
 import io.ktor.features.*
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.dsl.isNotNull
+import org.ktorm.dsl.*
 import org.ktorm.entity.add
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
@@ -77,6 +75,24 @@ class VmService(val call: ApplicationCall) : IService {
         finalTeacherId?.let { condition = condition.and(VirtualMachines.teacherId.eq(it)) }
         finalExpId?.let { condition = condition.and((VirtualMachines.experimentId.eq(it))) }
         return mysql.virtualMachines.filter { condition }.toList()
+    }
+
+    fun getVmApplyList(): List<VmApply> {
+        val applyList = mutableListOf<VmApply>()
+        if (call.user().isAdmin()) return mysql.vmApplyList.toList()
+        applyList += mysql.vmApplyList.filter {
+            it.studentId.eq(call.userId())
+                .or(it.teacherId.eq(call.userId()))
+        }.toList()
+        applyList += mysql.vmApplyList.filter {
+            it.experimentId.inList(call.user().getAllManagedExperimentIdList())
+        }.toList()
+        return applyList
+    }
+
+    fun getVmApply(id: String): VmApply {
+        // TODO: 这里先不做鉴权，嘿嘿
+        return mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
     }
 
     fun createVmApply(request: CreateVmApplyRequest): VmApply {

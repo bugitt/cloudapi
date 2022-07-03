@@ -7,9 +7,8 @@ import cn.edu.buaa.scs.utils.exists
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
-import org.ktorm.entity.Entity
-import org.ktorm.entity.find
-import org.ktorm.entity.sequenceOf
+import org.ktorm.dsl.inList
+import org.ktorm.entity.*
 import org.ktorm.schema.Table
 import org.ktorm.schema.boolean
 import org.ktorm.schema.int
@@ -80,6 +79,17 @@ interface User : Entity<User>, IEntity {
     fun isCourseTeacher(courseId: Int): Boolean = Course.id(courseId).teacher.id == this.id
 
     fun isCourseAdmin(course: Course): Boolean = isCourseAssistant(course) || isCourseTeacher(course)
+
+    fun getAllManagedExperimentIdList(): List<Int> {
+        val courseIdList = if (isAdmin()) {
+            mysql.courses.map { it.id }
+        } else if (isTeacher()) {
+            mysql.courses.filter { it.teacherId.eq(this.id) }.map { it.id }
+        } else {
+            mysql.assistants.filter { it.studentId.eq(this.id) }.map { it.id }
+        }
+        return mysql.experiments.filter { it.courseId.inList(courseIdList.distinct()) }.map { it.id }.distinct()
+    }
 
     override fun entityId(): IntOrString {
         return IntOrString(this.id)

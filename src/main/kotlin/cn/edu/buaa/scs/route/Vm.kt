@@ -49,9 +49,23 @@ fun Route.vmRoute() {
         }
 
         route("/apply") {
+            get {
+                call.respond(call.vm.getVmApplyList().map { convertVmApplyResponse(it) })
+            }
+
             post {
                 val request = call.receive<CreateVmApplyRequest>()
                 call.respond(convertVmApplyResponse(call.vm.createVmApply(request)))
+            }
+
+            route("/{applyId}") {
+
+                fun ApplicationCall.getApplyIdFromPath(): String =
+                    parameters["applyId"] ?: throw BadRequestException("apply id is invalid")
+
+                get {
+                    call.respond(convertVmApplyResponse(call.vm.getVmApply(call.getApplyIdFromPath())))
+                }
             }
         }
     }
