@@ -95,6 +95,18 @@ class VmService(val call: ApplicationCall) : IService {
         return mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
     }
 
+    fun handleApply(id: String, approve: Boolean): VmApply {
+        val vmApply = mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
+        if (approve) {
+            vmApply.status = 1
+        } else {
+            vmApply.status = 2
+        }
+        vmApply.handleTime = System.currentTimeMillis()
+        vmApply.flushChanges()
+        return vmApply
+    }
+
     fun createVmApply(request: CreateVmApplyRequest): VmApply {
         val vmApply = VmApply {
             this.id = UUID.randomUUID().toString()
