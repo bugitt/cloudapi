@@ -1023,6 +1023,26 @@ paths:
         name: applyId
         in: path
         required: true
+  /vm/template:
+    get:
+      summary: 获取当前可用的所有虚拟机模板
+      tags:
+        - 虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualMachine'
+      operationId: get-vm-template
+      description: |-
+        获取当前可用的所有虚拟机模板
+        返回的是一个数组
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:
