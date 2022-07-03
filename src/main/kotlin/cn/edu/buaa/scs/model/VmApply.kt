@@ -1,0 +1,52 @@
+package cn.edu.buaa.scs.model
+
+import cn.edu.buaa.scs.utils.jsonMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import org.ktorm.database.Database
+import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
+import org.ktorm.schema.*
+
+interface VmApply : Entity<VmApply>, IEntity {
+    companion object : Entity.Factory<VmApply>()
+
+    var id: String
+    var namePrefix: String
+    var studentId: String
+    var teacherId: String
+    var experimentId: Int
+    var studentIdList: List<String>
+    var cpu: Int
+    var memory: Int // MB
+    var diskSize: Long // bytes
+    var templateUuid: String
+    var description: String
+    var applyTime: Long
+    var status: Int // 0: 还未处理; 1: 允许; 2: 拒绝
+    var handleTime: Long
+    var expectedNum: Int
+    var actualNum: Int
+}
+
+object VmApplyList : Table<VmApply>("vm_apply") {
+    val id = varchar("id").primaryKey().bindTo { it.id }
+    val namePrefix = varchar("name_prefix").bindTo { it.namePrefix }
+    val studentId = varchar("student_id").bindTo { it.studentId }
+    val teacherId = varchar("teacher_id").bindTo { it.teacherId }
+    val experimentId = int("experiment_id").bindTo { it.experimentId }
+    val studentIdList = text("student_id_list")
+        .transform({ jsonMapper.readValue<List<String>>(it) }, { jsonMapper.writeValueAsString(it) })
+        .bindTo { it.studentIdList }
+    val cpu = int("cpu").bindTo { it.cpu }
+    val memory = int("memory").bindTo { it.memory }
+    val diskSize = long("disk_size").bindTo { it.diskSize }
+    val templateUuid = varchar("template_uuid").bindTo { it.templateUuid }
+    val description = text("description").bindTo { it.description }
+    val applyTime = long("apply_time").bindTo { it.applyTime }
+    val status = int("status").bindTo { it.status }
+    val handleTime = long("handle_time").bindTo { it.handleTime }
+    val exceptedNum = int("expected_num").bindTo { it.expectedNum }
+    val actualNum = int("actual_num").bindTo { it.actualNum }
+}
+
+val Database.vmApplyList get() = this.sequenceOf(VmApplyList)

@@ -1,10 +1,14 @@
 package cn.edu.buaa.scs.route
 
+import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
+import cn.edu.buaa.scs.controller.models.CreateVmApplyResponse
 import cn.edu.buaa.scs.controller.models.VmNetInfo
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.model.VmApply
 import cn.edu.buaa.scs.service.vm
 import io.ktor.application.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 
@@ -43,6 +47,13 @@ fun Route.vmRoute() {
             val experimentId = call.request.queryParameters["experimentId"]?.toInt()
             call.respond(call.vm.getVms(studentId, teacherId, experimentId).map { convertVirtualMachineResponse(it) })
         }
+
+        route("/apply") {
+            post {
+                val request = call.receive<CreateVmApplyRequest>()
+                call.respond(convertVmApplyResponse(call.vm.createVmApply(request)))
+            }
+        }
     }
 }
 
@@ -66,4 +77,23 @@ internal fun convertVirtualMachineResponse(vm: VirtualMachine) = cn.edu.buaa.scs
     powerState = vm.powerState.value(),
     overallStatus = vm.overallStatus.value(),
     netInfos = vm.netInfos.map { VmNetInfo(it.macAddress, it.ipList) }
+)
+
+internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
+    id = vmApply.id,
+    namePrefix = vmApply.namePrefix,
+    studentId = vmApply.studentId,
+    teacherId = vmApply.teacherId,
+    experimentId = vmApply.experimentId,
+    studentIdList = vmApply.studentIdList,
+    cpu = vmApply.cpu,
+    memory = vmApply.memory,
+    diskSize = vmApply.diskSize,
+    templateUuid = vmApply.templateUuid,
+    description = vmApply.description,
+    applyTime = vmApply.applyTime,
+    status = vmApply.status,
+    handleTime = vmApply.handleTime,
+    expectedNum = vmApply.expectedNum,
+    actualNum = vmApply.actualNum,
 )
