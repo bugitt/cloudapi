@@ -38,6 +38,12 @@ fun Route.vmRoute() {
             }
 
         }
+
+        route("/template") {
+            get {
+                call.respond(call.vm.getAllTemplate().map { convertVirtualMachineResponse(it) })
+            }
+        }
     }
 
     route("/vms") {

@@ -160,4 +160,8 @@ class VmService(val call: ApplicationCall) : IService {
         mysql.vmApplyList.add(vmApply)
         return vmApply
     }
+
+    fun getAllTemplate(): List<VirtualMachine> {
+        return mysql.virtualMachines.filter { it.isTemplate.eq(true) }.toList()
+    }
 }
