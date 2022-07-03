@@ -66,6 +66,17 @@ fun Route.vmRoute() {
                 get {
                     call.respond(convertVmApplyResponse(call.vm.getVmApply(call.getApplyIdFromPath())))
                 }
+
+                patch {
+                    call.respond(
+                        convertVmApplyResponse(
+                            call.vm.handleApply(
+                                call.getApplyIdFromPath(),
+                                call.request.queryParameters["approve"]?.toBoolean() ?: false
+                            )
+                        )
+                    )
+                }
             }
         }
     }
