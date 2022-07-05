@@ -7,7 +7,6 @@ import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.CreateVmOptions
@@ -23,7 +22,6 @@ import kotlinx.coroutines.channels.Channel
 import org.ktorm.dsl.*
 import org.ktorm.entity.find
 import org.ktorm.entity.map
-import org.ktorm.schema.ColumnDeclaring
 import java.net.URI
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -219,14 +217,8 @@ object VCenterClient : IVMClient {
     }
 
     override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> {
-        val predicate: (VirtualMachines) -> ColumnDeclaring<Boolean> = {
-            it.name.eq(options.name)
-                .and(it.studentId.eq(options.studentId))
-                .and(it.teacherId.eq(options.teacherId))
-                .and(it.experimentId.eq(options.experimentId))
-        }
         // 首先检查是不是有同名vm
-        if (mysql.virtualMachines.exists(predicate)) {
+        if (options.existInDb()) {
             return Result.failure(BadRequestException("there is already a VirtualMachine with the same name"))
         }
         return baseSyncTask { connection ->
@@ -249,11 +241,11 @@ object VCenterClient : IVMClient {
             )
             waitForTaskResult(connection, task).getOrThrow()
             // wait to find the vm in db
-            withTimeout(10000L) {
-                while (!mysql.virtualMachines.exists(predicate)) {
+            withTimeout(500000L) {
+                while (!options.existInDb()) {
                     delay(10L)
                 }
-                mysql.virtualMachines.find(predicate)!!
+                mysql.virtualMachines.find(options.existPredicate())!!
             }
         }
     }
@@ -350,8 +342,8 @@ object VCenterClient : IVMClient {
                 as ArrayOfVirtualDevice).virtualDevice
         for (vd in devices) {
             if (vd is VirtualDisk) {
-                if (vd.capacityInKB < diskSizeBytes) {
-                    vd.capacityInKB = diskSizeBytes
+                if (vd.capacityInKB < diskSizeBytes / 1024) {
+                    vd.capacityInKB = diskSizeBytes / 1024
                 }
                 diskConfig = VirtualDiskConfigSpec()
                 diskConfig.device = vd
@@ -359,7 +351,7 @@ object VCenterClient : IVMClient {
                 configSpec.deviceChange.add(diskConfig)
             }
         }
-        configSpec.annotation = vmExtraInfo.toString()
+        configSpec.annotation = vmExtraInfo.toJson()
         /*
         * 配置虚拟机的自定义策略信息
         * 根据Windows和Linux分类讨论
@@ -373,10 +365,6 @@ object VCenterClient : IVMClient {
         } else if (templateSummary.config.guestId.startsWith("win")) {
             customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "group").spec
         }
-        /*
-        * 配置"克隆"这一动作属性：①克隆完成后开机；②不标记为模板
-        * 并且将目标位置、元信息、自定义策略挂载到克隆配置上
-        * */
         val cloneSpec = VirtualMachineCloneSpec()
         cloneSpec.location = relocateSpec
         cloneSpec.isPowerOn = powerOn
