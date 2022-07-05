@@ -1,6 +1,13 @@
 package cn.edu.buaa.scs.vm
 
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.model.VirtualMachines
+import cn.edu.buaa.scs.model.virtualMachines
+import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.exists
+import org.ktorm.dsl.and
+import org.ktorm.dsl.eq
+import org.ktorm.schema.ColumnDeclaring
 
 interface IVMClient {
     suspend fun getAllVMs(): Result<List<VirtualMachine>>
@@ -39,4 +46,16 @@ data class CreateVmOptions(
     val diskSize: Long, // bytes
 
     val powerOn: Boolean = false,
-)
+) {
+    internal fun existInDb() = mysql.virtualMachines.exists(existPredicate())
+
+    internal fun existPredicate(): (VirtualMachines) -> ColumnDeclaring<Boolean> {
+        return {
+            it.name.eq(this.name)
+                .and(it.studentId.eq(this.studentId))
+                .and(it.teacherId.eq(this.teacherId))
+                .and(it.experimentId.eq(this.experimentId))
+                .and(it.applyId.eq(this.applyId))
+        }
+    }
+}

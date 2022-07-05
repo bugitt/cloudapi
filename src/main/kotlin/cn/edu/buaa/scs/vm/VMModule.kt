@@ -9,4 +9,5 @@ lateinit var vmClient: IVMClient
 fun Application.vmModule() {
     VCenterClient.initialize(this)
     vmClient = VCenterClient
+    Routine.run()
 }
