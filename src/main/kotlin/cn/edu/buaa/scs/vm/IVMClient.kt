@@ -26,6 +26,8 @@ interface IVMClient {
     suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit>
 
     suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine>
+
+    suspend fun deleteVM(uuid: String): Result<Unit>
 }
 
 data class CreateVmOptions(

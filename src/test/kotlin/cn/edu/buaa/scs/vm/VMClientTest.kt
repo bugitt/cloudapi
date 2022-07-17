@@ -55,4 +55,14 @@ class VMClientTest {
             }
         }
     }
+
+    @Test
+    fun testDeleteVm() {
+        withApplication(testEnv) {
+            runBlocking {
+                val result = vmClient.deleteVM("4207002c-3175-941b-f1ae-3c91af32c627")
+                result.getOrThrow()
+            }
+        }
+    }
 }

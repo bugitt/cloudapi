@@ -2,7 +2,7 @@
 # 后面可以改成直接在docker build时编译代码
 image:
 	./gradlew clean build -x test
-	docker build -t harbor.scs.buaa.edu.cn/iobs/cloudapi:latest -f ./Dockerfile .
+	docker build -t registry.cn-beijing.aliyuncs.com/loheagn-docker/cloudapi:latest -f ./Dockerfile .
 
 push: image
 	docker push harbor.scs.buaa.edu.cn/iobs/cloudapi:latest

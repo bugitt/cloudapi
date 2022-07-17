@@ -94,6 +94,11 @@ fun User.authWrite(entity: IEntity): Boolean {
             entity.studentId == this.id
                     || authWrite(Experiment.id(entity.expId))
 
+        is VmApply ->
+            Experiment.id(entity.experimentId).course.let {
+                isCourseAdmin(it)
+            }
+
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
 }
