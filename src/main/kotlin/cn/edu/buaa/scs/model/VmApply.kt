@@ -1,9 +1,12 @@
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.jsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.ktorm.database.Database
+import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
+import org.ktorm.entity.count
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
@@ -25,7 +28,10 @@ interface VmApply : Entity<VmApply>, IEntity {
     var status: Int // 0: 还未处理; 1: 允许; 2: 拒绝
     var handleTime: Long
     var expectedNum: Int
-    var actualNum: Int
+
+    fun isApproved(): Boolean = this.status == 1
+
+    fun getActualNum(): Int = mysql.virtualMachines.count { it.applyId.eq(this.id) }
 }
 
 object VmApplyList : Table<VmApply>("vm_apply") {
@@ -46,7 +52,6 @@ object VmApplyList : Table<VmApply>("vm_apply") {
     val status = int("status").bindTo { it.status }
     val handleTime = long("handle_time").bindTo { it.handleTime }
     val exceptedNum = int("expected_num").bindTo { it.expectedNum }
-    val actualNum = int("actual_num").bindTo { it.actualNum }
 }
 
 val Database.vmApplyList get() = this.sequenceOf(VmApplyList)

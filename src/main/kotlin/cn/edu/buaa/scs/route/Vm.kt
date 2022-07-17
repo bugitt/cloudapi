@@ -1,8 +1,6 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
-import cn.edu.buaa.scs.controller.models.CreateVmApplyResponse
-import cn.edu.buaa.scs.controller.models.VmNetInfo
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VmApply
@@ -83,6 +81,29 @@ fun Route.vmRoute() {
                         )
                     )
                 }
+
+                route("/vms") {
+                    patch {
+                        val request = call.receive<PatchVmApplyVms>()
+                        request.studentIdList?.let {
+                            call.respond(
+                                call.vm.addVmsToApply(call.getApplyIdFromPath(), it)
+                            )
+                        }
+                    }
+
+                    delete {
+                        val request = call.receive<DeleteVmApplyVms>()
+                        call.respond(
+                            call.vm.deleteFromApply(
+                                call.getApplyIdFromPath(),
+                                request.studentId,
+                                request.teacherId,
+                                request.studentIdList,
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -126,5 +147,5 @@ internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
     status = vmApply.status,
     handleTime = vmApply.handleTime,
     expectedNum = vmApply.expectedNum,
-    actualNum = vmApply.actualNum,
+    actualNum = vmApply.getActualNum(),
 )

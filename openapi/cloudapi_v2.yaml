@@ -1023,6 +1023,56 @@ paths:
         name: applyId
         in: path
         required: true
+  '/vms/apply/{applyId}/vms':
+    patch:
+      summary: 修改“虚拟机创建申请”中的虚拟机情况
+      operationId: patch-vms-apply-vms
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVmApplyResponse'
+      tags:
+        - 虚拟机
+      security:
+        - Authorization: [ ]
+      parameters: [ ]
+      description: |-
+        修改“虚拟机创建申请”中的虚拟机个数
+        例如，可以使用此接口为已经审批通过的申请创建添加新的虚拟机，但不可删除
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchVmApplyVms'
+    parameters:
+      - schema:
+          type: string
+        name: applyId
+        in: path
+        required: true
+    delete:
+      summary: 删除“虚拟机创建申请”中的虚拟机
+      operationId: delete-vms-apply-applyId-vms
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVmApplyResponse'
+      tags:
+        - 虚拟机
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteVmApplyVms'
+      description: 删除“虚拟机创建申请”中的虚拟机
   /vm/template:
     get:
       summary: 获取当前可用的所有虚拟机模板
@@ -2061,6 +2111,34 @@ components:
         - expectedNum
         - actualNum
         - namePrefix
+    PatchVmApplyVms:
+      title: PatchVmApplyVms
+      x-stoplight:
+        id: tc8blp905u4mf
+      type: object
+      properties:
+        studentIdList:
+          type: array
+          description: 需要为实验中的学生新增虚拟机时，使用该字段
+          items:
+            type: string
+    DeleteVmApplyVms:
+      title: DeleteVmApplyVms
+      x-stoplight:
+        id: 5km93g7eafr7d
+      type: object
+      properties:
+        teacherId:
+          type: string
+          description: 需要删除教师申请的单个虚拟机时设置此字段
+        studentId:
+          type: string
+          description: 需要删除学生申请的单个虚拟机时设置此字段
+        studentIdList:
+          type: array
+          description: 需要删除批量申请的多个虚拟机时设置此字段
+          items:
+            type: string
   securitySchemes:
     Authorization:
       type: apiKey
