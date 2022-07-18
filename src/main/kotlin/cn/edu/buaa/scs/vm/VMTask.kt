@@ -21,7 +21,9 @@ class VMTask(taskData: TaskData) : Task(taskData) {
         private fun commonVMTask() = TaskData {
             this.type = Task.Type.VirtualMachine
             this.createTime = System.currentTimeMillis()
-            this.status = Task.Status.UNDO
+            this.status = Status.UNDO
+            this.error = ""
+            this.updateTime = 0
         }
 
         fun vmCreateTask(options: CreateVmOptions): TaskData {
@@ -42,7 +44,7 @@ class VMTask(taskData: TaskData) : Task(taskData) {
         return when (content.type) {
             Type.Create -> {
                 val options = jsonMapper.readValue<CreateVmOptions>(content.data)
-                vmClient.createVM(options).map { Unit }
+                vmClient.createVM(options).map { }
             }
             Type.Delete -> {
                 vmClient.deleteVM(content.data)
