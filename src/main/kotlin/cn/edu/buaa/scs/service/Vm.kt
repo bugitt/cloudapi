@@ -49,7 +49,7 @@ class VmService(val call: ApplicationCall) : IService {
             if (studentId != null)
                 if (call.user().hasAccessToStudent(studentId)) studentId
                 else throw AuthorizationException("has no access to student($studentId)")
-            else if (call.user().isStudent())
+            else if (experimentId == null)
                 call.userId()
             else null
 
