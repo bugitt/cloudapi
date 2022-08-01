@@ -22,6 +22,7 @@ fun Application.configureRouting() {
             statRoute()
             peerRoute()
             vmRoute()
+            websocketRoute()
             // 添加其他的 route
         }
 

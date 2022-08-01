@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
+import cn.edu.buaa.scs.auth.authRead
 import cn.edu.buaa.scs.auth.hasAccessToStudent
 import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
@@ -10,10 +11,14 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.vm.CreateVmOptions
+import cn.edu.buaa.scs.vm.SSH
 import cn.edu.buaa.scs.vm.VMTask
 import cn.edu.buaa.scs.vm.vmClient
 import io.ktor.application.*
 import io.ktor.features.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import org.ktorm.schema.ColumnDeclaring
@@ -260,5 +265,27 @@ class VmService(val call: ApplicationCall) : IService {
         }
             .filter { !it.existInDb() }
             .map { VMTask.vmCreateTask(it) }
+    }
+}
+
+suspend fun DefaultWebSocketServerSession.sshWS(uuid: String) {
+    val vm =
+        mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("virtual machine ($uuid) not found")
+    call.user().authRead(vm)
+
+    val sshSession = SSH.vmGetSSH(vm)
+        ?: throw cn.edu.buaa.scs.error.BadRequestException("can not connect to virtual machine ($uuid)")
+    sshSession.use { ssh ->
+        val launch = launch {
+            ssh.readCommand(incoming)
+        }
+        while (launch.isActive) {
+            ssh.processOutput(outgoing)
+            flush()
+            if (!ssh.isActive()) {
+                break
+            }
+            delay(20)
+        }
     }
 }

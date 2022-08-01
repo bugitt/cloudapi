@@ -5,11 +5,11 @@ import io.ktor.application.*
 
 @Suppress("unused")
 fun Application.webModule() {
+    configureWebsocket()
     configureCORS()
     configureCallID()
     configureMonitoring()
     configureContentNegotiation()
     configureStatusPage()
     configureRouting()
-    configureWebsocket()
 }

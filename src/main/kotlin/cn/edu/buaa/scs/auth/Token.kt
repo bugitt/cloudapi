@@ -25,12 +25,19 @@ val adminUser = User {
  * 目前仅兼容旧平台的用法
  */
 fun fetchToken(call: ApplicationCall) {
-    // TODO 后续兼容JWT校验
-    val token: String = call.request.queryParameters.let { params ->
-        params["token"] ?: params["authentication"] ?: params["Authentication"]
-    } ?: call.request.headers.let { headers ->
-        headers["authorization"] ?: headers["Authorization"]
-    }?.let { auth -> auth.split(" ").let { if (it.size > 1 && it[0] == "Bearer") it[1] else auth } } ?: ""
+    val token: String = when {
+        call.isWS() -> {
+            call.request.path().split("/").last()
+        }
+        else -> {
+            // TODO 后续兼容JWT校验
+            call.request.queryParameters.let { params ->
+                params["token"] ?: params["authentication"] ?: params["Authentication"]
+            } ?: call.request.headers.let { headers ->
+                headers["authorization"] ?: headers["Authorization"]
+            }?.let { auth -> auth.split(" ").let { if (it.size > 1 && it[0] == "Bearer") it[1] else auth } } ?: ""
+        }
+    }
 
     val setUser = fun(user: User) {
         call.attributes.put(TOKEN_KEY, token)
@@ -42,8 +49,7 @@ fun fetchToken(call: ApplicationCall) {
     if (call.request.path() == "/test") {
         return
     }
-
-    // TODO 添加其他不需要token例外情况
+    // 如有需要，可以继续添加其他不需要token例外情况
     if (token.isEmpty()) {
         throw AuthenticationException()
     }
@@ -58,6 +64,10 @@ fun fetchToken(call: ApplicationCall) {
     val user = authRedis.checkToken(token)?.let { Users.getByID(it) }
         ?: throw throw AuthorizationException("incorrect token")
     setUser(user)
+}
+
+fun ApplicationCall.isWS(): Boolean {
+    return request.path().startsWith("/api/v2/ws")
 }
 
 @Suppress("unused")
