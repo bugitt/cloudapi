@@ -77,8 +77,10 @@ dependencies {
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.1.1")
 
     // vm
-//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("com.vmware.photon.controller:photon-vsphere-adapter-util:0.6.60")
+
+    // ssh
+    implementation("com.hierynomus:sshj:0.33.0")
 
     // test
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
