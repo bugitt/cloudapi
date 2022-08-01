@@ -11,4 +11,5 @@ fun Application.webModule() {
     configureContentNegotiation()
     configureStatusPage()
     configureRouting()
+    configureWebsocket()
 }

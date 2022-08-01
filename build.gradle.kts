@@ -25,6 +25,7 @@ dependencies {
     // ktor server
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-websockets:$ktor_version")
 
     // ktor client
     implementation("io.ktor:ktor-client-core:$ktor_version")
