@@ -85,7 +85,7 @@ object VMRoutine : Routine {
             .forEach { it.process() }
     }
 
-    override val routineList = listOf(
+    override val routineList: List<suspend () -> Unit> = listOf(
         updateVMsToDatabase,
         createVm,
         // add more routines if needed
