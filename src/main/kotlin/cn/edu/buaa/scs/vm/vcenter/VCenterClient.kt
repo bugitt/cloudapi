@@ -290,25 +290,11 @@ object VCenterClient : IVMClient {
             }
         }
         configSpec.annotation = vmExtraInfo.toJson()
-        /*
-        * 配置虚拟机的自定义策略信息
-        * 根据Windows和Linux分类讨论
-        * */
-        var customSpec: CustomizationSpec? = null
-        val templateSummary = getMoRef.entityProps(templateRef, "summary")["summary"]!! as VirtualMachineSummary
-        if (templateSummary.config.guestId.startsWith("centos") || templateSummary.config.guestId.startsWith("fedora") ||
-            templateSummary.config.guestId.startsWith("freebsd") || templateSummary.config.guestId.startsWith("ubuntu")
-        ) {
-            customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "open").spec
-        } else if (templateSummary.config.guestId.startsWith("win")) {
-            customSpec = vimPort.getCustomizationSpec(connection.serviceContent.customizationSpecManager, "group").spec
-        }
         val cloneSpec = VirtualMachineCloneSpec()
         cloneSpec.location = relocateSpec
         cloneSpec.isPowerOn = powerOn
         cloneSpec.isTemplate = false
         cloneSpec.config = configSpec
-        cloneSpec.customization = customSpec
         return vimPort.cloneVMTask(templateRef, connection.getCreateVmSubFolder(), name, cloneSpec)
     }
 

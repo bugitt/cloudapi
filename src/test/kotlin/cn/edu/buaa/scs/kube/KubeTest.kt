@@ -3,7 +3,7 @@ package cn.edu.buaa.scs.kube
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.client.Watcher
 import io.fabric8.kubernetes.client.WatcherException
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import org.junit.Test
 
