@@ -4,7 +4,7 @@ import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.application.*
+import io.ktor.server.application.*
 import org.ktorm.database.Database
 import org.ktorm.logging.Logger
 

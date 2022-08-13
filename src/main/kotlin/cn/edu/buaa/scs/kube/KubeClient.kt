@@ -1,7 +1,7 @@
 package cn.edu.buaa.scs.kube
 
 import io.fabric8.kubernetes.client.KubernetesClient
-import io.ktor.application.*
+import io.ktor.server.application.*
 
 lateinit var kubeClient: () -> KubernetesClient
 

@@ -2,7 +2,7 @@ package cn.edu.buaa.scs.service
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import io.ktor.application.*
+import io.ktor.server.application.*
 
 interface IService {
     abstract class Caller<T : IService> {

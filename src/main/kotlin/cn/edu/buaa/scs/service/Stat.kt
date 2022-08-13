@@ -5,7 +5,7 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.utils.user
-import io.ktor.application.*
+import io.ktor.server.application.*
 
 internal val ApplicationCall.stat get() = StatService.getSvc(this) { StatService(this) }
 

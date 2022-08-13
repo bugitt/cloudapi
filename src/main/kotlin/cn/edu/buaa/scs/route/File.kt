@@ -9,11 +9,11 @@ import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.service.file
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.BASE_URL
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URI

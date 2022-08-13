@@ -21,15 +21,23 @@ repositories {
 }
 
 dependencies {
-    val ktor_version = "1.6.8"
-    // ktor server
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-websockets:$ktor_version")
-
-    // ktor client
-    implementation("io.ktor:ktor-client-core:$ktor_version")
-    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    // ktor
+    val ktor_version = "2.1.0"
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    implementation("io.ktor:ktor-server-call-id:$ktor_version")
+    implementation("io.ktor:ktor-server-cors:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktor_version")
+    implementation("io.ktor:ktor-client-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-client-cio-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-auth-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-jackson:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
 
     // coroutine
     val coroutine_version = "1.6.4"
@@ -40,12 +48,6 @@ dependencies {
     // kotlin-log
     implementation("io.github.microutils:kotlin-logging:2.1.21")
     implementation("ch.qos.logback:logback-classic:1.2.11")
-
-    // auth
-    implementation("io.ktor:ktor-auth:$ktor_version")
-
-    // serialization
-    implementation("io.ktor:ktor-jackson:$ktor_version")
 
     // Redis
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
@@ -83,7 +85,7 @@ dependencies {
     implementation("com.hierynomus:sshj:0.33.0")
 
     // test
-    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+    testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     implementation("org.junit.jupiter:junit-jupiter:5.8.1")
 }

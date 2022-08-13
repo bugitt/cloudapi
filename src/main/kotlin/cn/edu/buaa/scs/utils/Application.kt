@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.utils
 
-import io.ktor.application.*
+import io.ktor.server.application.*
 import java.io.InputStream
 
 fun Application.getConfigString(name: String, default: String = ""): String =

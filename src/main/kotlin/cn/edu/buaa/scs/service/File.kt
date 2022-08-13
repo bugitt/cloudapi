@@ -14,11 +14,11 @@ import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.utils.value
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
@@ -55,6 +55,7 @@ class FileService(val call: ApplicationCall) : IService {
                 is PartData.FileItem -> {
                     filePart = part
                 }
+
                 else -> part.dispose()
             }
         }
@@ -227,6 +228,7 @@ class FileService(val call: ApplicationCall) : IService {
                         assert(part.originalFileName != null)
                         fileParts.add(parseFilePart(part))
                     }
+
                     is PartData.FormItem ->
                         when (part.name) {
                             "owner" -> owner = part.value
@@ -234,6 +236,7 @@ class FileService(val call: ApplicationCall) : IService {
                             "involvedId" -> involvedId = part.value.toInt()
                             "fileId" -> fileId = part.value.toInt().let { if (it == 0) null else it }
                         }
+
                     else -> Unit
                 }
             }
@@ -282,11 +285,14 @@ class FileService(val call: ApplicationCall) : IService {
             FileType.Assignment ->
                 // 老师和助教才能打包作业
                 call.user().assertWrite(Experiment.id(involvedId))
+
             FileType.CourseResource ->
                 // 对课程有读权限的，都可以打包下载课程资源
                 call.user().assertRead(Course.id(involvedId))
+
             FileType.ExperimentResource ->
                 call.user().assertRead(Experiment.id(involvedId))
+
             FileType.AssignmentReview ->
                 Unit
         }

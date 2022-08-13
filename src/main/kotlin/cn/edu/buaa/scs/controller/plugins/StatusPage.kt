@@ -4,14 +4,15 @@ import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.utils.error
 import com.google.common.base.Throwables
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.response.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 
 fun Application.configureStatusPage() {
     install(StatusPages) {
-        exception<Throwable> { cause ->
+        exception<Throwable> { call, cause ->
             call.error(Throwables.getStackTraceAsString(cause))
             when (cause) {
 

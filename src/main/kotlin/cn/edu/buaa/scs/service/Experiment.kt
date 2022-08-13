@@ -10,7 +10,7 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
-import io.ktor.application.*
+import io.ktor.server.application.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.util.*

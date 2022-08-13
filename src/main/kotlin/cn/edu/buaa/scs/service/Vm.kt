@@ -14,9 +14,9 @@ import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.SSH
 import cn.edu.buaa.scs.vm.VMTask
 import cn.edu.buaa.scs.vm.vmClient
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.websocket.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.websocket.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.ktorm.dsl.*
@@ -142,10 +142,12 @@ class VmService(val call: ApplicationCall) : IService {
                 vmApply.expectedNum = 0
                 mysql.virtualMachines.filter { it.studentId.eq(studentId) and it.applyId.eq(vmApply.id) }.toList()
             }
+
             teacherId != null -> {
                 vmApply.expectedNum = 0
                 mysql.virtualMachines.filter { it.studentId.eq(teacherId) and it.applyId.eq(vmApply.id) }.toList()
             }
+
             studentIdList != null -> {
                 if (studentIdList.isEmpty()) listOf()
                 else {
@@ -158,6 +160,7 @@ class VmService(val call: ApplicationCall) : IService {
                     }.toList()
                 }
             }
+
             else -> listOf()
         }
         mysql.useTransaction {
@@ -242,6 +245,7 @@ class VmService(val call: ApplicationCall) : IService {
                         studentId = vmApply.studentId
                     )
                 )
+
             vmApply.teacherId.isNotBlank() && vmApply.teacherId != "default" ->
                 listOf(
                     baseOptions.copy(
@@ -249,6 +253,7 @@ class VmService(val call: ApplicationCall) : IService {
                         teacherId = vmApply.teacherId
                     )
                 )
+
             vmApply.experimentId != 0 -> {
                 val experiment = Experiment.id(vmApply.experimentId)
                 vmApply.studentIdList.map { studentId ->
@@ -261,6 +266,7 @@ class VmService(val call: ApplicationCall) : IService {
                     )
                 }
             }
+
             else -> listOf()
         }
             .filter { !it.existInDb() }

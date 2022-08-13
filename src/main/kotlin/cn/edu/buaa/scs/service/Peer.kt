@@ -14,7 +14,7 @@ import cn.edu.buaa.scs.utils.getOrPut
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
-import io.ktor.application.*
+import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import org.ktorm.dsl.*

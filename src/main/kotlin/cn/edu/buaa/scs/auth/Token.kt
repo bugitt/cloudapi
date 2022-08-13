@@ -7,8 +7,8 @@ import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.model.UserRole
 import cn.edu.buaa.scs.model.Users
 import cn.edu.buaa.scs.utils.*
-import io.ktor.application.*
-import io.ktor.request.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
 
 lateinit var superTokenList: List<String>
 
@@ -29,6 +29,7 @@ fun fetchToken(call: ApplicationCall) {
         call.isWS() -> {
             call.request.path().split("/").last()
         }
+
         else -> {
             // TODO 后续兼容JWT校验
             call.request.queryParameters.let { params ->

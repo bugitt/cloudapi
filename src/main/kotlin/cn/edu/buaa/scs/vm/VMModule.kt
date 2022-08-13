@@ -2,7 +2,7 @@ package cn.edu.buaa.scs.vm
 
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.vm.vcenter.VCenterClient
-import io.ktor.application.*
+import io.ktor.server.application.*
 
 lateinit var vmClient: IVMClient
 

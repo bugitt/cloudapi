@@ -6,10 +6,10 @@ import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.CourseService
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.stat
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Route.statRoute() {
     route("/stat") {

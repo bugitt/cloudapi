@@ -6,10 +6,10 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.AssignmentReview
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.service.*
-import io.ktor.application.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Route.experimentRoute() {
     route("/experiments") {

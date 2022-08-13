@@ -1,9 +1,9 @@
 package cn.edu.buaa.scs.controller.plugins
 
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.request.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.request.*
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {

@@ -8,10 +8,10 @@ import cn.edu.buaa.scs.model.PeerStandard
 import cn.edu.buaa.scs.model.PeerTask
 import cn.edu.buaa.scs.service.PeerService
 import cn.edu.buaa.scs.service.peer
-import io.ktor.application.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 /**
  * 互评相关的路由

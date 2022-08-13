@@ -1,7 +1,7 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.utils.IntOrString
-import io.ktor.features.*
+import io.ktor.server.plugins.*
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf

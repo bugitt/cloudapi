@@ -5,10 +5,10 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VmApply
 import cn.edu.buaa.scs.service.vm
-import io.ktor.application.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Route.vmRoute() {
     route("/vm") {
@@ -109,7 +109,7 @@ fun Route.vmRoute() {
     }
 }
 
-internal fun convertVirtualMachineResponse(vm: VirtualMachine) = cn.edu.buaa.scs.controller.models.VirtualMachine(
+internal fun convertVirtualMachineResponse(vm: VirtualMachine) = VirtualMachine(
     uuid = vm.uuid,
     platform = vm.platform,
     name = vm.name,

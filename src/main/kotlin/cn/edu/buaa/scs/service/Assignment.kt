@@ -14,7 +14,7 @@ import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getFileExtension
 import cn.edu.buaa.scs.utils.toTimestamp
 import cn.edu.buaa.scs.utils.user
-import io.ktor.application.*
+import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext

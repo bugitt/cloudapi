@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.service
 
-import io.ktor.http.cio.websocket.*
+import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

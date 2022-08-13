@@ -15,7 +15,7 @@ import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Basic
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Connection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.WaitForValues
 import com.vmware.vim25.*
-import io.ktor.application.*
+import io.ktor.server.application.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.ktorm.dsl.eq

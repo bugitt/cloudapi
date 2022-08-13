@@ -2,7 +2,7 @@ package cn.edu.buaa.scs.storage
 
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.minio.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

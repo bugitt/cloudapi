@@ -8,8 +8,8 @@ import cn.edu.buaa.scs.storage.S3
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.warn
-import io.ktor.application.*
-import io.ktor.features.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import org.ktorm.schema.ColumnDeclaring
@@ -35,6 +35,7 @@ class CourseResourceService(private val call: ApplicationCall) : IService, FileS
                     FileType.CourseResource -> {
                         { it.courseId eq courseId and (it.expId.isNull() or it.expId.eq(0)) }
                     }
+
                     FileType.ExperimentResource -> {
                         { it.courseId eq courseId and it.expId.isNotNull() and it.expId.notEq(0) }
                     }
