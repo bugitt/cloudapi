@@ -22,6 +22,7 @@ abstract class Task(protected val taskData: TaskData) {
             internalProcess().getOrThrow()
         } catch (e: Throwable) {
             taskData.fail(e.stackTraceToString())
+            return Result.failure(e)
         }
         taskData.success()
         return Result.success(Unit)
