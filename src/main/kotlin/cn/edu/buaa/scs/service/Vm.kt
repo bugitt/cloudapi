@@ -75,7 +75,11 @@ class VmService(val call: ApplicationCall) : IService {
             }
 
         var condition: ColumnDeclaring<Boolean> = VirtualMachines.uuid.isNotNull()
-        finalStudentId?.let { condition = condition.and(VirtualMachines.studentId.eq(it)) }
+        finalStudentId?.let {
+            if (!call.user().isAdmin()) {
+                condition = condition.and(VirtualMachines.studentId.eq(it))
+            }
+        }
         finalTeacherId?.let { condition = condition.and(VirtualMachines.teacherId.eq(it)) }
         finalExpId?.let { condition = condition.and((VirtualMachines.experimentId.eq(it))) }
         return mysql.virtualMachines.filter { condition }.toList()
