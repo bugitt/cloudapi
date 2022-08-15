@@ -1091,8 +1091,41 @@ paths:
       description: |-
         获取当前可用的所有虚拟机模板
         返回的是一个数组
+
+        该接口已被启用，请使用 GET /vm/templates
       security:
         - Authorization: [ ]
+      deprecated: true
+  /vm/templates:
+    get:
+      summary: 获取当前用户可用的所有虚拟机模板
+      tags:
+        - 虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualMachineTemplate'
+      operationId: get-vm-templates
+      description: |-
+        获取当前可用的所有虚拟机模板
+        返回的是一个数组
+
+        逻辑是：
+        1. 如果是管理员，返回所有的虚拟机模板
+        2. 如果是教师，返回所有公共模板、该教师自己制作的所有模板、该教师的助教制作的所有模板
+        3. 如果是学生，
+          a. 如果是助教，返回所有公共模板、该学生自己制作的所有模板、助教所属课程的教师制作的所有模板
+          b. 如果不是助教，返回所有公共模板、该学生自己制作的所有模板
+        
+        前端在使用该接口时，可以考虑在具体场景中，对获取到的列表做进一步的过滤
+      security:
+        - Authorization: [ ]
+    parameters: [ ]
 components:
   schemas:
     AssignmentResponse:
@@ -1969,6 +2002,64 @@ components:
         - powerState
         - overallStatus
         - netInfos
+    VirtualMachineTemplate:
+      title: VirtualMachineTemplate
+      type: object
+      properties:
+        uuid:
+          type: string
+        platform:
+          type: string
+        name:
+          type: string
+        host:
+          type: string
+        adminId:
+          type: string
+        studentId:
+          type: string
+        teacherId:
+          type: string
+        isExperimental:
+          type: boolean
+        experimentId:
+          type: integer
+          format: int32
+        memory:
+          type: integer
+          format: int32
+          description: MB
+        cpu:
+          type: integer
+          format: int32
+        osFullName:
+          type: string
+        diskNum:
+          type: integer
+          format: int32
+        diskSize:
+          type: integer
+          format: int64
+          description: byte
+        overallStatus:
+          type: string
+          description: 'gray, green, yellow, red'
+      required:
+        - uuid
+        - platform
+        - name
+        - host
+        - adminId
+        - studentId
+        - teacherId
+        - isExperimental
+        - experimentId
+        - memory
+        - cpu
+        - osFullName
+        - diskNum
+        - diskSize
+        - overallStatus
     StatExpAssignmentResponseAssignments:
       title: StatExpAssignmentResponseAssignments
       type: object

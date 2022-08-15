@@ -91,6 +91,18 @@ interface User : Entity<User>, IEntity {
         return mysql.experiments.filter { it.courseId.inList(courseIdList.distinct()) }.map { it.id }.distinct()
     }
 
+    fun getAllAssistantIdList(): List<String> {
+        if (!isTeacher()) return listOf()
+        val courseIdList = mysql.courses.filter { it.teacherId.eq(this.id) }.map { it.id.toString() }
+        if (courseIdList.isEmpty()) return listOf()
+        return mysql.assistants.filter { it.courseId.inList(courseIdList) }.map { it.studentId }
+    }
+
+    fun assistantGetAllTeacherIdList(): List<String> {
+        val courseIdList = mysql.assistants.filter { it.studentId.eq(it.studentId) }.map { it.courseId.toInt() }
+        return mysql.courses.filter { it.id.inList(courseIdList) }.map { it.teacher.id }
+    }
+
     override fun entityId(): IntOrString {
         return IntOrString(this.id)
     }

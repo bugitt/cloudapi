@@ -228,8 +228,34 @@ class VmService(val call: ApplicationCall) : IService {
         return vmApply
     }
 
-    fun getAllTemplate(): List<VirtualMachine> {
-        return mysql.virtualMachines.filter { it.isTemplate.eq(true) }.toList()
+    fun getAllTemplates(): List<VirtualMachine> {
+        val user = call.user()
+        var condition: ColumnDeclaring<Boolean> = VirtualMachines.isTemplate.eq(true)
+        val publicCondition: ColumnDeclaring<Boolean> =
+            VirtualMachines.studentId.eq("default").and(VirtualMachines.teacherId.eq("default"))
+        condition = when {
+            user.isAdmin() -> condition
+
+            user.isTeacher() -> {
+                var subCondition: ColumnDeclaring<Boolean> =
+                    VirtualMachines.teacherId.eq(user.id).and(VirtualMachines.studentId.eq("default"))
+                val studentIdList = user.getAllAssistantIdList()
+                if (studentIdList.isNotEmpty()) subCondition =
+                    subCondition.or(VirtualMachines.studentId.inList(studentIdList))
+                condition.and(subCondition.or(publicCondition))
+            }
+
+            else -> {
+                var subCondition: ColumnDeclaring<Boolean> = VirtualMachines.studentId.eq(user.id)
+                val teacherIdList = user.getAllAssistantIdList()
+                if (teacherIdList.isNotEmpty())
+                    subCondition = subCondition.or(
+                        VirtualMachines.teacherId.inList(teacherIdList) and (VirtualMachines.studentId.eq("default"))
+                    )
+                condition.and(subCondition.or(publicCondition))
+            }
+        }
+        return mysql.virtualMachines.filter { condition }.toList()
     }
 
     private fun generateVmCreationTasks(vmApply: VmApply): List<TaskData> {

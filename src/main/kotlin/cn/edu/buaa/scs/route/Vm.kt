@@ -38,9 +38,17 @@ fun Route.vmRoute() {
         }
 
         route("/template") {
+
             get {
-                call.respond(call.vm.getAllTemplate().map { convertVirtualMachineResponse(it) })
+                call.respond(call.vm.getAllTemplates().map { convertVirtualMachineResponse(it) })
             }
+        }
+
+        route("/templates") {
+            get {
+                call.respond(call.vm.getAllTemplates().map { convertVirtualMachineTemplateResponse(it) })
+            }
+
         }
     }
 
@@ -129,6 +137,24 @@ internal fun convertVirtualMachineResponse(vm: VirtualMachine) = VirtualMachine(
     powerState = vm.powerState.value(),
     overallStatus = vm.overallStatus.value(),
     netInfos = vm.netInfos.map { VmNetInfo(it.macAddress, it.ipList) }
+)
+
+internal fun convertVirtualMachineTemplateResponse(vm: VirtualMachine) = VirtualMachineTemplate(
+    uuid = vm.uuid,
+    platform = vm.platform,
+    name = vm.name,
+    host = vm.host,
+    adminId = vm.adminId,
+    studentId = vm.studentId,
+    teacherId = vm.teacherId,
+    isExperimental = vm.isExperimental,
+    experimentId = vm.experimentId,
+    memory = vm.memory,
+    cpu = vm.cpu,
+    osFullName = vm.osFullName,
+    diskNum = vm.diskNum,
+    diskSize = vm.diskSize,
+    overallStatus = vm.overallStatus.value(),
 )
 
 internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
