@@ -8,12 +8,14 @@ import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.SSH
 import cn.edu.buaa.scs.vm.VMTask
 import cn.edu.buaa.scs.vm.vmClient
+import com.vmware.vim25.VirtualMachinePowerState
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
@@ -256,6 +258,36 @@ class VmService(val call: ApplicationCall) : IService {
             }
         }
         return mysql.virtualMachines.filter { condition }.toList()
+    }
+
+    suspend fun convertVMToTemplate(uuid: String, name: String): VirtualMachine {
+        var vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
+        call.user().assertWrite(vm)
+        // 检查是否已经关机
+        if (vm.powerState != VirtualMachinePowerState.POWERED_OFF) {
+            throw BadRequestException("VM is not powered off")
+        }
+        if (vm.isTemplate) {
+            throw BadRequestException("VM is already a template")
+        }
+        // 检查template名称是否重复
+        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
+            throw BadRequestException("template name already exists")
+        }
+        // convert machine into template
+        vm = vmClient.convertVMToTemplate(uuid).getOrThrow()
+        // config vm template
+        val (adminId, teacherId, studentId) = when {
+            call.user().isAdmin() -> Triple("default", "default", "default")
+            call.user().isTeacher() -> Triple("default", call.userId(), "default")
+            else -> Triple("default", "default", call.userId())
+        }
+        return vmClient.configVM(
+            vm.uuid,
+            adminId = adminId,
+            teacherId = teacherId,
+            studentId = studentId,
+        ).getOrThrow()
     }
 
     private fun generateVmCreationTasks(vmApply: VmApply): List<TaskData> {

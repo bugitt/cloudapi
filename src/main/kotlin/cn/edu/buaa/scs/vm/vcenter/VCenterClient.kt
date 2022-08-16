@@ -18,6 +18,7 @@ import com.vmware.vim25.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
 import java.net.URI
@@ -124,17 +125,50 @@ object VCenterClient : IVMClient {
         }
     }
 
-    override suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit> {
+    override suspend fun configVM(
+        uuid: String,
+        experimentId: Int?,
+        adminId: String?,
+        teacherId: String?,
+        studentId: String?,
+    ): Result<VirtualMachine> {
         return baseSyncTask { connection ->
-            val vmRef = connection.getVmRefByUuid(uuid)
-            val vm = getVM(uuid).getOrThrow()
-            val vmConfigSpec = VirtualMachineConfigSpec()
-            val vmExtraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(vm)
-            experimentId?.let { vmExtraInfo.experimentId = it; vmExtraInfo.isExperimental = true }
-            vmConfigSpec.annotation = vmExtraInfo.toJson()
-            val task = connection.vimPort.reconfigVMTask(vmRef, vmConfigSpec)
-            waitForTaskResult(connection, task).getOrThrow()
+            configVM(
+                connection,
+                connection.getVmRefByUuid(uuid),
+                getVM(uuid).getOrThrow(),
+                experimentId = experimentId,
+                adminId = adminId,
+                teacherId = teacherId,
+                studentId = studentId,
+            ).getOrThrow()
         }
+    }
+
+    private fun configVM(
+        connection: Connection,
+        vmRef: ManagedObjectReference,
+        vm: VirtualMachine,
+        experimentId: Int? = null,
+        adminId: String? = null,
+        teacherId: String? = null,
+        studentId: String? = null,
+    ): Result<VirtualMachine> {
+        val vmConfigSpec = VirtualMachineConfigSpec()
+        val vmExtraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(vm)
+        experimentId?.let { vmExtraInfo.experimentId = it; vmExtraInfo.isExperimental = true }
+        adminId?.let { vmExtraInfo.adminId = it }
+        teacherId?.let { vmExtraInfo.teacherId = it }
+        studentId?.let { vmExtraInfo.studentId = it }
+        vmConfigSpec.annotation = vmExtraInfo.toJson()
+        val task = connection.vimPort.reconfigVMTask(vmRef, vmConfigSpec)
+        try {
+            waitForTaskResult(connection, task).getOrThrow()
+        } catch (e: Throwable) {
+            return Result.failure(e)
+        }
+        vm.applyExtraInfo(vmExtraInfo)
+        return Result.success(vm)
     }
 
     override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> {
@@ -162,12 +196,7 @@ object VCenterClient : IVMClient {
             )
             waitForTaskResult(connection, task).getOrThrow()
             // wait to find the vm in db
-            withTimeout(500000L) {
-                while (!options.existInDb()) {
-                    delay(10L)
-                }
-                mysql.virtualMachines.find(options.existPredicate())!!
-            }
+            waitForVMInDB(options.existPredicate()).getOrThrow()
         }
     }
 
@@ -182,6 +211,16 @@ object VCenterClient : IVMClient {
             val vmRef = connection.getVmRefByUuid(uuid)
             val task = connection.vimPort.destroyTask(vmRef)
             waitForTaskResult(connection, task).getOrThrow()
+        }
+    }
+
+    override suspend fun convertVMToTemplate(uuid: String): Result<VirtualMachine> {
+        return baseSyncTask { connection ->
+            val vmRef = connection.getVmRefByUuid(uuid)
+            connection.vimPort.markAsTemplate(vmRef)
+            waitForVMInDB {
+                it.uuid eq uuid and it.isTemplate eq true
+            }.getOrThrow()
         }
     }
 

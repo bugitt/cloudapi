@@ -42,6 +42,11 @@ fun Route.vmRoute() {
             get {
                 call.respond(call.vm.getAllTemplates().map { convertVirtualMachineResponse(it) })
             }
+
+            post {
+                val req = call.receive<PostVmTemplateRequest>()
+                call.respond(convertVirtualMachineTemplateResponse(call.vm.convertVMToTemplate(req.uuid, req.name)))
+            }
         }
 
         route("/templates") {

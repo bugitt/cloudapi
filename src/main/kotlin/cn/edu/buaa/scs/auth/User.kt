@@ -94,6 +94,9 @@ fun User.authWrite(entity: IEntity): Boolean {
             entity.studentId == this.id
                     || authWrite(Experiment.id(entity.expId))
 
+        is VirtualMachine ->
+            authRead(entity)
+
         is VmApply ->
             Experiment.id(entity.experimentId).course.let {
                 isCourseAdmin(it)

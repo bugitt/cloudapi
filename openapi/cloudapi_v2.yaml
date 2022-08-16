@@ -1096,6 +1096,37 @@ paths:
       security:
         - Authorization: [ ]
       deprecated: true
+    post:
+      summary: 创建虚拟机模板
+      operationId: post-vm-template
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualMachineTemplate'
+      tags:
+        - 虚拟机
+      description: |-
+        创建虚拟机模板，本质上是将虚拟机转换为模板
+
+        前端应注意，在调用该接口前，应该提示用户先将虚拟机关机，并提示用户，该操作将删除当前虚拟机
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uuid:
+                  type: string
+                  description: 需要转换的虚拟机的UUID
+                name:
+                  type: string
+                  description: 转换出来的模板的名称
+              required:
+                - uuid
+                - name
   /vm/templates:
     get:
       summary: 获取当前用户可用的所有虚拟机模板

@@ -5,8 +5,11 @@ import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import org.ktorm.schema.ColumnDeclaring
 
 interface IVMClient {
@@ -23,11 +26,32 @@ interface IVMClient {
     suspend fun powerOffAsync(uuid: String)
 
     // TODO: 添加更多配置项
-    suspend fun configVM(uuid: String, experimentId: Int?): Result<Unit>
+    suspend fun configVM(
+        uuid: String,
+        experimentId: Int? = null,
+        adminId: String? = null,
+        teacherId: String? = null,
+        studentId: String? = null,
+    ): Result<VirtualMachine>
 
     suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine>
 
     suspend fun deleteVM(uuid: String): Result<Unit>
+
+    suspend fun convertVMToTemplate(uuid: String): Result<VirtualMachine>
+
+    suspend fun waitForVMInDB(predicate: (VirtualMachines) -> ColumnDeclaring<Boolean>): Result<VirtualMachine> {
+        return try {
+            Result.success(withTimeout(500000L) {
+                while (!mysql.virtualMachines.exists(predicate)) {
+                    delay(10L)
+                }
+                mysql.virtualMachines.find(predicate)!!
+            })
+        } catch (e: Throwable) {
+            Result.failure(Exception("waitForVMInDB timeout", e))
+        }
+    }
 }
 
 data class CreateVmOptions(
