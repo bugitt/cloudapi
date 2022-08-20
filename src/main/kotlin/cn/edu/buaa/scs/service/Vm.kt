@@ -56,7 +56,7 @@ class VmService(val call: ApplicationCall) : IService {
             if (studentId != null)
                 if (call.user().hasAccessToStudent(studentId)) studentId
                 else throw AuthorizationException("has no access to student($studentId)")
-            else if (experimentId == null)
+            else if (call.user().isStudent())
                 call.userId()
             else null
 
@@ -77,11 +77,7 @@ class VmService(val call: ApplicationCall) : IService {
             }
 
         var condition: ColumnDeclaring<Boolean> = VirtualMachines.uuid.isNotNull()
-        finalStudentId?.let {
-            if (!call.user().isAdmin()) {
-                condition = condition.and(VirtualMachines.studentId.eq(it))
-            }
-        }
+        finalStudentId?.let { condition = condition.and(VirtualMachines.studentId.eq(it)) }
         finalTeacherId?.let { condition = condition.and(VirtualMachines.teacherId.eq(it)) }
         finalExpId?.let { condition = condition.and((VirtualMachines.experimentId.eq(it))) }
         return mysql.virtualMachines.filter { condition }.toList()
