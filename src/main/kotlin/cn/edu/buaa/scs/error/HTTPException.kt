@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.error
 
-class BadRequestException(message: String = "400", cause: Throwable? = null) :
+open class BadRequestException(message: String = "400", cause: Throwable? = null) :
     io.ktor.server.plugins.BadRequestException(message, cause)
 
 class AuthenticationException(message: String = "401") : Exception(message)

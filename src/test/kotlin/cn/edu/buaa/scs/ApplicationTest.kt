@@ -7,3 +7,7 @@ import io.ktor.server.testing.*
 val testEnv = createTestEnvironment {
     config = HoconApplicationConfig(ConfigFactory.load("application.conf"))
 }
+
+val mainTestEnv = createTestEnvironment {
+    config = HoconApplicationConfig(ConfigFactory.load("main.test.application.conf"))
+}
