@@ -85,3 +85,16 @@ data class RepoPermissions(
     val push: Boolean,
     val pull: Boolean
 )
+
+data class CreateUserReq(
+    @JsonProperty("login_name")
+    val loginName: String,
+
+    val username: String,
+
+    @JsonProperty("full_name")
+    val fullName: String,
+
+    val email: String,
+    val password: String
+)
