@@ -1,0 +1,2 @@
+packageName: "cn.edu.buaa.scs.sdk.harbor"
+serializationLibrary: jackson
