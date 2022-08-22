@@ -82,6 +82,22 @@ object GitClient : IProjectManager {
         return get("orgs/$projectName")
     }
 
+    override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> {
+        val exception = get<GitUser>("users/$userID").exceptionOrNull()
+        return if (exception == null) Result.success(userID)
+        else if (exception is RemoteServiceException && exception.status == HttpStatusCode.NotFound.value) {
+            post<String>(
+                "admin/users", CreateUserReq(
+                    username = userID,
+                    fullName = realName,
+                    email = email,
+                    loginName = userID,
+                    password = password,
+                )
+            ).map { userID }
+        } else Result.failure(exception)
+    }
+
     override suspend fun createProjectForUser(
         userID: String,
         projectName: String,
