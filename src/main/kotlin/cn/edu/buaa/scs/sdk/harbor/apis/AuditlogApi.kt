@@ -39,6 +39,7 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * This endpoint let user see the recent operation logs of the projects which he is member of
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return kotlin.collections.List<AuditLog>
@@ -59,11 +60,12 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
     fun listAuditLogs(
         xRequestId: kotlin.String? = null,
         q: kotlin.String? = null,
+        sort: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10
     ): kotlin.collections.List<AuditLog> {
         val localVarResponse =
-            listAuditLogsWithHttpInfo(xRequestId = xRequestId, q = q, page = page, pageSize = pageSize)
+            listAuditLogsWithHttpInfo(xRequestId = xRequestId, q = q, sort = sort, page = page, pageSize = pageSize)
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> (localVarResponse as Success<*>).data as kotlin.collections.List<AuditLog>
@@ -94,6 +96,7 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * This endpoint let user see the recent operation logs of the projects which he is member of
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return ApiResponse<kotlin.collections.List<AuditLog>?>
@@ -105,11 +108,12 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
     fun listAuditLogsWithHttpInfo(
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?
     ): ApiResponse<kotlin.collections.List<AuditLog>?> {
         val localVariableConfig =
-            listAuditLogsRequestConfig(xRequestId = xRequestId, q = q, page = page, pageSize = pageSize)
+            listAuditLogsRequestConfig(xRequestId = xRequestId, q = q, sort = sort, page = page, pageSize = pageSize)
 
         return request<Unit, kotlin.collections.List<AuditLog>>(
             localVariableConfig
@@ -121,6 +125,7 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      *
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return RequestConfig
@@ -128,6 +133,7 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
     fun listAuditLogsRequestConfig(
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?
     ): RequestConfig<Unit> {
@@ -136,6 +142,9 @@ class AuditlogApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             .apply {
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
                 if (page != null) {
                     put("page", listOf(page.toString()))

@@ -911,6 +911,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return kotlin.collections.List<Execution>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -932,7 +933,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
-        q: kotlin.String? = null
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null
     ): kotlin.collections.List<Execution> {
         val localVarResponse = listExecutionsWithHttpInfo(
             projectName = projectName,
@@ -940,7 +942,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
-            q = q
+            q = q,
+            sort = sort
         )
 
         return when (localVarResponse.responseType) {
@@ -976,6 +979,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return ApiResponse<kotlin.collections.List<Execution>?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -988,7 +992,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): ApiResponse<kotlin.collections.List<Execution>?> {
         val localVariableConfig = listExecutionsRequestConfig(
             projectName = projectName,
@@ -996,7 +1001,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
-            q = q
+            q = q,
+            sort = sort
         )
 
         return request<Unit, kotlin.collections.List<Execution>>(
@@ -1013,6 +1019,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return RequestConfig
      */
     fun listExecutionsRequestConfig(
@@ -1021,7 +1028,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
@@ -1034,6 +1042,9 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
                 }
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
@@ -1059,6 +1070,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return kotlin.collections.List<Instance>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1078,10 +1090,11 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
-        q: kotlin.String? = null
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null
     ): kotlin.collections.List<Instance> {
         val localVarResponse =
-            listInstancesWithHttpInfo(xRequestId = xRequestId, page = page, pageSize = pageSize, q = q)
+            listInstancesWithHttpInfo(xRequestId = xRequestId, page = page, pageSize = pageSize, q = q, sort = sort)
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> (localVarResponse as Success<*>).data as kotlin.collections.List<Instance>
@@ -1114,6 +1127,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return ApiResponse<kotlin.collections.List<Instance>?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1124,10 +1138,11 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): ApiResponse<kotlin.collections.List<Instance>?> {
         val localVariableConfig =
-            listInstancesRequestConfig(xRequestId = xRequestId, page = page, pageSize = pageSize, q = q)
+            listInstancesRequestConfig(xRequestId = xRequestId, page = page, pageSize = pageSize, q = q, sort = sort)
 
         return request<Unit, kotlin.collections.List<Instance>>(
             localVariableConfig
@@ -1141,13 +1156,15 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return RequestConfig
      */
     fun listInstancesRequestConfig(
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
@@ -1160,6 +1177,9 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
                 }
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
@@ -1183,6 +1203,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return kotlin.collections.List<PreheatPolicy>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1203,14 +1224,16 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
-        q: kotlin.String? = null
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null
     ): kotlin.collections.List<PreheatPolicy> {
         val localVarResponse = listPoliciesWithHttpInfo(
             projectName = projectName,
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
-            q = q
+            q = q,
+            sort = sort
         )
 
         return when (localVarResponse.responseType) {
@@ -1245,6 +1268,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return ApiResponse<kotlin.collections.List<PreheatPolicy>?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1256,14 +1280,16 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): ApiResponse<kotlin.collections.List<PreheatPolicy>?> {
         val localVariableConfig = listPoliciesRequestConfig(
             projectName = projectName,
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
-            q = q
+            q = q,
+            sort = sort
         )
 
         return request<Unit, kotlin.collections.List<PreheatPolicy>>(
@@ -1279,6 +1305,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return RequestConfig
      */
     fun listPoliciesRequestConfig(
@@ -1286,7 +1313,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
@@ -1299,6 +1327,9 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
                 }
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
@@ -1515,6 +1546,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return kotlin.collections.List<Task>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1537,7 +1569,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
-        q: kotlin.String? = null
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null
     ): kotlin.collections.List<Task> {
         val localVarResponse = listTasksWithHttpInfo(
             projectName = projectName,
@@ -1546,7 +1579,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
-            q = q
+            q = q,
+            sort = sort
         )
 
         return when (localVarResponse.responseType) {
@@ -1583,6 +1617,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return ApiResponse<kotlin.collections.List<Task>?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1596,7 +1631,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): ApiResponse<kotlin.collections.List<Task>?> {
         val localVariableConfig = listTasksRequestConfig(
             projectName = projectName,
@@ -1605,7 +1641,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
-            q = q
+            q = q,
+            sort = sort
         )
 
         return request<Unit, kotlin.collections.List<Task>>(
@@ -1623,6 +1660,7 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @return RequestConfig
      */
     fun listTasksRequestConfig(
@@ -1632,7 +1670,8 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
-        q: kotlin.String?
+        q: kotlin.String?,
+        sort: kotlin.String?
     ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
@@ -1645,6 +1684,9 @@ class PreheatApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
                 }
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()

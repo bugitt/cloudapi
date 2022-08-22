@@ -287,4 +287,126 @@ class ScanApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient = 
         )
     }
 
+    /**
+     * Cancelling a scan job for a particular artifact
+     * Cancelling a scan job for a particular artifact
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @return void
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun stopScanArtifact(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String? = null
+    ): Unit {
+        val localVarResponse = stopScanArtifactWithHttpInfo(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference,
+            xRequestId = xRequestId
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> Unit
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * Cancelling a scan job for a particular artifact
+     * Cancelling a scan job for a particular artifact
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @return ApiResponse<Unit?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Throws(IllegalStateException::class, IOException::class)
+    fun stopScanArtifactWithHttpInfo(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String?
+    ): ApiResponse<Unit?> {
+        val localVariableConfig = stopScanArtifactRequestConfig(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference,
+            xRequestId = xRequestId
+        )
+
+        return request<Unit, Unit>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation stopScanArtifact
+     *
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @return RequestConfig
+     */
+    fun stopScanArtifactRequestConfig(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String?
+    ): RequestConfig<Unit> {
+        val localVariableBody = null
+        val localVariableQuery: MultiValueMap = mutableMapOf()
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.POST,
+            path = "/projects/{project_name}/repositories/{repository_name}/artifacts/{reference}/scan/stop".replace(
+                "{" + "project_name" + "}",
+                projectName.toString()
+            ).replace("{" + "repository_name" + "}", repositoryName.toString())
+                .replace("{" + "reference" + "}", reference.toString()),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
 }

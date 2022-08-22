@@ -43,6 +43,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * @param additionLinks
  * @param labels
  * @param scanOverview The scan overview attached in the metadata of tag
+ * @param accessories
  */
 
 data class Artifact(
@@ -111,7 +112,10 @@ data class Artifact(
 
     /* The scan overview attached in the metadata of tag */
     @field:JsonProperty("scan_overview")
-    val scanOverview: kotlin.collections.Map<kotlin.String, NativeReportSummary>? = null
+    val scanOverview: kotlin.collections.Map<kotlin.String, NativeReportSummary>? = null,
+
+    @field:JsonProperty("accessories")
+    val accessories: kotlin.collections.List<Accessory>? = null
 
 )
 

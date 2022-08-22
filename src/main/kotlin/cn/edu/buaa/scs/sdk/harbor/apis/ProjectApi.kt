@@ -39,6 +39,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * This endpoint is for user to create a new project.
      * @param project New created project.
      * @param xRequestId An unique ID for the request (optional)
+     * @param xResourceNameInLocation The flag to indicate whether to return the name of the resource in Location. When X-Resource-Name-In-Location is true, the Location will return the name of the resource. (optional, default to false)
      * @return void
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -53,8 +54,16 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         ClientException::class,
         ServerException::class
     )
-    fun createProject(project: ProjectReq, xRequestId: kotlin.String? = null): Unit {
-        val localVarResponse = createProjectWithHttpInfo(project = project, xRequestId = xRequestId)
+    fun createProject(
+        project: ProjectReq,
+        xRequestId: kotlin.String? = null,
+        xResourceNameInLocation: kotlin.Boolean? = false
+    ): Unit {
+        val localVarResponse = createProjectWithHttpInfo(
+            project = project,
+            xRequestId = xRequestId,
+            xResourceNameInLocation = xResourceNameInLocation
+        )
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> Unit
@@ -85,13 +94,22 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * This endpoint is for user to create a new project.
      * @param project New created project.
      * @param xRequestId An unique ID for the request (optional)
+     * @param xResourceNameInLocation The flag to indicate whether to return the name of the resource in Location. When X-Resource-Name-In-Location is true, the Location will return the name of the resource. (optional, default to false)
      * @return ApiResponse<Unit?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
      */
     @Throws(IllegalStateException::class, IOException::class)
-    fun createProjectWithHttpInfo(project: ProjectReq, xRequestId: kotlin.String?): ApiResponse<Unit?> {
-        val localVariableConfig = createProjectRequestConfig(project = project, xRequestId = xRequestId)
+    fun createProjectWithHttpInfo(
+        project: ProjectReq,
+        xRequestId: kotlin.String?,
+        xResourceNameInLocation: kotlin.Boolean?
+    ): ApiResponse<Unit?> {
+        val localVariableConfig = createProjectRequestConfig(
+            project = project,
+            xRequestId = xRequestId,
+            xResourceNameInLocation = xResourceNameInLocation
+        )
 
         return request<ProjectReq, Unit>(
             localVariableConfig
@@ -103,13 +121,19 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      *
      * @param project New created project.
      * @param xRequestId An unique ID for the request (optional)
+     * @param xResourceNameInLocation The flag to indicate whether to return the name of the resource in Location. When X-Resource-Name-In-Location is true, the Location will return the name of the resource. (optional, default to false)
      * @return RequestConfig
      */
-    fun createProjectRequestConfig(project: ProjectReq, xRequestId: kotlin.String?): RequestConfig<ProjectReq> {
+    fun createProjectRequestConfig(
+        project: ProjectReq,
+        xRequestId: kotlin.String?,
+        xResourceNameInLocation: kotlin.Boolean?
+    ): RequestConfig<ProjectReq> {
         val localVariableBody = project
         val localVariableQuery: MultiValueMap = mutableMapOf()
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xResourceNameInLocation?.apply { localVariableHeaders["X-Resource-Name-In-Location"] = this.toString() }
         localVariableHeaders["Content-Type"] = "application/json"
         localVariableHeaders["Accept"] = "application/json"
 
@@ -125,8 +149,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Delete project by projectID
      * This endpoint is aimed to delete project by project ID.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return void
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -141,8 +166,16 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         ClientException::class,
         ServerException::class
     )
-    fun deleteProject(projectId: kotlin.Long, xRequestId: kotlin.String? = null): Unit {
-        val localVarResponse = deleteProjectWithHttpInfo(projectId = projectId, xRequestId = xRequestId)
+    fun deleteProject(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): Unit {
+        val localVarResponse = deleteProjectWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> Unit
@@ -171,15 +204,24 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Delete project by projectID
      * This endpoint is aimed to delete project by project ID.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ApiResponse<Unit?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
      */
     @Throws(IllegalStateException::class, IOException::class)
-    fun deleteProjectWithHttpInfo(projectId: kotlin.Long, xRequestId: kotlin.String?): ApiResponse<Unit?> {
-        val localVariableConfig = deleteProjectRequestConfig(projectId = projectId, xRequestId = xRequestId)
+    fun deleteProjectWithHttpInfo(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): ApiResponse<Unit?> {
+        val localVariableConfig = deleteProjectRequestConfig(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return request<Unit, Unit>(
             localVariableConfig
@@ -189,20 +231,29 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * To obtain the request config of the operation deleteProject
      *
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return RequestConfig
      */
-    fun deleteProjectRequestConfig(projectId: kotlin.Long, xRequestId: kotlin.String?): RequestConfig<Unit> {
+    fun deleteProjectRequestConfig(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf()
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
             method = RequestMethod.DELETE,
-            path = "/projects/{project_id}".replace("{" + "project_id" + "}", projectId.toString()),
+            path = "/projects/{project_name_or_id}".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
             query = localVariableQuery,
             headers = localVariableHeaders,
             body = localVariableBody
@@ -215,6 +266,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param projectName The name of the project
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return kotlin.collections.List<AuditLog>
@@ -236,6 +288,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         projectName: kotlin.String,
         xRequestId: kotlin.String? = null,
         q: kotlin.String? = null,
+        sort: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10
     ): kotlin.collections.List<AuditLog> {
@@ -243,6 +296,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             projectName = projectName,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize
         )
@@ -277,6 +331,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param projectName The name of the project
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return ApiResponse<kotlin.collections.List<AuditLog>?>
@@ -289,6 +344,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         projectName: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?
     ): ApiResponse<kotlin.collections.List<AuditLog>?> {
@@ -296,6 +352,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             projectName = projectName,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize
         )
@@ -311,6 +368,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * @param projectName The name of the project
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return RequestConfig
@@ -319,6 +377,7 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         projectName: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?
     ): RequestConfig<Unit> {
@@ -327,6 +386,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
             .apply {
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
                 if (page != null) {
                     put("page", listOf(page.toString()))
@@ -351,8 +413,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Return specific project detail information
      * This endpoint returns specific project information by project ID.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return Project
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -368,8 +431,16 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         ClientException::class,
         ServerException::class
     )
-    fun getProject(projectId: kotlin.Long, xRequestId: kotlin.String? = null): Project {
-        val localVarResponse = getProjectWithHttpInfo(projectId = projectId, xRequestId = xRequestId)
+    fun getProject(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): Project {
+        val localVarResponse = getProjectWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> (localVarResponse as Success<*>).data as Project
@@ -398,16 +469,25 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Return specific project detail information
      * This endpoint returns specific project information by project ID.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ApiResponse<Project?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
      */
     @Suppress("UNCHECKED_CAST")
     @Throws(IllegalStateException::class, IOException::class)
-    fun getProjectWithHttpInfo(projectId: kotlin.Long, xRequestId: kotlin.String?): ApiResponse<Project?> {
-        val localVariableConfig = getProjectRequestConfig(projectId = projectId, xRequestId = xRequestId)
+    fun getProjectWithHttpInfo(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): ApiResponse<Project?> {
+        val localVariableConfig = getProjectRequestConfig(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return request<Unit, Project>(
             localVariableConfig
@@ -417,20 +497,29 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * To obtain the request config of the operation getProject
      *
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return RequestConfig
      */
-    fun getProjectRequestConfig(projectId: kotlin.Long, xRequestId: kotlin.String?): RequestConfig<Unit> {
+    fun getProjectRequestConfig(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf()
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
             method = RequestMethod.GET,
-            path = "/projects/{project_id}".replace("{" + "project_id" + "}", projectId.toString()),
+            path = "/projects/{project_name_or_id}".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
             query = localVariableQuery,
             headers = localVariableHeaders,
             body = localVariableBody
@@ -440,8 +529,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Get the deletable status of the project
      * Get the deletable status of the project
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ProjectDeletable
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -457,8 +547,16 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         ClientException::class,
         ServerException::class
     )
-    fun getProjectDeletable(projectId: kotlin.Long, xRequestId: kotlin.String? = null): ProjectDeletable {
-        val localVarResponse = getProjectDeletableWithHttpInfo(projectId = projectId, xRequestId = xRequestId)
+    fun getProjectDeletable(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): ProjectDeletable {
+        val localVarResponse = getProjectDeletableWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> (localVarResponse as Success<*>).data as ProjectDeletable
@@ -487,8 +585,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Get the deletable status of the project
      * Get the deletable status of the project
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ApiResponse<ProjectDeletable?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -496,10 +595,15 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     @Suppress("UNCHECKED_CAST")
     @Throws(IllegalStateException::class, IOException::class)
     fun getProjectDeletableWithHttpInfo(
-        projectId: kotlin.Long,
-        xRequestId: kotlin.String?
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
     ): ApiResponse<ProjectDeletable?> {
-        val localVariableConfig = getProjectDeletableRequestConfig(projectId = projectId, xRequestId = xRequestId)
+        val localVariableConfig = getProjectDeletableRequestConfig(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return request<Unit, ProjectDeletable>(
             localVariableConfig
@@ -509,20 +613,29 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * To obtain the request config of the operation getProjectDeletable
      *
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return RequestConfig
      */
-    fun getProjectDeletableRequestConfig(projectId: kotlin.Long, xRequestId: kotlin.String?): RequestConfig<Unit> {
+    fun getProjectDeletableRequestConfig(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf()
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
             method = RequestMethod.GET,
-            path = "/projects/{project_id}/_deletable".replace("{" + "project_id" + "}", projectId.toString()),
+            path = "/projects/{project_name_or_id}/_deletable".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
             query = localVariableQuery,
             headers = localVariableHeaders,
             body = localVariableBody
@@ -532,8 +645,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Get summary of the project.
      * Get summary of the project.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ProjectSummary
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -549,8 +663,16 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         ClientException::class,
         ServerException::class
     )
-    fun getProjectSummary(projectId: kotlin.Long, xRequestId: kotlin.String? = null): ProjectSummary {
-        val localVarResponse = getProjectSummaryWithHttpInfo(projectId = projectId, xRequestId = xRequestId)
+    fun getProjectSummary(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): ProjectSummary {
+        val localVarResponse = getProjectSummaryWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> (localVarResponse as Success<*>).data as ProjectSummary
@@ -579,8 +701,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Get summary of the project.
      * Get summary of the project.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ApiResponse<ProjectSummary?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -588,10 +711,15 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     @Suppress("UNCHECKED_CAST")
     @Throws(IllegalStateException::class, IOException::class)
     fun getProjectSummaryWithHttpInfo(
-        projectId: kotlin.Long,
-        xRequestId: kotlin.String?
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
     ): ApiResponse<ProjectSummary?> {
-        val localVariableConfig = getProjectSummaryRequestConfig(projectId = projectId, xRequestId = xRequestId)
+        val localVariableConfig = getProjectSummaryRequestConfig(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return request<Unit, ProjectSummary>(
             localVariableConfig
@@ -601,20 +729,145 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * To obtain the request config of the operation getProjectSummary
      *
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return RequestConfig
      */
-    fun getProjectSummaryRequestConfig(projectId: kotlin.Long, xRequestId: kotlin.String?): RequestConfig<Unit> {
+    fun getProjectSummaryRequestConfig(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf()
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
             method = RequestMethod.GET,
-            path = "/projects/{project_id}/summary".replace("{" + "project_id" + "}", projectId.toString()),
+            path = "/projects/{project_name_or_id}/summary".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
+    /**
+     * Get project level scanner
+     * Get the scanner registration of the specified project. If no scanner registration is configured for the specified project, the system default scanner registration will be returned.
+     * @param projectNameOrId The name or id of the project
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @return ScannerRegistration
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun getScannerOfProject(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): ScannerRegistration {
+        val localVarResponse = getScannerOfProjectWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> (localVarResponse as Success<*>).data as ScannerRegistration
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * Get project level scanner
+     * Get the scanner registration of the specified project. If no scanner registration is configured for the specified project, the system default scanner registration will be returned.
+     * @param projectNameOrId The name or id of the project
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @return ApiResponse<ScannerRegistration?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(IllegalStateException::class, IOException::class)
+    fun getScannerOfProjectWithHttpInfo(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): ApiResponse<ScannerRegistration?> {
+        val localVariableConfig = getScannerOfProjectRequestConfig(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
+
+        return request<Unit, ScannerRegistration>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation getScannerOfProject
+     *
+     * @param projectNameOrId The name or id of the project
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @return RequestConfig
+     */
+    fun getScannerOfProjectRequestConfig(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): RequestConfig<Unit> {
+        val localVariableBody = null
+        val localVariableQuery: MultiValueMap = mutableMapOf()
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.GET,
+            path = "/projects/{project_name_or_id}/scanner".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
             query = localVariableQuery,
             headers = localVariableHeaders,
             body = localVariableBody
@@ -715,11 +968,14 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * List projects
      * This endpoint returns projects created by Harbor.
      * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param name The name of project. (optional)
      * @param `public` The project is public or private. (optional)
      * @param owner The name of project owner. (optional)
+     * @param withDetail Bool value indicating whether return detailed information of the project (optional, default to true)
      * @return kotlin.collections.List<Project>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -737,19 +993,25 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     )
     fun listProjects(
         xRequestId: kotlin.String? = null,
+        q: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
+        sort: kotlin.String? = null,
         name: kotlin.String? = null,
         `public`: kotlin.Boolean? = null,
-        owner: kotlin.String? = null
+        owner: kotlin.String? = null,
+        withDetail: kotlin.Boolean? = true
     ): kotlin.collections.List<Project> {
         val localVarResponse = listProjectsWithHttpInfo(
             xRequestId = xRequestId,
+            q = q,
             page = page,
             pageSize = pageSize,
+            sort = sort,
             name = name,
             `public` = `public`,
-            owner = owner
+            owner = owner,
+            withDetail = withDetail
         )
 
         return when (localVarResponse.responseType) {
@@ -780,11 +1042,14 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * List projects
      * This endpoint returns projects created by Harbor.
      * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param name The name of project. (optional)
      * @param `public` The project is public or private. (optional)
      * @param owner The name of project owner. (optional)
+     * @param withDetail Bool value indicating whether return detailed information of the project (optional, default to true)
      * @return ApiResponse<kotlin.collections.List<Project>?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -793,19 +1058,25 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     @Throws(IllegalStateException::class, IOException::class)
     fun listProjectsWithHttpInfo(
         xRequestId: kotlin.String?,
+        q: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
+        sort: kotlin.String?,
         name: kotlin.String?,
         `public`: kotlin.Boolean?,
-        owner: kotlin.String?
+        owner: kotlin.String?,
+        withDetail: kotlin.Boolean?
     ): ApiResponse<kotlin.collections.List<Project>?> {
         val localVariableConfig = listProjectsRequestConfig(
             xRequestId = xRequestId,
+            q = q,
             page = page,
             pageSize = pageSize,
+            sort = sort,
             name = name,
             `public` = `public`,
-            owner = owner
+            owner = owner,
+            withDetail = withDetail
         )
 
         return request<Unit, kotlin.collections.List<Project>>(
@@ -817,29 +1088,41 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
      * To obtain the request config of the operation listProjects
      *
      * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param name The name of project. (optional)
      * @param `public` The project is public or private. (optional)
      * @param owner The name of project owner. (optional)
+     * @param withDetail Bool value indicating whether return detailed information of the project (optional, default to true)
      * @return RequestConfig
      */
     fun listProjectsRequestConfig(
         xRequestId: kotlin.String?,
+        q: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
+        sort: kotlin.String?,
         name: kotlin.String?,
         `public`: kotlin.Boolean?,
-        owner: kotlin.String?
+        owner: kotlin.String?,
+        withDetail: kotlin.Boolean?
     ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
             .apply {
+                if (q != null) {
+                    put("q", listOf(q.toString()))
+                }
                 if (page != null) {
                     put("page", listOf(page.toString()))
                 }
                 if (pageSize != null) {
                     put("page_size", listOf(pageSize.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
                 if (name != null) {
                     put("name", listOf(name.toString()))
@@ -849,6 +1132,9 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
                 }
                 if (owner != null) {
                     put("owner", listOf(owner.toString()))
+                }
+                if (withDetail != null) {
+                    put("with_detail", listOf(withDetail.toString()))
                 }
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
@@ -865,11 +1151,174 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     }
 
     /**
-     * Update properties for a selected project.
-     * This endpoint is aimed to update the properties of a project.
-     * @param projectId The ID of the project
-     * @param project Updates of project.
+     * Get scanner registration candidates for configurating project level scanner
+     * Retrieve the system configured scanner registrations as candidates of setting project level scanner.
+     * @param projectNameOrId The name or id of the project
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return kotlin.collections.List<ScannerRegistration>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun listScannerCandidatesOfProject(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false,
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null,
+        page: kotlin.Long? = 1,
+        pageSize: kotlin.Long? = 10
+    ): kotlin.collections.List<ScannerRegistration> {
+        val localVarResponse = listScannerCandidatesOfProjectWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName,
+            q = q,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> (localVarResponse as Success<*>).data as kotlin.collections.List<ScannerRegistration>
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * Get scanner registration candidates for configurating project level scanner
+     * Retrieve the system configured scanner registrations as candidates of setting project level scanner.
+     * @param projectNameOrId The name or id of the project
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return ApiResponse<kotlin.collections.List<ScannerRegistration>?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(IllegalStateException::class, IOException::class)
+    fun listScannerCandidatesOfProjectWithHttpInfo(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?,
+        q: kotlin.String?,
+        sort: kotlin.String?,
+        page: kotlin.Long?,
+        pageSize: kotlin.Long?
+    ): ApiResponse<kotlin.collections.List<ScannerRegistration>?> {
+        val localVariableConfig = listScannerCandidatesOfProjectRequestConfig(
+            projectNameOrId = projectNameOrId,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName,
+            q = q,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
+        )
+
+        return request<Unit, kotlin.collections.List<ScannerRegistration>>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation listScannerCandidatesOfProject
+     *
+     * @param projectNameOrId The name or id of the project
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return RequestConfig
+     */
+    fun listScannerCandidatesOfProjectRequestConfig(
+        projectNameOrId: kotlin.String,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?,
+        q: kotlin.String?,
+        sort: kotlin.String?,
+        page: kotlin.Long?,
+        pageSize: kotlin.Long?
+    ): RequestConfig<Unit> {
+        val localVariableBody = null
+        val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
+            .apply {
+                if (q != null) {
+                    put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
+                }
+                if (page != null) {
+                    put("page", listOf(page.toString()))
+                }
+                if (pageSize != null) {
+                    put("page_size", listOf(pageSize.toString()))
+                }
+            }
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.GET,
+            path = "/projects/{project_name_or_id}/scanner/candidates".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
+    /**
+     * Configure scanner for the specified project
+     * Set one of the system configured scanner registration as the indepndent scanner of the specified project.
+     * @param projectNameOrId The name or id of the project
+     * @param payload
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return void
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -884,9 +1333,141 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
         ClientException::class,
         ServerException::class
     )
-    fun updateProject(projectId: kotlin.Long, project: ProjectReq, xRequestId: kotlin.String? = null): Unit {
-        val localVarResponse =
-            updateProjectWithHttpInfo(projectId = projectId, project = project, xRequestId = xRequestId)
+    fun setScannerOfProject(
+        projectNameOrId: kotlin.String,
+        payload: ProjectScanner,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): Unit {
+        val localVarResponse = setScannerOfProjectWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            payload = payload,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> Unit
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * Configure scanner for the specified project
+     * Set one of the system configured scanner registration as the indepndent scanner of the specified project.
+     * @param projectNameOrId The name or id of the project
+     * @param payload
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @return ApiResponse<Unit?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Throws(IllegalStateException::class, IOException::class)
+    fun setScannerOfProjectWithHttpInfo(
+        projectNameOrId: kotlin.String,
+        payload: ProjectScanner,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): ApiResponse<Unit?> {
+        val localVariableConfig = setScannerOfProjectRequestConfig(
+            projectNameOrId = projectNameOrId,
+            payload = payload,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
+
+        return request<ProjectScanner, Unit>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation setScannerOfProject
+     *
+     * @param projectNameOrId The name or id of the project
+     * @param payload
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @return RequestConfig
+     */
+    fun setScannerOfProjectRequestConfig(
+        projectNameOrId: kotlin.String,
+        payload: ProjectScanner,
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
+    ): RequestConfig<ProjectScanner> {
+        val localVariableBody = payload
+        val localVariableQuery: MultiValueMap = mutableMapOf()
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
+        localVariableHeaders["Content-Type"] = "application/json"
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.PUT,
+            path = "/projects/{project_name_or_id}/scanner".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
+    /**
+     * Update properties for a selected project.
+     * This endpoint is aimed to update the properties of a project.
+     * @param projectNameOrId The name or id of the project
+     * @param project Updates of project.
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
+     * @return void
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun updateProject(
+        projectNameOrId: kotlin.String,
+        project: ProjectReq,
+        xRequestId: kotlin.String? = null,
+        xIsResourceName: kotlin.Boolean? = false
+    ): Unit {
+        val localVarResponse = updateProjectWithHttpInfo(
+            projectNameOrId = projectNameOrId,
+            project = project,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return when (localVarResponse.responseType) {
             ResponseType.Success -> Unit
@@ -915,21 +1496,27 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * Update properties for a selected project.
      * This endpoint is aimed to update the properties of a project.
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param project Updates of project.
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return ApiResponse<Unit?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
      */
     @Throws(IllegalStateException::class, IOException::class)
     fun updateProjectWithHttpInfo(
-        projectId: kotlin.Long,
+        projectNameOrId: kotlin.String,
         project: ProjectReq,
-        xRequestId: kotlin.String?
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
     ): ApiResponse<Unit?> {
-        val localVariableConfig =
-            updateProjectRequestConfig(projectId = projectId, project = project, xRequestId = xRequestId)
+        val localVariableConfig = updateProjectRequestConfig(
+            projectNameOrId = projectNameOrId,
+            project = project,
+            xRequestId = xRequestId,
+            xIsResourceName = xIsResourceName
+        )
 
         return request<ProjectReq, Unit>(
             localVariableConfig
@@ -939,26 +1526,32 @@ class ProjectApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClient
     /**
      * To obtain the request config of the operation updateProject
      *
-     * @param projectId The ID of the project
+     * @param projectNameOrId The name or id of the project
      * @param project Updates of project.
      * @param xRequestId An unique ID for the request (optional)
+     * @param xIsResourceName The flag to indicate whether the parameter which supports both name and id in the path is the name of the resource. When the X-Is-Resource-Name is false and the parameter can be converted to an integer, the parameter will be as an id, otherwise, it will be as a name. (optional, default to false)
      * @return RequestConfig
      */
     fun updateProjectRequestConfig(
-        projectId: kotlin.Long,
+        projectNameOrId: kotlin.String,
         project: ProjectReq,
-        xRequestId: kotlin.String?
+        xRequestId: kotlin.String?,
+        xIsResourceName: kotlin.Boolean?
     ): RequestConfig<ProjectReq> {
         val localVariableBody = project
         val localVariableQuery: MultiValueMap = mutableMapOf()
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xIsResourceName?.apply { localVariableHeaders["X-Is-Resource-Name"] = this.toString() }
         localVariableHeaders["Content-Type"] = "application/json"
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
             method = RequestMethod.PUT,
-            path = "/projects/{project_id}".replace("{" + "project_id" + "}", projectId.toString()),
+            path = "/projects/{project_name_or_id}".replace(
+                "{" + "project_name_or_id" + "}",
+                projectNameOrId.toString()
+            ),
             query = localVariableQuery,
             headers = localVariableHeaders,
             body = localVariableBody

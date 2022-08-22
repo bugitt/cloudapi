@@ -72,11 +72,11 @@ data class Registry(
 
     /* The create time of the policy. */
     @field:JsonProperty("creation_time")
-    val creationTime: kotlin.String? = null,
+    val creationTime: java.time.OffsetDateTime? = null,
 
     /* The update time of the policy. */
     @field:JsonProperty("update_time")
-    val updateTime: kotlin.String? = null
+    val updateTime: java.time.OffsetDateTime? = null
 
 )
 

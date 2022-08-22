@@ -263,11 +263,154 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
     }
 
     /**
+     * List all authorized repositories
+     * List all authorized repositories
+     * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return kotlin.collections.List<Repository>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun listAllRepositories(
+        xRequestId: kotlin.String? = null,
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null,
+        page: kotlin.Long? = 1,
+        pageSize: kotlin.Long? = 10
+    ): kotlin.collections.List<Repository> {
+        val localVarResponse = listAllRepositoriesWithHttpInfo(
+            xRequestId = xRequestId,
+            q = q,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> (localVarResponse as Success<*>).data as kotlin.collections.List<Repository>
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * List all authorized repositories
+     * List all authorized repositories
+     * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return ApiResponse<kotlin.collections.List<Repository>?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(IllegalStateException::class, IOException::class)
+    fun listAllRepositoriesWithHttpInfo(
+        xRequestId: kotlin.String?,
+        q: kotlin.String?,
+        sort: kotlin.String?,
+        page: kotlin.Long?,
+        pageSize: kotlin.Long?
+    ): ApiResponse<kotlin.collections.List<Repository>?> {
+        val localVariableConfig = listAllRepositoriesRequestConfig(
+            xRequestId = xRequestId,
+            q = q,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
+        )
+
+        return request<Unit, kotlin.collections.List<Repository>>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation listAllRepositories
+     *
+     * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return RequestConfig
+     */
+    fun listAllRepositoriesRequestConfig(
+        xRequestId: kotlin.String?,
+        q: kotlin.String?,
+        sort: kotlin.String?,
+        page: kotlin.Long?,
+        pageSize: kotlin.Long?
+    ): RequestConfig<Unit> {
+        val localVariableBody = null
+        val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
+            .apply {
+                if (q != null) {
+                    put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
+                }
+                if (page != null) {
+                    put("page", listOf(page.toString()))
+                }
+                if (pageSize != null) {
+                    put("page_size", listOf(pageSize.toString()))
+                }
+            }
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.GET,
+            path = "/repositories",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
+    /**
      * List repositories
      * List repositories of the specified project
      * @param projectName The name of the project
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return kotlin.collections.List<Repository>
@@ -289,6 +432,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
         projectName: kotlin.String,
         xRequestId: kotlin.String? = null,
         q: kotlin.String? = null,
+        sort: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10
     ): kotlin.collections.List<Repository> {
@@ -296,6 +440,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
             projectName = projectName,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize
         )
@@ -330,6 +475,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
      * @param projectName The name of the project
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return ApiResponse<kotlin.collections.List<Repository>?>
@@ -342,6 +488,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
         projectName: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?
     ): ApiResponse<kotlin.collections.List<Repository>?> {
@@ -349,6 +496,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
             projectName = projectName,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize
         )
@@ -364,6 +512,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
      * @param projectName The name of the project
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @return RequestConfig
@@ -372,6 +521,7 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
         projectName: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?
     ): RequestConfig<Unit> {
@@ -380,6 +530,9 @@ class RepositoryApi(basePath: kotlin.String = defaultBasePath, client: OkHttpCli
             .apply {
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
                 if (page != null) {
                     put("page", listOf(page.toString()))

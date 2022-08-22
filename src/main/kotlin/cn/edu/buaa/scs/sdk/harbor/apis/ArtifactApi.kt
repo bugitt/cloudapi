@@ -21,6 +21,7 @@
 package cn.edu.buaa.scs.sdk.harbor.apis
 
 import cn.edu.buaa.scs.sdk.harbor.infrastructure.*
+import cn.edu.buaa.scs.sdk.harbor.models.Accessory
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
 import cn.edu.buaa.scs.sdk.harbor.models.Label
 import cn.edu.buaa.scs.sdk.harbor.models.Tag
@@ -687,9 +688,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         @JsonProperty(value = "readme.md")
         readmePeriodMd("readme.md"),
         @JsonProperty(value = "dependencies")
-        dependencies("dependencies"),
-        @JsonProperty(value = "vulnerabilities")
-        vulnerabilities("vulnerabilities")
+        dependencies("dependencies")
     }
 
     /**
@@ -834,11 +833,13 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param xRequestId An unique ID for the request (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
      * @param withTag Specify whether the tags are inclued inside the returning artifacts (optional, default to true)
      * @param withLabel Specify whether the labels are inclued inside the returning artifacts (optional, default to false)
      * @param withScanOverview Specify whether the scan overview is inclued inside the returning artifacts (optional, default to false)
+     * @param withAccessory Specify whether the accessories are included of the returning artifacts. (optional, default to false)
      * @param withSignature Specify whether the signature is inclued inside the returning artifacts (optional, default to false)
-     * @param withImmutableStatus Specify whether the immutable status is inclued inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
+     * @param withImmutableStatus Specify whether the immutable status is inclued inside the tags of the returning artifacts. (optional, default to false)
      * @return Artifact
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -861,9 +862,11 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         xRequestId: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
+        xAcceptVulnerabilities: kotlin.String? = "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
         withTag: kotlin.Boolean? = true,
         withLabel: kotlin.Boolean? = false,
         withScanOverview: kotlin.Boolean? = false,
+        withAccessory: kotlin.Boolean? = false,
         withSignature: kotlin.Boolean? = false,
         withImmutableStatus: kotlin.Boolean? = false
     ): Artifact {
@@ -874,9 +877,11 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
+            xAcceptVulnerabilities = xAcceptVulnerabilities,
             withTag = withTag,
             withLabel = withLabel,
             withScanOverview = withScanOverview,
+            withAccessory = withAccessory,
             withSignature = withSignature,
             withImmutableStatus = withImmutableStatus
         )
@@ -914,11 +919,13 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param xRequestId An unique ID for the request (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
      * @param withTag Specify whether the tags are inclued inside the returning artifacts (optional, default to true)
      * @param withLabel Specify whether the labels are inclued inside the returning artifacts (optional, default to false)
      * @param withScanOverview Specify whether the scan overview is inclued inside the returning artifacts (optional, default to false)
+     * @param withAccessory Specify whether the accessories are included of the returning artifacts. (optional, default to false)
      * @param withSignature Specify whether the signature is inclued inside the returning artifacts (optional, default to false)
-     * @param withImmutableStatus Specify whether the immutable status is inclued inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
+     * @param withImmutableStatus Specify whether the immutable status is inclued inside the tags of the returning artifacts. (optional, default to false)
      * @return ApiResponse<Artifact?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -932,9 +939,11 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
+        xAcceptVulnerabilities: kotlin.String?,
         withTag: kotlin.Boolean?,
         withLabel: kotlin.Boolean?,
         withScanOverview: kotlin.Boolean?,
+        withAccessory: kotlin.Boolean?,
         withSignature: kotlin.Boolean?,
         withImmutableStatus: kotlin.Boolean?
     ): ApiResponse<Artifact?> {
@@ -945,9 +954,11 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             xRequestId = xRequestId,
             page = page,
             pageSize = pageSize,
+            xAcceptVulnerabilities = xAcceptVulnerabilities,
             withTag = withTag,
             withLabel = withLabel,
             withScanOverview = withScanOverview,
+            withAccessory = withAccessory,
             withSignature = withSignature,
             withImmutableStatus = withImmutableStatus
         )
@@ -966,11 +977,13 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param xRequestId An unique ID for the request (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
      * @param withTag Specify whether the tags are inclued inside the returning artifacts (optional, default to true)
      * @param withLabel Specify whether the labels are inclued inside the returning artifacts (optional, default to false)
      * @param withScanOverview Specify whether the scan overview is inclued inside the returning artifacts (optional, default to false)
+     * @param withAccessory Specify whether the accessories are included of the returning artifacts. (optional, default to false)
      * @param withSignature Specify whether the signature is inclued inside the returning artifacts (optional, default to false)
-     * @param withImmutableStatus Specify whether the immutable status is inclued inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
+     * @param withImmutableStatus Specify whether the immutable status is inclued inside the tags of the returning artifacts. (optional, default to false)
      * @return RequestConfig
      */
     fun getArtifactRequestConfig(
@@ -980,9 +993,11 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         xRequestId: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
+        xAcceptVulnerabilities: kotlin.String?,
         withTag: kotlin.Boolean?,
         withLabel: kotlin.Boolean?,
         withScanOverview: kotlin.Boolean?,
+        withAccessory: kotlin.Boolean?,
         withSignature: kotlin.Boolean?,
         withImmutableStatus: kotlin.Boolean?
     ): RequestConfig<Unit> {
@@ -1004,6 +1019,9 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
                 if (withScanOverview != null) {
                     put("with_scan_overview", listOf(withScanOverview.toString()))
                 }
+                if (withAccessory != null) {
+                    put("with_accessory", listOf(withAccessory.toString()))
+                }
                 if (withSignature != null) {
                     put("with_signature", listOf(withSignature.toString()))
                 }
@@ -1013,11 +1031,315 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xAcceptVulnerabilities?.apply { localVariableHeaders["X-Accept-Vulnerabilities"] = this.toString() }
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
             method = RequestMethod.GET,
             path = "/projects/{project_name}/repositories/{repository_name}/artifacts/{reference}".replace(
+                "{" + "project_name" + "}",
+                projectName.toString()
+            ).replace("{" + "repository_name" + "}", repositoryName.toString())
+                .replace("{" + "reference" + "}", reference.toString()),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
+    /**
+     * Get the vulnerabilities addition of the specific artifact
+     * Get the vulnerabilities addition of the artifact specified by the reference under the project and repository.
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
+     * @return kotlin.String
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun getVulnerabilitiesAddition(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        xAcceptVulnerabilities: kotlin.String? = "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+    ): kotlin.String {
+        val localVarResponse = getVulnerabilitiesAdditionWithHttpInfo(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference,
+            xRequestId = xRequestId,
+            xAcceptVulnerabilities = xAcceptVulnerabilities
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> (localVarResponse as Success<*>).data as kotlin.String
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * Get the vulnerabilities addition of the specific artifact
+     * Get the vulnerabilities addition of the artifact specified by the reference under the project and repository.
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
+     * @return ApiResponse<kotlin.String?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(IllegalStateException::class, IOException::class)
+    fun getVulnerabilitiesAdditionWithHttpInfo(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String?,
+        xAcceptVulnerabilities: kotlin.String?
+    ): ApiResponse<kotlin.String?> {
+        val localVariableConfig = getVulnerabilitiesAdditionRequestConfig(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference,
+            xRequestId = xRequestId,
+            xAcceptVulnerabilities = xAcceptVulnerabilities
+        )
+
+        return request<Unit, kotlin.String>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation getVulnerabilitiesAddition
+     *
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
+     * @return RequestConfig
+     */
+    fun getVulnerabilitiesAdditionRequestConfig(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String?,
+        xAcceptVulnerabilities: kotlin.String?
+    ): RequestConfig<Unit> {
+        val localVariableBody = null
+        val localVariableQuery: MultiValueMap = mutableMapOf()
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xAcceptVulnerabilities?.apply { localVariableHeaders["X-Accept-Vulnerabilities"] = this.toString() }
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.GET,
+            path = "/projects/{project_name}/repositories/{repository_name}/artifacts/{reference}/additions/vulnerabilities".replace(
+                "{" + "project_name" + "}",
+                projectName.toString()
+            ).replace("{" + "repository_name" + "}", repositoryName.toString())
+                .replace("{" + "reference" + "}", reference.toString()),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            body = localVariableBody
+        )
+    }
+
+    /**
+     * List accessories
+     * List accessories of the specific artifact
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return kotlin.collections.List<Accessory>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     * @throws UnsupportedOperationException If the API returns an informational or redirection response
+     * @throws ClientException If the API returns a client error response
+     * @throws ServerException If the API returns a server error response
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(
+        IllegalStateException::class,
+        IOException::class,
+        UnsupportedOperationException::class,
+        ClientException::class,
+        ServerException::class
+    )
+    fun listAccessories(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String? = null,
+        q: kotlin.String? = null,
+        sort: kotlin.String? = null,
+        page: kotlin.Long? = 1,
+        pageSize: kotlin.Long? = 10
+    ): kotlin.collections.List<Accessory> {
+        val localVarResponse = listAccessoriesWithHttpInfo(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference,
+            xRequestId = xRequestId,
+            q = q,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
+        )
+
+        return when (localVarResponse.responseType) {
+            ResponseType.Success -> (localVarResponse as Success<*>).data as kotlin.collections.List<Accessory>
+            ResponseType.Informational -> throw UnsupportedOperationException("Client does not support Informational responses.")
+            ResponseType.Redirection -> throw UnsupportedOperationException("Client does not support Redirection responses.")
+            ResponseType.ClientError -> {
+                val localVarError = localVarResponse as ClientError<*>
+                throw ClientException(
+                    "Client error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+
+            ResponseType.ServerError -> {
+                val localVarError = localVarResponse as ServerError<*>
+                throw ServerException(
+                    "Server error : ${localVarError.statusCode} ${localVarError.message.orEmpty()}",
+                    localVarError.statusCode,
+                    localVarResponse
+                )
+            }
+        }
+    }
+
+    /**
+     * List accessories
+     * List accessories of the specific artifact
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return ApiResponse<kotlin.collections.List<Accessory>?>
+     * @throws IllegalStateException If the request is not correctly configured
+     * @throws IOException Rethrows the OkHttp execute method exception
+     */
+    @Suppress("UNCHECKED_CAST")
+    @Throws(IllegalStateException::class, IOException::class)
+    fun listAccessoriesWithHttpInfo(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String?,
+        q: kotlin.String?,
+        sort: kotlin.String?,
+        page: kotlin.Long?,
+        pageSize: kotlin.Long?
+    ): ApiResponse<kotlin.collections.List<Accessory>?> {
+        val localVariableConfig = listAccessoriesRequestConfig(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference,
+            xRequestId = xRequestId,
+            q = q,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
+        )
+
+        return request<Unit, kotlin.collections.List<Accessory>>(
+            localVariableConfig
+        )
+    }
+
+    /**
+     * To obtain the request config of the operation listAccessories
+     *
+     * @param projectName The name of the project
+     * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
+     * @param reference The reference of the artifact, can be digest or tag
+     * @param xRequestId An unique ID for the request (optional)
+     * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
+     * @param page The page number (optional, default to 1)
+     * @param pageSize The size of per page (optional, default to 10)
+     * @return RequestConfig
+     */
+    fun listAccessoriesRequestConfig(
+        projectName: kotlin.String,
+        repositoryName: kotlin.String,
+        reference: kotlin.String,
+        xRequestId: kotlin.String?,
+        q: kotlin.String?,
+        sort: kotlin.String?,
+        page: kotlin.Long?,
+        pageSize: kotlin.Long?
+    ): RequestConfig<Unit> {
+        val localVariableBody = null
+        val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
+            .apply {
+                if (q != null) {
+                    put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
+                }
+                if (page != null) {
+                    put("page", listOf(page.toString()))
+                }
+                if (pageSize != null) {
+                    put("page_size", listOf(pageSize.toString()))
+                }
+            }
+        val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
+        xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        localVariableHeaders["Accept"] = "application/json"
+
+        return RequestConfig(
+            method = RequestMethod.GET,
+            path = "/projects/{project_name}/repositories/{repository_name}/artifacts/{reference}/accessories".replace(
                 "{" + "project_name" + "}",
                 projectName.toString()
             ).replace("{" + "repository_name" + "}", repositoryName.toString())
@@ -1035,13 +1357,16 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
      * @param withTag Specify whether the tags are included inside the returning artifacts (optional, default to true)
      * @param withLabel Specify whether the labels are included inside the returning artifacts (optional, default to false)
      * @param withScanOverview Specify whether the scan overview is included inside the returning artifacts (optional, default to false)
      * @param withSignature Specify whether the signature is included inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
-     * @param withImmutableStatus Specify whether the immutable status is included inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
+     * @param withImmutableStatus Specify whether the immutable status is included inside the tags of the returning artifacts. Only works when setting \&quot;with_immutable_status&#x3D;true\&quot; (optional, default to false)
+     * @param withAccessory Specify whether the accessories are included of the returning artifacts. Only works when setting \&quot;with_accessory&#x3D;true\&quot; (optional, default to false)
      * @return kotlin.collections.List<Artifact>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1062,26 +1387,32 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         repositoryName: kotlin.String,
         xRequestId: kotlin.String? = null,
         q: kotlin.String? = null,
+        sort: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
+        xAcceptVulnerabilities: kotlin.String? = "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
         withTag: kotlin.Boolean? = true,
         withLabel: kotlin.Boolean? = false,
         withScanOverview: kotlin.Boolean? = false,
         withSignature: kotlin.Boolean? = false,
-        withImmutableStatus: kotlin.Boolean? = false
+        withImmutableStatus: kotlin.Boolean? = false,
+        withAccessory: kotlin.Boolean? = false
     ): kotlin.collections.List<Artifact> {
         val localVarResponse = listArtifactsWithHttpInfo(
             projectName = projectName,
             repositoryName = repositoryName,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize,
+            xAcceptVulnerabilities = xAcceptVulnerabilities,
             withTag = withTag,
             withLabel = withLabel,
             withScanOverview = withScanOverview,
             withSignature = withSignature,
-            withImmutableStatus = withImmutableStatus
+            withImmutableStatus = withImmutableStatus,
+            withAccessory = withAccessory
         )
 
         return when (localVarResponse.responseType) {
@@ -1115,13 +1446,16 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
      * @param withTag Specify whether the tags are included inside the returning artifacts (optional, default to true)
      * @param withLabel Specify whether the labels are included inside the returning artifacts (optional, default to false)
      * @param withScanOverview Specify whether the scan overview is included inside the returning artifacts (optional, default to false)
      * @param withSignature Specify whether the signature is included inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
-     * @param withImmutableStatus Specify whether the immutable status is included inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
+     * @param withImmutableStatus Specify whether the immutable status is included inside the tags of the returning artifacts. Only works when setting \&quot;with_immutable_status&#x3D;true\&quot; (optional, default to false)
+     * @param withAccessory Specify whether the accessories are included of the returning artifacts. Only works when setting \&quot;with_accessory&#x3D;true\&quot; (optional, default to false)
      * @return ApiResponse<kotlin.collections.List<Artifact>?>
      * @throws IllegalStateException If the request is not correctly configured
      * @throws IOException Rethrows the OkHttp execute method exception
@@ -1133,26 +1467,32 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         repositoryName: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
+        xAcceptVulnerabilities: kotlin.String?,
         withTag: kotlin.Boolean?,
         withLabel: kotlin.Boolean?,
         withScanOverview: kotlin.Boolean?,
         withSignature: kotlin.Boolean?,
-        withImmutableStatus: kotlin.Boolean?
+        withImmutableStatus: kotlin.Boolean?,
+        withAccessory: kotlin.Boolean?
     ): ApiResponse<kotlin.collections.List<Artifact>?> {
         val localVariableConfig = listArtifactsRequestConfig(
             projectName = projectName,
             repositoryName = repositoryName,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize,
+            xAcceptVulnerabilities = xAcceptVulnerabilities,
             withTag = withTag,
             withLabel = withLabel,
             withScanOverview = withScanOverview,
             withSignature = withSignature,
-            withImmutableStatus = withImmutableStatus
+            withImmutableStatus = withImmutableStatus,
+            withAccessory = withAccessory
         )
 
         return request<Unit, kotlin.collections.List<Artifact>>(
@@ -1167,13 +1507,16 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param repositoryName The name of the repository. If it contains slash, encode it with URL encoding. e.g. a/b -&gt; a%252Fb
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
+     * @param xAcceptVulnerabilities A comma-separated lists of MIME types for the scan report or scan summary. The first mime type will be used when the report found for it. Currently the mime type supports &#39;application/vnd.scanner.adapter.vuln.report.harbor+json; version&#x3D;1.0&#39; and &#39;application/vnd.security.vulnerability.report; version&#x3D;1.1&#39; (optional, default to "application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
      * @param withTag Specify whether the tags are included inside the returning artifacts (optional, default to true)
      * @param withLabel Specify whether the labels are included inside the returning artifacts (optional, default to false)
      * @param withScanOverview Specify whether the scan overview is included inside the returning artifacts (optional, default to false)
      * @param withSignature Specify whether the signature is included inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
-     * @param withImmutableStatus Specify whether the immutable status is included inside the tags of the returning artifacts. Only works when setting \&quot;with_tag&#x3D;true\&quot; (optional, default to false)
+     * @param withImmutableStatus Specify whether the immutable status is included inside the tags of the returning artifacts. Only works when setting \&quot;with_immutable_status&#x3D;true\&quot; (optional, default to false)
+     * @param withAccessory Specify whether the accessories are included of the returning artifacts. Only works when setting \&quot;with_accessory&#x3D;true\&quot; (optional, default to false)
      * @return RequestConfig
      */
     fun listArtifactsRequestConfig(
@@ -1181,19 +1524,25 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         repositoryName: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
+        xAcceptVulnerabilities: kotlin.String?,
         withTag: kotlin.Boolean?,
         withLabel: kotlin.Boolean?,
         withScanOverview: kotlin.Boolean?,
         withSignature: kotlin.Boolean?,
-        withImmutableStatus: kotlin.Boolean?
+        withImmutableStatus: kotlin.Boolean?,
+        withAccessory: kotlin.Boolean?
     ): RequestConfig<Unit> {
         val localVariableBody = null
         val localVariableQuery: MultiValueMap = mutableMapOf<kotlin.String, kotlin.collections.List<kotlin.String>>()
             .apply {
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
                 if (page != null) {
                     put("page", listOf(page.toString()))
@@ -1216,9 +1565,13 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
                 if (withImmutableStatus != null) {
                     put("with_immutable_status", listOf(withImmutableStatus.toString()))
                 }
+                if (withAccessory != null) {
+                    put("with_accessory", listOf(withAccessory.toString()))
+                }
             }
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         xRequestId?.apply { localVariableHeaders["X-Request-Id"] = this.toString() }
+        xAcceptVulnerabilities?.apply { localVariableHeaders["X-Accept-Vulnerabilities"] = this.toString() }
         localVariableHeaders["Accept"] = "application/json"
 
         return RequestConfig(
@@ -1241,6 +1594,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param reference The reference of the artifact, can be digest or tag
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param withSignature Specify whether the signature is included inside the returning tags (optional, default to false)
@@ -1266,6 +1620,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         reference: kotlin.String,
         xRequestId: kotlin.String? = null,
         q: kotlin.String? = null,
+        sort: kotlin.String? = null,
         page: kotlin.Long? = 1,
         pageSize: kotlin.Long? = 10,
         withSignature: kotlin.Boolean? = false,
@@ -1277,6 +1632,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             reference = reference,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize,
             withSignature = withSignature,
@@ -1315,6 +1671,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param reference The reference of the artifact, can be digest or tag
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param withSignature Specify whether the signature is included inside the returning tags (optional, default to false)
@@ -1331,6 +1688,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         reference: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
         withSignature: kotlin.Boolean?,
@@ -1342,6 +1700,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             reference = reference,
             xRequestId = xRequestId,
             q = q,
+            sort = sort,
             page = page,
             pageSize = pageSize,
             withSignature = withSignature,
@@ -1361,6 +1720,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
      * @param reference The reference of the artifact, can be digest or tag
      * @param xRequestId An unique ID for the request (optional)
      * @param q Query string to query resources. Supported query patterns are \&quot;exact match(k&#x3D;v)\&quot;, \&quot;fuzzy match(k&#x3D;~v)\&quot;, \&quot;range(k&#x3D;[min~max])\&quot;, \&quot;list with union releationship(k&#x3D;{v1 v2 v3})\&quot; and \&quot;list with intersetion relationship(k&#x3D;(v1 v2 v3))\&quot;. The value of range and list can be string(enclosed by \&quot; or &#39;), integer or time(in format \&quot;2020-04-09 02:36:00\&quot;). All of these query patterns should be put in the query string \&quot;q&#x3D;xxx\&quot; and splitted by \&quot;,\&quot;. e.g. q&#x3D;k1&#x3D;v1,k2&#x3D;~v2,k3&#x3D;[min~max] (optional)
+     * @param sort Sort the resource list in ascending or descending order. e.g. sort by field1 in ascending orderr and field2 in descending order with \&quot;sort&#x3D;field1,-field2\&quot; (optional)
      * @param page The page number (optional, default to 1)
      * @param pageSize The size of per page (optional, default to 10)
      * @param withSignature Specify whether the signature is included inside the returning tags (optional, default to false)
@@ -1373,6 +1733,7 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
         reference: kotlin.String,
         xRequestId: kotlin.String?,
         q: kotlin.String?,
+        sort: kotlin.String?,
         page: kotlin.Long?,
         pageSize: kotlin.Long?,
         withSignature: kotlin.Boolean?,
@@ -1383,6 +1744,9 @@ class ArtifactApi(basePath: kotlin.String = defaultBasePath, client: OkHttpClien
             .apply {
                 if (q != null) {
                     put("q", listOf(q.toString()))
+                }
+                if (sort != null) {
+                    put("sort", listOf(sort.toString()))
                 }
                 if (page != null) {
                     put("page", listOf(page.toString()))

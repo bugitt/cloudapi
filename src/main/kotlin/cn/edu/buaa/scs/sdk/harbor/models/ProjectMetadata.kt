@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  *
  * @param `public` The public status of the project. The valid values are \"true\", \"false\".
  * @param enableContentTrust Whether content trust is enabled or not. If it is enabled, user can't pull unsigned images from this project. The valid values are \"true\", \"false\".
+ * @param enableContentTrustCosign Whether cosign content trust is enabled or not. If it is enabled, user can't pull images without cosign signature from this project. The valid values are \"true\", \"false\".
  * @param preventVul Whether prevent the vulnerable images from running. The valid values are \"true\", \"false\".
  * @param severity If the vulnerability is high than severity defined here, the images can't be pulled. The valid values are \"none\", \"low\", \"medium\", \"high\", \"critical\".
  * @param autoScan Whether scan images automatically when pushing. The valid values are \"true\", \"false\".
@@ -44,6 +45,10 @@ data class ProjectMetadata (
     /* Whether content trust is enabled or not. If it is enabled, user can't pull unsigned images from this project. The valid values are \"true\", \"false\". */
     @field:JsonProperty("enable_content_trust")
     val enableContentTrust: kotlin.String? = null,
+
+    /* Whether cosign content trust is enabled or not. If it is enabled, user can't pull images without cosign signature from this project. The valid values are \"true\", \"false\". */
+    @field:JsonProperty("enable_content_trust_cosign")
+    val enableContentTrustCosign: kotlin.String? = null,
 
     /* Whether prevent the vulnerable images from running. The valid values are \"true\", \"false\". */
     @field:JsonProperty("prevent_vul")

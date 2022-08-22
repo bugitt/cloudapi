@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * @param startTime The start time of the scan process that generating report
  * @param endTime The end time of the scan process that generating report
  * @param completePercent The complete percent of the scanning which value is between 0 and 100
+ * @param scanner
  */
 
 data class NativeReportSummary(
@@ -66,7 +67,10 @@ data class NativeReportSummary(
 
     /* The complete percent of the scanning which value is between 0 and 100 */
     @field:JsonProperty("complete_percent")
-    val completePercent: kotlin.Int? = null
+    val completePercent: kotlin.Int? = null,
+
+    @field:JsonProperty("scanner")
+    val scanner: Scanner? = null
 
 )
 
