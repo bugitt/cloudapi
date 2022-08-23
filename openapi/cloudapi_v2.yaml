@@ -26,6 +26,8 @@ tags:
     description: 身份认证相关接口
   - name: 虚拟机
     description: 虚拟机相关接口
+  - name: 项目
+    description: 项目相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -1152,11 +1154,36 @@ paths:
         3. 如果是学生，
           a. 如果是助教，返回所有公共模板、该学生自己制作的所有模板、助教所属课程的教师制作的所有模板
           b. 如果不是助教，返回所有公共模板、该学生自己制作的所有模板
-        
+
         前端在使用该接口时，可以考虑在具体场景中，对获取到的列表做进一步的过滤
       security:
         - Authorization: [ ]
     parameters: [ ]
+  /paasUser:
+    post:
+      summary: 在各个PaaS相关后端中创建用户
+      operationId: post-paasUser
+      responses:
+        '200':
+          description: OK
+      description: |-
+        在各个PaaS相关后端中创建用户。
+        该接口是幂等的，可多次重复调用而没有副作用。
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: 学工号
+              required:
+                - userId
+      tags:
+        - 项目
 components:
   schemas:
     AssignmentResponse:

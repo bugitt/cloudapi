@@ -21,6 +21,7 @@ fun Application.configureRouting() {
             fileRoute()
             statRoute()
             peerRoute()
+            projectRoute()
             vmRoute()
             websocketRoute()
             // 添加其他的 route

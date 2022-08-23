@@ -51,6 +51,7 @@ interface User : Entity<User>, IEntity {
     var departmentId: Int
     var isAccepted: Boolean
     var acceptTime: String
+    var paasToken: String
 
     fun isTeacher(): Boolean = this.role.level() == 2
 
@@ -135,6 +136,9 @@ object Users : Table<User>("user") {
 
     @Suppress("unused")
     val acceptTime = varchar("accept_time").bindTo { it.acceptTime }
+
+    @Suppress("unused")
+    val paasToken = varchar("paas_token").bindTo { it.paasToken }
 
     fun getByID(id: String): User? =
         mysql.users.find { Users.id eq id }
