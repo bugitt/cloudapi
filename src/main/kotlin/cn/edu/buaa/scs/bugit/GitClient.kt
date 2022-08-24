@@ -125,12 +125,16 @@ object GitClient : IProjectManager {
             }
         }
         // delete all the repos in the project first
-        return get<List<GitRepo>>("orgs/$projectName/repos").mapCatching { repos ->
+        return getRepoListOfProject(projectName).mapCatching { repos ->
             repos.forEach { repo ->
                 deleteRepo(projectName, repo.name).getOrThrow()
             }
             delete<String>("admin/users/$projectName").getOrThrow()
         }
+    }
+
+    suspend fun getRepoListOfProject(projectName: String): Result<List<GitRepo>> {
+        return get("orgs/$projectName/repos")
     }
 
 }

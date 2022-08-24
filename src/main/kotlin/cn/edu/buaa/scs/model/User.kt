@@ -79,7 +79,7 @@ interface User : Entity<User>, IEntity {
 
     fun isCourseTeacher(courseId: Int): Boolean = Course.id(courseId).teacher.id == this.id
 
-    fun isCourseAdmin(course: Course): Boolean = isCourseAssistant(course) || isCourseTeacher(course)
+    fun isCourseAdmin(course: Course): Boolean = isCourseAssistant(course) || isCourseTeacher(course) || isAdmin()
 
     fun getAllManagedExperimentIdList(): List<Int> {
         val courseIdList = if (isAdmin()) {

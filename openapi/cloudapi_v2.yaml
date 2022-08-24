@@ -28,6 +28,12 @@ tags:
     description: 虚拟机相关接口
   - name: 项目
     description: 项目相关接口
+  - name: 代码仓库
+    description: 代码仓库相关接口
+  - name: 镜像
+    description: 镜像相关接口
+  - name: 容器服务
+    description: 容器服务相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -1184,6 +1190,82 @@ paths:
                 - userId
       tags:
         - 项目
+  /projects:
+    get:
+      summary: 获取项目列表
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimpleProject'
+      operationId: get-projects
+      tags:
+        - 项目
+      description: 获取项目列表
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: integer
+          in: query
+          name: expId
+          description: 如果该值为空，则默认返回该用户创建或参与的所有项目
+    post:
+      summary: 创建新项目
+      operationId: post-projects
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+      tags:
+        - 项目
+      description: 接口调用者为自己创建一个新项目
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 字符串格式为 RFC1035
+                expId:
+                  type: integer
+                displayName:
+                  type: string
+                description:
+                  type: string
+                isPersonal:
+                  type: boolean
+                  description: 表示是否是个人项目，默认为false
+              required:
+                - name
+          application/xml:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: |-
+                    项目名称，
+                    不允许使用与他人或自己重复的项目名称，
+                    且项目名称必须符合 RFC1035 规范
+                expId:
+                  type: integer
+                  format: int32
+                isPersonal:
+                  type: boolean
+                  description: 是否是个人项目。个人项目不允许添加其他成员。默认为false
+              required:
+                - name
+        description: ''
 components:
   schemas:
     AssignmentResponse:
@@ -2288,6 +2370,107 @@ components:
           description: 需要删除批量申请的多个虚拟机时设置此字段
           items:
             type: string
+    Repository:
+      title: Repository
+      x-stoplight:
+        id: 5v8tbv93tso16
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          description: 代码仓库的URL
+      required:
+        - name
+        - url
+    Project:
+      title: Project
+      x-stoplight:
+        id: 26t0e0o4vj3h3
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        owner:
+          type: string
+        token:
+          type: string
+          description: 当前该用户访问该Project中的资源，例如clone代码仓库、push和pull镜像等，所需要使用的token，即密码
+        repositories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Repository'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectMember'
+        displayName:
+          type: string
+          description: 区别于name之外的一个格式随便的，便于记忆和展示的名字
+        description:
+          type: string
+      required:
+        - id
+        - name
+        - owner
+        - token
+        - repositories
+        - members
+    SimpleProject:
+      title: SimpleProject
+      x-stoplight:
+        id: 26t0e0o4vj3h3
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        owner:
+          type: string
+        token:
+          type: string
+          description: 当前该用户访问该Project中的资源，例如clone代码仓库、push和pull镜像等，所需要使用的token，即密码
+        displayName:
+          type: string
+          description: 区别于name之外的一个格式随便的，便于记忆和展示的名字
+        description:
+          type: string
+      required:
+        - id
+        - name
+        - owner
+        - token
+    ProjectMember:
+      title: ProjectMember
+      x-stoplight:
+        id: a7fr60oqy52cw
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        projectId:
+          type: integer
+          format: int64
+        userId:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+          description: '枚举值，OWNER，ADMIN, MEMBER'
+      required:
+        - id
+        - projectId
+        - userId
+        - username
+        - role
   securitySchemes:
     Authorization:
       type: apiKey
