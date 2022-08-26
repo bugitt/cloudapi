@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.service.id

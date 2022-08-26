@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.project
 
 import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.harbor.HarborClient
+import cn.edu.buaa.scs.kube.BusinessKubeClient
 
 interface IProjectManager {
     suspend fun createUser(
@@ -24,4 +25,5 @@ interface IProjectManager {
 val managerList = listOf(
     GitClient,
     HarborClient,
+    BusinessKubeClient,
 )
