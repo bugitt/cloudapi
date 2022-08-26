@@ -75,10 +75,10 @@ dependencies {
     implementation("io.netty:netty-all:4.1.78.Final")
 
     // kubernetes
-    val kubernetes_client_version = "5.12.1"
+    val kubernetes_client_version = "6.0.0"
     implementation("io.fabric8:kubernetes-model:$kubernetes_client_version")
     implementation("io.fabric8:kubernetes-client:$kubernetes_client_version")
-    implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.1.1")
+    implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.2.0")
 
     // vm
     implementation("com.vmware.photon.controller:photon-vsphere-adapter-util:0.6.60")
