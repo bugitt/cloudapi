@@ -104,6 +104,12 @@ class ProjectService(val call: ApplicationCall) : IService {
         return project
     }
 
+    fun getProject(projectID: Long): Project {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        return project
+    }
+
     fun getProjects(expID: Int?): List<Project> {
         if (expID != null) {
             val experiment = Experiment.id(expID)

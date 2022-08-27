@@ -7,6 +7,8 @@ import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.isPeerTarget
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.exists
+import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.filter
 import org.ktorm.entity.map
@@ -55,6 +57,10 @@ fun User.authRead(entity: IEntity): Boolean {
                     || entity.teacherId == this.id // 实验虚拟机的任课老师
                     || entity.experimentId != 0 && authWrite(Experiment.id(entity.experimentId)) // 对实验虚拟机所属的实验有写权限的人，包括教师和助教
 
+        is Project ->
+            mysql.projectMembers.exists { it.projectId.eq(entity.id) and it.userId.eq(this.id) }
+                    || entity.expID != null && isCourseAdmin(Experiment.id(entity.expID!!).course)
+
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
 }
@@ -101,6 +107,9 @@ fun User.authWrite(entity: IEntity): Boolean {
             Experiment.id(entity.experimentId).course.let {
                 isCourseAdmin(it)
             }
+
+        is Project ->
+            authRead(entity)
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }

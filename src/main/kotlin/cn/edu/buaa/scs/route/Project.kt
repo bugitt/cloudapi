@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.controller.models.PostPaasUserRequest
 import cn.edu.buaa.scs.controller.models.PostProjectsRequest
 import cn.edu.buaa.scs.controller.models.Repository
 import cn.edu.buaa.scs.controller.models.SimpleProject
+import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Project
 import cn.edu.buaa.scs.model.ProjectMember
 import cn.edu.buaa.scs.model.User
@@ -24,6 +25,7 @@ fun Route.projectRoute() {
         call.project.createUser(req.userId)
         call.respond("OK")
     }
+
     route("/projects") {
         get {
             val expID = call.parameters["expId"]?.toInt()
@@ -45,6 +47,22 @@ fun Route.projectRoute() {
                         req.description ?: "",
                         req.isPersonal ?: false,
                     )
+                )
+            )
+        }
+    }
+
+    route("/project/{projectID}") {
+        fun ApplicationCall.getProjectID(): Long {
+            return parameters["projectID"]?.toLong()
+                ?: throw BadRequestException("invalid projectID")
+        }
+
+        get {
+            val projectID = call.getProjectID()
+            call.respond(
+                call.convertProjectResponse(
+                    call.project.getProject(projectID)
                 )
             )
         }

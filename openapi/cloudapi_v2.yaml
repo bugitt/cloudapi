@@ -1266,6 +1266,28 @@ paths:
               required:
                 - name
         description: ''
+  '/project/{projectId}':
+    parameters:
+      - schema:
+          type: integer
+        name: projectId
+        in: path
+        required: true
+    get:
+      summary: 查看某一项目详情
+      tags:
+        - 项目
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+      operationId: get-project-projectId
+      description: 查看某一项目详情
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:
