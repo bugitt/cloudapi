@@ -66,6 +66,17 @@ fun Route.projectRoute() {
                 )
             )
         }
+
+        route("/members") {
+            get {
+                val projectID = call.getProjectID()
+                call.respond(
+                    call.project.getProjectMembers(projectID).map {
+                        convertProjectMemberResponse(it)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -76,7 +87,7 @@ suspend fun ApplicationCall.convertProjectResponse(project: Project): ProjectRes
         token = this.user().paasToken,
         owner = project.owner,
         repositories = this.project.getAllReposForProject(project.name).map { convertRepositoryResponse(it) },
-        members = this.project.getAllMembers(project.id).map { convertProjectMemberResponse(it) },
+        members = this.project.getProjectMembers(project.id).map { convertProjectMemberResponse(it) },
         displayName = project.displayName,
         description = project.description,
     )

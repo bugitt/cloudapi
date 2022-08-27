@@ -1288,6 +1288,31 @@ paths:
       description: 查看某一项目详情
       security:
         - Authorization: [ ]
+  '/project/{projectId}/members':
+    parameters:
+      - schema:
+          type: integer
+          format: int64
+        name: projectId
+        in: path
+        required: true
+    get:
+      summary: 获取项目中的所有成员
+      tags:
+        - 项目
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectMember'
+      operationId: get-project-projectId-members
+      description: 获取项目中的所有成员
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:

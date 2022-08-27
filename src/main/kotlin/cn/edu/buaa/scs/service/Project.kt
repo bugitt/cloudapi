@@ -132,7 +132,7 @@ class ProjectService(val call: ApplicationCall) : IService {
         }
     }
 
-    fun getAllMembers(projectID: Long): List<ProjectMember> {
+    fun getProjectMembers(projectID: Long): List<ProjectMember> {
         return mysql.projectMembers.filter { it.projectId.eq(projectID) }.toList()
     }
 
