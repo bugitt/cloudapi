@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.model.UserRole
 import cn.edu.buaa.scs.model.Users
+import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -57,7 +58,8 @@ fun fetchToken(call: ApplicationCall) {
 
     // super token
     if (superTokenList.contains(token)) {
-        setUser(adminUser)
+        val user = call.request.headers["X-Custom-User"]?.let { User.id(it) } ?: adminUser
+        setUser(user)
         return
     }
 
