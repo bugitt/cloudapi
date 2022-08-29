@@ -1,13 +1,11 @@
 package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.bugit.GitRepo
-import cn.edu.buaa.scs.controller.models.PostPaasUserRequest
-import cn.edu.buaa.scs.controller.models.PostProjectsRequest
-import cn.edu.buaa.scs.controller.models.Repository
-import cn.edu.buaa.scs.controller.models.SimpleProject
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Project
 import cn.edu.buaa.scs.model.ProjectMember
+import cn.edu.buaa.scs.model.ProjectRole
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
@@ -74,6 +72,26 @@ fun Route.projectRoute() {
                     call.project.getProjectMembers(projectID).map {
                         convertProjectMemberResponse(it)
                     }
+                )
+            }
+
+            post {
+                val projectID = call.getProjectID()
+                val req = call.receive<PostProjectProjectIdMembersRequest>()
+                call.respond(
+                    convertProjectMemberResponse(
+                        call.project.addProjectMember(projectID, req.userId, ProjectRole.valueOf(req.role))
+                    )
+                )
+            }
+
+            delete {
+                val projectID = call.getProjectID()
+                val req = call.receive<DeleteProjectProjectIdMembersRequest>()
+                call.respond(
+                    convertProjectMemberResponse(
+                        call.project.removeProjectMember(projectID, req.userId)
+                    )
                 )
             }
         }

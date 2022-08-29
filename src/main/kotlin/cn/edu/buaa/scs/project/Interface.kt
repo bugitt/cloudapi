@@ -20,6 +20,10 @@ interface IProjectManager {
     ): Result<String>
 
     suspend fun deleteProject(projectName: String): Result<Unit>
+
+    suspend fun addProjectMember(projectName: String, memberID: String): Result<Unit>
+
+    suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit>
 }
 
 val managerList = listOf(

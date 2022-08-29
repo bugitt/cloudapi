@@ -59,7 +59,7 @@ fun User.authRead(entity: IEntity): Boolean {
 
         is Project ->
             mysql.projectMembers.exists { it.projectId.eq(entity.id) and it.userId.eq(this.id) }
-                    || entity.expID != null && isCourseAdmin(Experiment.id(entity.expID!!).course)
+                    || isProjectAdmin(entity)
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }

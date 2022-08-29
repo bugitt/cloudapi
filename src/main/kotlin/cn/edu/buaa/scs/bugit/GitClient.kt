@@ -111,6 +111,7 @@ object GitClient : IProjectManager {
             "",
             "",
         )
+        if (getProject(projectName).isSuccess) return Result.success(projectName)
         return post<GitProject>("admin/users/$userID/orgs", request).map { it.username }
     }
 
@@ -131,6 +132,14 @@ object GitClient : IProjectManager {
             }
             delete<String>("admin/users/$projectName").getOrThrow()
         }
+    }
+
+    override suspend fun addProjectMember(projectName: String, memberID: String): Result<Unit> {
+        return post("/orgs/$projectName/memberships/$memberID")
+    }
+
+    override suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit> {
+        return delete("/orgs/$projectName/memberships/$memberID")
     }
 
     suspend fun getRepoListOfProject(projectName: String): Result<List<GitRepo>> {

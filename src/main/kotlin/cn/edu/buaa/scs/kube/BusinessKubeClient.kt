@@ -1,6 +1,8 @@
 package cn.edu.buaa.scs.kube
 
 import cn.edu.buaa.scs.project.IProjectManager
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newNamespace
 
 object BusinessKubeClient : IProjectManager {
     val client by lazy(kubeClient)
@@ -16,11 +18,25 @@ object BusinessKubeClient : IProjectManager {
         projectDescription: String
     ): Result<String> = runCatching {
         if (!client.namespaces().withName(projectName).isReady) {
-            client.namespaces().withName(projectName).create()
+            client.namespaces().resource(
+                newNamespace {
+                    metadata {
+                        name = projectName
+                    }
+                }
+            ).create()
         }
     }.map { projectName }
 
     override suspend fun deleteProject(projectName: String): Result<Unit> = runCatching {
         client.namespaces().withName(projectName).delete()
+    }
+
+    override suspend fun addProjectMember(projectName: String, memberID: String): Result<Unit> {
+        return Result.success(Unit)
+    }
+
+    override suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit> {
+        return Result.success(Unit)
     }
 }

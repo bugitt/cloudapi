@@ -5,10 +5,12 @@ import cn.edu.buaa.scs.sdk.harbor.apis.MemberApi
 import cn.edu.buaa.scs.sdk.harbor.apis.ProjectApi
 import cn.edu.buaa.scs.sdk.harbor.apis.RepositoryApi
 import cn.edu.buaa.scs.sdk.harbor.apis.UserApi
+import cn.edu.buaa.scs.sdk.harbor.infrastructure.ClientException
 import cn.edu.buaa.scs.sdk.harbor.models.ProjectMember
 import cn.edu.buaa.scs.sdk.harbor.models.ProjectReq
 import cn.edu.buaa.scs.sdk.harbor.models.UserCreationReq
 import cn.edu.buaa.scs.sdk.harbor.models.UserEntity
+import io.ktor.http.*
 
 object HarborClient : IProjectManager {
 
@@ -36,19 +38,12 @@ object HarborClient : IProjectManager {
         projectDisplayName: String,
         projectDescription: String
     ): Result<String> = runCatching {
-        val users = userClient.searchUsers(userID)
-        if (users.isEmpty()) return Result.failure(Exception("User $userID not found in harbor"))
-        val userEntity = UserEntity(
-            userId = users[0].userId,
-            username = users[0].username,
-        )
+        if (existProject(projectName)) return Result.success(projectName)
+
         val projectReq = ProjectReq(projectName = projectName, `public` = true)
         projectClient.createProject(projectReq)
-        val projectMember = ProjectMember(
-            roleId = 1,
-            memberUser = userEntity,
-        )
-        memberClient.createProjectMember(projectName, projectMember = projectMember)
+
+        createProjectMember(projectName, userID)
     }.map { projectName }
 
 
@@ -58,6 +53,50 @@ object HarborClient : IProjectManager {
             pageSize = Int.MAX_VALUE.toLong(),
         ).forEach { it.name?.let { repoName -> repoClient.deleteRepository(projectName, repoName) } }
         projectClient.deleteProject(projectName)
+    }
+
+    override suspend fun addProjectMember(projectName: String, memberID: String): Result<Unit> = runCatching {
+        createProjectMember(projectName, memberID)
+    }
+
+    override suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit> = runCatching {
+        deleteProjectMember(projectName, memberID)
+    }
+
+    private fun existProject(projectName: String): Boolean {
+        return try {
+            projectClient.getProject(projectName)
+            true
+        } catch (e: ClientException) {
+            if (e.statusCode == HttpStatusCode.NotFound.value
+                || e.statusCode == HttpStatusCode.Forbidden.value
+            ) {
+                false
+            } else {
+                throw e
+            }
+        }
+    }
+
+    private fun createProjectMember(projectName: String, userID: String) {
+        val users = userClient.searchUsers(userID)
+        if (users.isEmpty()) throw Exception("User $userID not found in harbor")
+        val userEntity = UserEntity(
+            userId = users[0].userId,
+            username = users[0].username,
+        )
+        val projectMember = ProjectMember(
+            roleId = 1,
+            memberUser = userEntity,
+        )
+        memberClient.createProjectMember(projectName, projectMember = projectMember)
+    }
+
+    private fun deleteProjectMember(projectName: String, userID: String) {
+        memberClient.listProjectMembers(projectName, pageSize = Int.MAX_VALUE.toLong()).find { it.entityName == userID }
+            ?.let {
+                memberClient.deleteProjectMember(projectName, mid = it.id?.toLong() ?: 0)
+            }
     }
 
 }

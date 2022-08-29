@@ -1313,6 +1313,62 @@ paths:
       description: 获取项目中的所有成员
       security:
         - Authorization: [ ]
+    post:
+      summary: 添加项目成员
+      operationId: post-project-projectId-members
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+      tags:
+        - 项目
+      description: |-
+        添加项目成员
+        仅支持项目管理员操作
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                role:
+                  type: string
+                  description: 枚举值，OWNER，ADMIN，MEMBER
+              required:
+                - userId
+                - role
+    delete:
+      summary: 从项目中移除成员
+      operationId: delete-project-projectId-members
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
+      tags:
+        - 项目
+      description: 从项目中移除成员
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+              required:
+                - userId
 components:
   schemas:
     AssignmentResponse:

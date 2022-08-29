@@ -10,6 +10,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.inList
+import org.ktorm.dsl.or
 import org.ktorm.entity.*
 import org.ktorm.schema.Table
 import org.ktorm.schema.boolean
@@ -82,6 +83,19 @@ interface User : Entity<User>, IEntity {
     fun isCourseTeacher(courseId: Int): Boolean = Course.id(courseId).teacher.id == this.id
 
     fun isCourseAdmin(course: Course): Boolean = isCourseAssistant(course) || isCourseTeacher(course) || isAdmin()
+
+    fun isProjectAdmin(projectID: Long): Boolean = isProjectAdmin(Project.id(projectID))
+
+    fun isProjectAdmin(project: Project): Boolean =
+        project.expID != null && isCourseAdmin(Experiment.id(project.expID!!).course) ||
+                mysql.projectMembers.exists {
+                    it.projectId.eq(project.id) and it.userId.eq(this.id)
+                        .and(it.role.eq(ProjectRole.ADMIN) or it.role.eq(ProjectRole.OWNER))
+                } ||
+                isAdmin()
+
+    fun personalProjectName() = "personal-${this.id.lowercase()}"
+
 
     fun getAllManagedExperimentIdList(): List<Int> {
         val courseIdList = if (isAdmin()) {
