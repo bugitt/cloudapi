@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     // ktor
-    val ktor_version = "2.1.0"
+    val ktor_version = "2.1.1"
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     implementation("io.ktor:ktor-server-call-id:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
