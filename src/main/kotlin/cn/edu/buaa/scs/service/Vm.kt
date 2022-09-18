@@ -11,10 +11,7 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
-import cn.edu.buaa.scs.vm.CreateVmOptions
-import cn.edu.buaa.scs.vm.SSH
-import cn.edu.buaa.scs.vm.VMTask
-import cn.edu.buaa.scs.vm.vmClient
+import cn.edu.buaa.scs.vm.*
 import com.vmware.vim25.VirtualMachinePowerState
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -336,8 +333,9 @@ suspend fun DefaultWebSocketServerSession.sshWS(uuid: String) {
     val vm =
         mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("virtual machine ($uuid) not found")
     call.user().authRead(vm)
+    val username = if (vm.name.startsWith("kube")) "root" else sshConfig.defaultUsername
 
-    val sshSession = SSH.vmGetSSH(vm)
+    val sshSession = SSH.vmGetSSH(vm, username)
         ?: throw cn.edu.buaa.scs.error.BadRequestException("can not connect to virtual machine ($uuid)")
     sshSession.use { ssh ->
         val launch = launch {

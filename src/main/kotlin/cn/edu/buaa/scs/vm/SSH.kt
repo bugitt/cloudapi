@@ -19,7 +19,7 @@ lateinit var sshConfig: SSHConfig
 
 data class SSHConfig(
     val privateKeyLocation: String,
-    val username: String,
+    val defaultUsername: String,
 )
 
 class SSH(
@@ -32,15 +32,20 @@ class SSH(
         fun initSSHConfig(privateKey: String, username: String): SSHConfig {
             val file = File("/tmp/privateKey")
             file.writeText(privateKey)
-            return SSHConfig(privateKeyLocation = file.absolutePath, username = username)
+            return SSHConfig(privateKeyLocation = file.absolutePath, defaultUsername = username)
         }
 
-        private fun connect(ip: String, port: Int = 22, initCommand: String? = null): Result<SSH> =
+        private fun connect(
+            ip: String,
+            port: Int = 22,
+            initCommand: String? = null,
+            username: String = sshConfig.defaultUsername
+        ): Result<SSH> =
             try {
                 val sshClient = SSHClient()
                 sshClient.addHostKeyVerifier(PromiscuousVerifier())
                 sshClient.connect(ip, port)
-                sshClient.authPublickey(sshConfig.username, sshConfig.privateKeyLocation)
+                sshClient.authPublickey(username, sshConfig.privateKeyLocation)
                 val session = sshClient.startSession()
                 session.allocateDefaultPTY()
                 val channel = initCommand?.let { session.exec(it) } ?: session.startShell()
@@ -49,10 +54,10 @@ class SSH(
                 Result.failure(e)
             }
 
-        fun vmGetSSH(vm: VirtualMachine): SSH? {
+        fun vmGetSSH(vm: VirtualMachine, username: String = sshConfig.defaultUsername): SSH? {
             val ipList = vm.netInfos.map { it.ipList }.flatten()
             for (ip in ipList) {
-                val ssh = connect(ip)
+                val ssh = connect(ip, username = username)
                 if (ssh.isSuccess) return ssh.getOrNull()
             }
             return null
