@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-build-001
+  namespace: iobs
+spec:
+  template:
+    spec:
+      volumes:
+        - name: workspace
+          emptyDir: { }
+        - name: build-context-tar
+          persistentVolumeClaim:
+            claimName: image-build-context
+        - name: push-secret
+          secret:
+            secretName: push-secret
+            items:
+              - key: .dockerconfigjson
+                path: config.json
+      initContainers:
+        - name: prepare-workspace
+          image: loheagn/go-unarr:0.1.6
+          command: [ "/bin/sh", "-c", "unarr /source /target" ]
+          volumeMounts:
+            - mountPath: /source
+              subPath: 001.zip
+              name: build-context-tar
+              readOnly: true
+            - mountPath: /target
+              name: workspace
+      containers:
+        - name: builder
+          image: scs.buaa.edu.cn:8081/iobs/kaniko-executor
+          args:
+            - "--dockerfile=Dockerfile"
+            - "--context=dir:///workspace"
+            - "--destination=scs.buaa.edu.cn:8081/iobs/kaniko-test"
+          volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /kaniko/.docker/
+              name: push-secret
+      restartPolicy: Never
