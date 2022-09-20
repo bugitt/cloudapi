@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: image-build-001
+  name: image-build-007
   namespace: iobs
 spec:
   template:
@@ -9,9 +9,6 @@ spec:
       volumes:
         - name: workspace
           emptyDir: { }
-        - name: build-context-tar
-          persistentVolumeClaim:
-            claimName: image-build-context
         - name: push-secret
           secret:
             secretName: push-secret
@@ -20,13 +17,9 @@ spec:
                 path: config.json
       initContainers:
         - name: prepare-workspace
-          image: loheagn/go-unarr:0.1.6
-          command: [ "/bin/sh", "-c", "unarr /source /target" ]
+          image: bitnami/git:2
+          command: [ "/bin/sh", "-c", "git clone https://99131009:kqbL65Hrwy96c@scs.buaa.edu.cn/git/SY2121108/loheagn-private.git /target" ]
           volumeMounts:
-            - mountPath: /source
-              subPath: 001.zip
-              name: build-context-tar
-              readOnly: true
             - mountPath: /target
               name: workspace
       containers:
@@ -35,7 +28,7 @@ spec:
           args:
             - "--dockerfile=Dockerfile"
             - "--context=dir:///workspace"
-            - "--destination=scs.buaa.edu.cn:8081/iobs/kaniko-test:local"
+            - "--destination=scs.buaa.edu.cn:8081/iobs/kaniko-test:git"
           volumeMounts:
             - mountPath: /workspace
               name: workspace
