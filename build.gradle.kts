@@ -47,6 +47,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutine_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutine_version")
 
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4")
+
     // kotlin-log
     implementation("io.github.microutils:kotlin-logging:2.1.21")
     implementation("ch.qos.logback:logback-classic:1.2.11")
