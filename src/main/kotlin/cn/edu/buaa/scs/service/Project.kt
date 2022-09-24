@@ -72,32 +72,35 @@ class ProjectService(val call: ApplicationCall) : IService {
         if (!name.isValidProjectName()) {
             throw BadRequestException("Project name is invalid")
         }
+        if (mysql.projects.exists { it.name.eq(name) }) {
+            throw BadRequestException("Project name is duplicated, please use another one")
+        }
         return transactionWork(
             { this.createProjectForUser(user.id, name, displayName, description) },
             { this.deleteProject(name) },
         ) {
-            val project = Project {
-                this.name = name
-                this.owner = user.id
-                this.expID = expID
-                this.courseID = experiment?.course?.id
-                this.displayName = displayName
-                this.description = description
-                this.isPersonal = isPersonal
-                this.createTime = System.currentTimeMillis()
-            }
-            val projectMember = ProjectMember {
-                this.userId = user.id
-                this.username = user.name
-                this.projectId = project.id
-                this.expID = expID
-                this.role = ProjectRole.OWNER
-            }
             mysql.useTransaction {
+                val project = Project {
+                    this.name = name
+                    this.owner = user.id
+                    this.expID = expID
+                    this.courseID = experiment?.course?.id
+                    this.displayName = displayName
+                    this.description = description
+                    this.isPersonal = isPersonal
+                    this.createTime = System.currentTimeMillis()
+                }
                 mysql.projects.add(project)
+                val projectMember = ProjectMember {
+                    this.userId = user.id
+                    this.username = user.name
+                    this.projectId = project.id
+                    this.expID = expID
+                    this.role = ProjectRole.OWNER
+                }
                 mysql.projectMembers.add(projectMember)
+                project
             }
-            project
         }.getOrThrow()
     }
 

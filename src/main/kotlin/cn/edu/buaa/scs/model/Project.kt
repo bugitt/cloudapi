@@ -31,7 +31,7 @@ interface Project : Entity<Project>, IEntity {
 }
 
 object Projects : Table<Project>("project") {
-    val id = long("id").primaryKey()
+    val id = long("id").primaryKey().bindTo { it.id }
     val name = varchar("name").bindTo { it.name }
     val displayName = varchar("display_name").bindTo { it.displayName }
     val description = text("description").bindTo { it.description }
