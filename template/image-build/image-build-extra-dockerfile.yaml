@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-build-009
+  namespace: iobs
+spec:
+  template:
+    spec:
+      volumes:
+        - name: workspace
+          emptyDir: { }
+        - name: push-secret
+          secret:
+            secretName: push-secret
+            items:
+              - key: .dockerconfigjson
+                path: config.json
+        - name: dockerfile
+          configMap:
+            name: image-build-test-dockerfile
+      containers:
+        - name: builder
+          image: scs.buaa.edu.cn:8081/iobs/kaniko-executor
+          args:
+            - "--dockerfile=Dockerfile"
+            - "--context=dir:///workspace"
+            - "--destination=scs.buaa.edu.cn:8081/iobs/kaniko-test:extra-dockerfile"
+          volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /workspace/Dockerfile
+              name: dockerfile
+              subPath: Dockerfile
+            - mountPath: /kaniko/.docker/
+              name: push-secret
+      restartPolicy: Never
