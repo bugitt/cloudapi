@@ -3,6 +3,9 @@ package cn.edu.buaa.scs.task
 import cn.edu.buaa.scs.model.TaskData
 import cn.edu.buaa.scs.model.taskDataList
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.logger
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import org.ktorm.entity.update
 
 abstract class Task(protected val taskData: TaskData) {
@@ -11,21 +14,49 @@ abstract class Task(protected val taskData: TaskData) {
     }
 
     enum class Type {
-        VirtualMachine
+        VirtualMachine, ImageBuild
     }
 
     protected abstract suspend fun internalProcess(): Result<Unit>
 
     suspend fun process(): Result<Unit> {
-        taskData.doing()
-        try {
+        return try {
+            taskData.doing()
             internalProcess().getOrThrow()
+            taskData.success()
+            Result.success(Unit)
         } catch (e: Throwable) {
             taskData.fail(e.stackTraceToString())
-            return Result.failure(e)
+            Result.failure(e)
         }
-        taskData.success()
-        return Result.success(Unit)
+    }
+
+    class TaskExecutorPool(
+        private val name: String,
+        private val poolSize: Int = 100,
+        bufferSize: Int = 100000,
+        private val dispatcher: CoroutineDispatcher = Dispatchers.Default
+    ) {
+        private val channel = Channel<Task>(bufferSize)
+        suspend fun send(task: Task) {
+            channel.send(task)
+        }
+
+        fun start() {
+            Thread {
+                runBlocking {
+                    withContext(dispatcher) {
+                        repeat(poolSize) {
+                            launch {
+                                for (task in channel) {
+                                    task.process().exceptionOrNull()?.let { logger(name)().error { it.stackTrace } }
+                                }
+                            }
+                        }
+                    }
+                }
+            }.start()
+        }
     }
 }
 
@@ -38,6 +69,7 @@ fun TaskData.doing() {
 fun TaskData.success() {
     this.status = Task.Status.SUCCESS
     this.updateTime = System.currentTimeMillis()
+    this.endTime = System.currentTimeMillis()
     mysql.taskDataList.update(this)
 }
 
@@ -45,5 +77,6 @@ fun TaskData.fail(errMsg: String) {
     this.status = Task.Status.FAIL
     this.error = errMsg
     this.updateTime = System.currentTimeMillis()
+    this.endTime = System.currentTimeMillis()
     mysql.taskDataList.update(this)
 }

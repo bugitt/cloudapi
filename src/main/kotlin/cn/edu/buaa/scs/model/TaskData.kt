@@ -10,7 +10,18 @@ import org.ktorm.schema.text
 import org.ktorm.schema.varchar
 
 interface TaskData : Entity<TaskData> {
-    companion object : Entity.Factory<TaskData>()
+    companion object : Entity.Factory<TaskData>() {
+        fun create(type: Task.Type, data: String, indexRef: Long = 0L) = TaskData {
+            this.type = type
+            this.data = data
+            this.createTime = System.currentTimeMillis()
+            this.status = Task.Status.UNDO
+            this.error = ""
+            this.updateTime = 0
+            this.endTime = 0
+            this.indexRef = indexRef
+        }
+    }
 
     var id: Long
     var type: Task.Type
@@ -19,6 +30,8 @@ interface TaskData : Entity<TaskData> {
     var status: Task.Status
     var error: String
     var updateTime: Long
+    var endTime: Long
+    var indexRef: Long
 }
 
 object TaskDataList : Table<TaskData>("task_data") {
@@ -29,6 +42,8 @@ object TaskDataList : Table<TaskData>("task_data") {
     val status = varchar("status").transform({ Task.Status.valueOf(it) }, { it.name }).bindTo { it.status }
     val error = text("error").bindTo { it.error }
     val updateTime = long("update_time").bindTo { it.updateTime }
+    val endTime = long("end_time").bindTo { it.endTime }
+    val indexRef = long("index_ref").bindTo { it.indexRef }
 }
 
 val Database.taskDataList get() = this.sequenceOf(TaskDataList)

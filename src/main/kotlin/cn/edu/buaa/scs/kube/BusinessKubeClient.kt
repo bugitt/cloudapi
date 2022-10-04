@@ -5,7 +5,7 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 
 object BusinessKubeClient : IProjectManager {
-    val client by lazy(kubeClient)
+    val client by lazy(businessKubeClientBuilder)
 
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> {
         return Result.success(userID)

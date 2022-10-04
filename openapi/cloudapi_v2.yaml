@@ -1369,6 +1369,104 @@ paths:
                   type: string
               required:
                 - userId
+  '/project/{projectId}/images':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    post:
+      summary: 构建镜像
+      operationId: post-project-projectId-images
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageBuildTask'
+      description: 构建镜像。该接口异步返回。
+      tags:
+        - 镜像
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                tag:
+                  type: string
+                  description: 默认 latest
+                dockerfilePath:
+                  type: string
+                gitUrl:
+                  type: string
+                gitUsername:
+                  type: string
+                gitPassword:
+                  type: string
+                gitRef:
+                  type: string
+                dockerfileContent:
+                  type: string
+              required:
+                - name
+            examples: { }
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                tag:
+                  type: string
+                  description: 默认 latest
+                dockerfilePath:
+                  type: string
+                  description: 默认为 Dockerfile
+                context:
+                  description: file类型。用户长传的用于构建镜像的上下文压缩包
+                  nullable: true
+                dockerfileContent:
+                  type: string
+              required:
+                - name
+                - context
+    get:
+      summary: 获取项目中的镜像列表
+      operationId: get-project-projectId-images
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Image'
+                  imageBuildTasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImageBuildTask'
+                required:
+                  - images
+                  - imageBuildTasks
+      security:
+        - Authorization: [ ]
+      description: |-
+        返回：
+        1. 镜像列表
+        2. 镜像构建任务列表
+      tags:
+        - 镜像
 components:
   schemas:
     AssignmentResponse:
@@ -2574,6 +2672,58 @@ components:
         - userId
         - username
         - role
+    Image:
+      title: Image
+      x-stoplight:
+        id: 5u7u1hhy6ugke
+      type: object
+      properties:
+        hostPrefix:
+          type: string
+        owner:
+          type: string
+        repo:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - hostPrefix
+        - owner
+        - repo
+        - tags
+    ImageBuildTask:
+      title: ImageBuildTask
+      x-stoplight:
+        id: 8abw1fyk126vz
+      type: object
+      properties:
+        hostPrefix:
+          type: string
+        owner:
+          type: string
+        repo:
+          type: string
+        tag:
+          type: string
+        status:
+          type: string
+          description: 'UNDO, DOING, SUCCESS, FAIL'
+        createdTime:
+          type: integer
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+      required:
+        - hostPrefix
+        - owner
+        - repo
+        - tag
+        - status
+        - createdTime
+        - endTime
   securitySchemes:
     Authorization:
       type: apiKey

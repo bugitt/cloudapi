@@ -18,24 +18,14 @@ class VMTask(taskData: TaskData) : Task(taskData) {
     )
 
     companion object {
-        private fun commonVMTask() = TaskData {
-            this.type = Task.Type.VirtualMachine
-            this.createTime = System.currentTimeMillis()
-            this.status = Status.UNDO
-            this.error = ""
-            this.updateTime = 0
-        }
-
         fun vmCreateTask(options: CreateVmOptions): TaskData {
-            val taskData = commonVMTask()
-            taskData.data = jsonMapper.writeValueAsString(Content(Type.Create, jsonMapper.writeValueAsString(options)))
-            return taskData
+            val data = jsonMapper.writeValueAsString(Content(Type.Create, jsonMapper.writeValueAsString(options)))
+            return TaskData.create(Task.Type.VirtualMachine, data)
         }
 
         fun vmDeleteTask(uuid: String): TaskData {
-            val taskData = commonVMTask()
-            taskData.data = jsonMapper.writeValueAsString(Content(Type.Delete, uuid))
-            return taskData
+            val data = jsonMapper.writeValueAsString(Content(Type.Delete, uuid))
+            return TaskData.create(Task.Type.VirtualMachine, data)
         }
     }
 
@@ -46,6 +36,7 @@ class VMTask(taskData: TaskData) : Task(taskData) {
                 val options = jsonMapper.readValue<CreateVmOptions>(content.data)
                 vmClient.createVM(options).map { }
             }
+
             Type.Delete -> {
                 vmClient.deleteVM(content.data)
             }

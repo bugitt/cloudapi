@@ -1,14 +1,60 @@
 package cn.edu.buaa.scs.kube
 
+import cn.edu.buaa.scs.utils.schedule.waitForDone
 import com.fkorotkov.kubernetes.*
 import com.fkorotkov.kubernetes.apps.spec
+import com.fkorotkov.kubernetes.batch.v1.newJob
+import com.fkorotkov.kubernetes.batch.v1.newJobSpec
 import io.fabric8.kubernetes.api.model.*
 import io.fabric8.kubernetes.api.model.apps.DaemonSet
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.StatefulSet
 import io.fabric8.kubernetes.api.model.batch.v1.JobSpec
+import io.fabric8.kubernetes.client.KubernetesClient
 import kotlinx.coroutines.coroutineScope
 import java.util.*
+
+suspend fun KubernetesClient.createJobSync(
+    name: String,
+    namespace: String,
+    podTemplateSpec: PodTemplateSpec,
+    timeout: Long = 1000 * 60 * 60
+): Result<Unit> = runCatching {
+    val job = newJob {
+        metadata = newObjectMeta {
+            this.name = name
+            this.namespace = namespace
+        }
+        spec = newJobSpec {
+            this.template = podTemplateSpec
+            this.backoffLimit = 4
+        }
+    }
+    this.batch().v1().jobs().inNamespace(namespace).resource(job).createOrReplace()
+    waitForDone(timeout) {
+        val gotJob = this.batch().v1().jobs().inNamespace(namespace).withName(name).get()
+        (gotJob.status?.succeeded ?: 0) > 0
+    }.getOrThrow()
+}
+
+suspend fun KubernetesClient.createConfigMapSync(
+    name: String,
+    namespace: String,
+    data: Map<String, String>,
+    timeout: Long = 1000 * 60 * 60
+): Result<Unit> = runCatching {
+    val configMap = newConfigMap {
+        metadata = newObjectMeta {
+            this.name = name
+            this.namespace = namespace
+        }
+        this.data = data
+    }
+    this.configMaps().inNamespace(namespace).resource(configMap).createOrReplace()
+    waitForDone(timeout) {
+        this.configMaps().inNamespace(namespace).withName(name).get() != null
+    }.getOrThrow()
+}
 
 
 object Kube {

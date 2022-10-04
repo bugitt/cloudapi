@@ -12,7 +12,7 @@ class KubeTest {
     @Test
     fun testKubernetesInit() {
         withTestApplication(Application::kubeModule) {
-            val client = kubeClient()
+            val client = businessKubeClientBuilder()
             println(client.kubernetesVersion.gitVersion)
             assert(client.kubernetesVersion.gitVersion.isNotBlank())
         }
@@ -21,7 +21,7 @@ class KubeTest {
     @Test
     fun testKubernetesEventWatch() {
         withTestApplication(Application::kubeModule) {
-            kubeClient().use { client ->
+            businessKubeClientBuilder().use { client ->
                 client.batch().v1().jobs()
                 client.apps().deployments().inAnyNamespace().watch(object : Watcher<Deployment> {
                     override fun eventReceived(action: Watcher.Action?, resource: Deployment?) {

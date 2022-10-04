@@ -3,10 +3,7 @@ package cn.edu.buaa.scs.route
 import cn.edu.buaa.scs.bugit.GitRepo
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
-import cn.edu.buaa.scs.model.Project
-import cn.edu.buaa.scs.model.ProjectMember
-import cn.edu.buaa.scs.model.ProjectRole
-import cn.edu.buaa.scs.model.User
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.utils.user
@@ -95,6 +92,15 @@ fun Route.projectRoute() {
                 )
             }
         }
+
+        route("/images") {
+            post {
+                val (imageMeta, taskData) = call.project.createImageBuildTask(call.getProjectID())
+                call.respond(
+                    convertImageBuildTaskResponse(imageMeta, taskData)
+                )
+            }
+        }
     }
 }
 
@@ -136,3 +142,13 @@ fun convertRepositoryResponse(repo: GitRepo) =
         name = repo.name,
         url = repo.htmlURL,
     )
+
+fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = ImageBuildTask(
+    hostPrefix = ImageMeta.hostPrefix,
+    owner = imageMeta.owner,
+    repo = imageMeta.repo,
+    tag = imageMeta.tag,
+    status = taskData.status.toString(),
+    createdTime = taskData.createTime,
+    endTime = taskData.endTime,
+)

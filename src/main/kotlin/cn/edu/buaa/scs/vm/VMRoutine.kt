@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.model.taskDataList
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Routine
+import cn.edu.buaa.scs.task.RoutineTask
 import cn.edu.buaa.scs.task.Task
 import org.ktorm.dsl.*
 import org.ktorm.entity.filter
@@ -85,9 +86,9 @@ object VMRoutine : Routine {
             .forEach { it.process() }
     }
 
-    override val routineList: List<suspend () -> Unit> = listOf(
-        updateVMsToDatabase,
-        createVm,
+    override val routineList: List<RoutineTask> = listOf(
+//        updateVMsToDatabase,
+//        createVm,
         // add more routines if needed
     )
 }
