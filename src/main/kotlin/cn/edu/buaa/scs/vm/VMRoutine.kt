@@ -87,8 +87,8 @@ object VMRoutine : Routine {
     }
 
     override val routineList: List<RoutineTask> = listOf(
-//        updateVMsToDatabase,
-//        createVm,
+        updateVMsToDatabase,
+        createVm,
         // add more routines if needed
     )
 }
