@@ -18,11 +18,13 @@ package cn.edu.buaa.scs.controller.models
  * @param owner
  * @param repo
  * @param tags
+ * @param pushTime
  */
 data class Image(
     val hostPrefix: kotlin.String,
     val owner: kotlin.String,
     val repo: kotlin.String,
-    val tags: kotlin.collections.List<kotlin.String>
+    val tags: kotlin.collections.List<kotlin.String>,
+    val pushTime: kotlin.Long
 ) 
 

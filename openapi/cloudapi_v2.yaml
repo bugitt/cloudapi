@@ -1446,27 +1446,38 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  images:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Image'
-                  imageBuildTasks:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ImageBuildTask'
-                required:
-                  - images
-                  - imageBuildTasks
+                type: array
+                items:
+                  $ref: '#/components/schemas/Image'
       security:
         - Authorization: [ ]
-      description: |-
-        返回：
-        1. 镜像列表
-        2. 镜像构建任务列表
+      description: 获取当前项目中的所有可用镜像
       tags:
         - 镜像
+  '/project/{projectId}/imageTasks':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    get:
+      summary: 获取镜像构建任务
+      tags:
+        - 镜像
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImageBuildTask'
+      operationId: get-project-projectId-imageTasks
+      description: 获取当前项目下的所有镜像构建任务
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:
@@ -2688,11 +2699,15 @@ components:
           type: array
           items:
             type: string
+        pushTime:
+          type: integer
+          format: int64
       required:
         - hostPrefix
         - owner
         - repo
         - tags
+        - pushTime
     ImageBuildTask:
       title: ImageBuildTask
       x-stoplight:

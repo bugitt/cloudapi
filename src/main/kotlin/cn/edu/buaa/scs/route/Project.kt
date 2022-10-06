@@ -94,6 +94,10 @@ fun Route.projectRoute() {
         }
 
         route("/images") {
+            get {
+                call.respond(call.project.getImagesByProject(call.getProjectID()))
+            }
+
             post {
                 val (imageMeta, taskData) = call.project.createImageBuildTask(call.getProjectID())
                 call.respond(

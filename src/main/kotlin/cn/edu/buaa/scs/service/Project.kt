@@ -3,9 +3,11 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.bugit.GitRepo
+import cn.edu.buaa.scs.controller.models.Image
 import cn.edu.buaa.scs.controller.models.PostProjectProjectIdImagesRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.project.IProjectManager
@@ -334,5 +336,23 @@ class ProjectService(val call: ApplicationCall) : IService {
             mysql.imageBuildTaskIndexList.update(imageBuildTaskIndex)
             Pair(taskContent.imageMeta, taskData)
         }
+    }
+
+    fun getImagesByProject(projectID: Long): List<Image> {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        return HarborClient.getImagesByProject(project.name)
+            .getOrThrow()
+            .flatMap { (repo, artifactList) ->
+                artifactList.map { artifact ->
+                    Image(
+                        hostPrefix = ImageMeta.hostPrefix,
+                        owner = project.name,
+                        repo = repo.name!!,
+                        tags = artifact.tags?.map { it.name!! } ?: listOf(),
+                        pushTime = artifact.pushTime?.toInstant()?.toEpochMilli() ?: 0L,
+                    )
+                }
+            }
     }
 }

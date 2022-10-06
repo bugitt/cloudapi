@@ -1,15 +1,9 @@
 package cn.edu.buaa.scs.harbor
 
 import cn.edu.buaa.scs.project.IProjectManager
-import cn.edu.buaa.scs.sdk.harbor.apis.MemberApi
-import cn.edu.buaa.scs.sdk.harbor.apis.ProjectApi
-import cn.edu.buaa.scs.sdk.harbor.apis.RepositoryApi
-import cn.edu.buaa.scs.sdk.harbor.apis.UserApi
+import cn.edu.buaa.scs.sdk.harbor.apis.*
 import cn.edu.buaa.scs.sdk.harbor.infrastructure.ClientException
-import cn.edu.buaa.scs.sdk.harbor.models.ProjectMember
-import cn.edu.buaa.scs.sdk.harbor.models.ProjectReq
-import cn.edu.buaa.scs.sdk.harbor.models.UserCreationReq
-import cn.edu.buaa.scs.sdk.harbor.models.UserEntity
+import cn.edu.buaa.scs.sdk.harbor.models.*
 import io.ktor.http.*
 
 object HarborClient : IProjectManager {
@@ -18,6 +12,20 @@ object HarborClient : IProjectManager {
     private val userClient by lazy { UserApi() }
     private val memberClient by lazy { MemberApi() }
     private val repoClient by lazy { RepositoryApi() }
+    private val artifactClient by lazy { ArtifactApi() }
+
+    fun getImagesByProject(projectName: String): Result<Map<Repository, List<Artifact>>> = runCatching {
+        repoClient.listRepositories(
+            projectName = projectName,
+            pageSize = Int.MAX_VALUE.toLong(),
+        ).associateWith {
+            artifactClient.listArtifacts(
+                projectName = projectName,
+                repositoryName = it.name!!,
+                pageSize = Int.MAX_VALUE.toLong()
+            ).filter { artifact -> artifact.type?.lowercase() == "image" }
+        }
+    }
 
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> =
         runCatching {
