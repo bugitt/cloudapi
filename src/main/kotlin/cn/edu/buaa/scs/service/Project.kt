@@ -267,12 +267,13 @@ class ProjectService(val call: ApplicationCall) : IService {
             var tag = "latest"
             var dockerfilePath = "Dockerfile"
             var dockerfileContent: String? = null
-            val contextTarFilename = "$imageBuildContextLocalDir/image-build-contest-tar-${UUID.randomUUID()}"
+            val contextTarFilename = "image-build-context-tar-${UUID.randomUUID()}"
+            val contextTarPath = "$imageBuildContextLocalDir/$contextTarFilename"
             multipartData.forEachPart { part ->
                 when (part) {
                     is PartData.FormItem -> {
                         when (part.name) {
-                            "repo" -> repo = part.value
+                            "name" -> repo = part.value
                             "tag" -> tag = part.value
                             "dockerfilePath" -> dockerfilePath = part.value
                             "dockerfileContent" -> dockerfileContent = part.value
@@ -284,7 +285,7 @@ class ProjectService(val call: ApplicationCall) : IService {
                             part.dispose()
                             return@forEachPart
                         }
-                        val contextTarFile = File(contextTarFilename)
+                        val contextTarFile = File(contextTarPath)
                         withContext(Dispatchers.IO) {
                             contextTarFile.createNewFile()
                             part.streamProvider().use { input ->
@@ -314,9 +315,9 @@ class ProjectService(val call: ApplicationCall) : IService {
             )
         }
 
-        val taskContent = when (call.request.contentType()) {
-            ContentType.Application.Json -> fetchTaskContentFromJson()
-            ContentType.MultiPart.FormData -> fetchTaskContentFromMultipartForm()
+        val taskContent = when (call.request.contentType().value) {
+            ContentType.Application.Json.value -> fetchTaskContentFromJson()
+            ContentType.MultiPart.FormData.value -> fetchTaskContentFromMultipartForm()
             else -> throw BadRequestException("Unsupported content type")
         }
 
