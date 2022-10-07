@@ -1,5 +1,7 @@
 package cn.edu.buaa.scs.task
 
+import cn.edu.buaa.scs.application
+import cn.edu.buaa.scs.utils.getConfigList
 import cn.edu.buaa.scs.utils.logger
 import kotlinx.coroutines.*
 
@@ -37,10 +39,13 @@ interface Routine {
 
     fun run() {
         Thread {
+            val shouldRunTaskList = application.getConfigList("routine.taskList").toSet()
             runBlocking {
-                routineList.forEach {
-                    launch { it.action() }
-                }
+                routineList
+                    .filter { shouldRunTaskList.contains(it.name) }
+                    .forEach {
+                        launch { it.action() }
+                    }
             }
         }.start()
     }
