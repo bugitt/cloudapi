@@ -15,6 +15,7 @@ import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.*
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -353,6 +354,22 @@ class ProjectService(val call: ApplicationCall) : IService {
                         pushTime = artifact.pushTime?.toInstant()?.toEpochMilli() ?: 0L,
                     )
                 }
+            }
+    }
+
+    fun getImageBuildTasksByProject(projectID: Long): List<Pair<ImageMeta, TaskData>> {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        val indexIdList = mysql.imageBuildTaskIndexList
+            .filter { it.projectId eq projectID }
+            .map { it.id }
+        if (indexIdList.isEmpty()) return listOf()
+        return mysql.taskDataList
+            .filter { it.indexRef inList indexIdList }
+            .toList()
+            .map { taskData ->
+                val content = jsonMapper.readValue<ImageBuildTask.Content>(taskData.data)
+                Pair(content.imageMeta, taskData)
             }
     }
 }

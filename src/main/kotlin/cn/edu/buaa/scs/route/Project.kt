@@ -105,6 +105,14 @@ fun Route.projectRoute() {
                 )
             }
         }
+
+        route("/imageBuildTasks") {
+            get {
+                call.respond(
+                    call.project.getImageBuildTasksByProject(call.getProjectID())
+                        .map { convertImageBuildTaskResponse(it) })
+            }
+        }
     }
 }
 
@@ -156,3 +164,6 @@ fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = Im
     createdTime = taskData.createTime,
     endTime = taskData.endTime,
 )
+
+fun convertImageBuildTaskResponse(imageWithTaskData: Pair<ImageMeta, TaskData>) =
+    convertImageBuildTaskResponse(imageWithTaskData.first, imageWithTaskData.second)

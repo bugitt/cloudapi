@@ -1454,7 +1454,7 @@ paths:
       description: 获取当前项目中的所有可用镜像
       tags:
         - 镜像
-  '/project/{projectId}/imageTasks':
+  '/project/{projectId}/imageBuildTasks':
     parameters:
       - schema:
           type: string
