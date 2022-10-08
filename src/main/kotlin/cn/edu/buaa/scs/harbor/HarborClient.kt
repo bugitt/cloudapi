@@ -15,14 +15,15 @@ object HarborClient : IProjectManager {
     private val artifactClient by lazy { ArtifactApi() }
 
     fun getImagesByProject(projectName: String): Result<Map<Repository, List<Artifact>>> = runCatching {
+        val project = projectClient.getProject(projectName)
         repoClient.listRepositories(
             projectName = projectName,
-            pageSize = Int.MAX_VALUE.toLong(),
+            pageSize = project.repoCount?.toLong(),
         ).associateWith {
             artifactClient.listArtifacts(
                 projectName = projectName,
-                repositoryName = it.name!!,
-                pageSize = Int.MAX_VALUE.toLong()
+                repositoryName = it.name!!.split("/").last(),
+                pageSize = it.artifactCount,
             ).filter { artifact -> artifact.type?.lowercase() == "image" }
         }
     }
@@ -56,9 +57,10 @@ object HarborClient : IProjectManager {
 
 
     override suspend fun deleteProject(projectName: String): Result<Unit> = runCatching {
+        val project = projectClient.getProject(projectName)
         repoClient.listRepositories(
             projectName = projectName,
-            pageSize = Int.MAX_VALUE.toLong(),
+            pageSize = project.repoCount?.toLong(),
         ).forEach { it.name?.let { repoName -> repoClient.deleteRepository(projectName, repoName) } }
         projectClient.deleteProject(projectName)
     }
