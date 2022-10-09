@@ -15,16 +15,22 @@ package cn.edu.buaa.scs.controller.models
 /**
  *
  * @param hostPrefix
- * @param owner
  * @param repo
+ * @param digest
  * @param tags
+ * @param imageSize
+ * @param pullCommand
  * @param pushTime
+ * @param pullTime
  */
 data class Image(
     val hostPrefix: kotlin.String,
-    val owner: kotlin.String,
     val repo: kotlin.String,
+    val digest: kotlin.String,
     val tags: kotlin.collections.List<kotlin.String>,
-    val pushTime: kotlin.Long
+    val imageSize: kotlin.Long,
+    val pullCommand: kotlin.String,
+    val pushTime: kotlin.Long? = null,
+    val pullTime: kotlin.Long? = null
 ) 
 

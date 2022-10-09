@@ -113,6 +113,14 @@ fun Route.projectRoute() {
                         .map { convertImageBuildTaskResponse(it) })
             }
         }
+
+        route("/imageRepos") {
+            get {
+                call.respond(
+                    call.project.getImageReposByProject(call.getProjectID())
+                )
+            }
+        }
     }
 }
 

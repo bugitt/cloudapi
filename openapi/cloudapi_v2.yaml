@@ -1474,8 +1474,32 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ImageBuildTask'
-      operationId: get-project-projectId-imageTasks
+      operationId: get-project-projectId-imageBuildTasks
       description: 获取当前项目下的所有镜像构建任务
+      security:
+        - Authorization: [ ]
+  '/project/{projectId}/imageRepos':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    get:
+      summary: 获取Harbor镜像仓库
+      tags:
+        - 镜像
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImageRepo'
+      operationId: get-project-projectId-imageRepos
+      description: 获取当前项目下的所有Harbor镜像仓库
       security:
         - Authorization: [ ]
 components:
@@ -2691,23 +2715,32 @@ components:
       properties:
         hostPrefix:
           type: string
-        owner:
-          type: string
         repo:
+          type: string
+        digest:
           type: string
         tags:
           type: array
           items:
             type: string
+        imageSize:
+          type: integer
+          format: int64
         pushTime:
           type: integer
           format: int64
+        pullTime:
+          type: integer
+          format: int64
+        pullCommand:
+          type: string
       required:
         - hostPrefix
-        - owner
         - repo
+        - digest
         - tags
-        - pushTime
+        - imageSize
+        - pullCommand
     ImageBuildTask:
       title: ImageBuildTask
       x-stoplight:
@@ -2739,6 +2772,31 @@ components:
         - status
         - createdTime
         - endTime
+    ImageRepo:
+      title: ImageRepo
+      x-stoplight:
+        id: vsg69k6x0z5m0
+      type: object
+      properties:
+        name:
+          type: string
+        artifactsCount:
+          type: integer
+          format: int64
+        downloadCount:
+          type: integer
+          format: int64
+        updateTime:
+          type: integer
+          format: int64
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+      required:
+        - name
+        - artifactsCount
+        - downloadCount
   securitySchemes:
     Authorization:
       type: apiKey

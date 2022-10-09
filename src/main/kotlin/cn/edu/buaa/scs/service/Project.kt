@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.bugit.GitRepo
 import cn.edu.buaa.scs.controller.models.Image
+import cn.edu.buaa.scs.controller.models.ImageRepo
 import cn.edu.buaa.scs.controller.models.PostProjectProjectIdImagesRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
@@ -12,6 +13,7 @@ import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
+import cn.edu.buaa.scs.sdk.harbor.models.Artifact
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.*
@@ -339,21 +341,40 @@ class ProjectService(val call: ApplicationCall) : IService {
         }
     }
 
+    private fun Artifact.toImage(repoName: String?) = Image(
+        hostPrefix = ImageMeta.hostPrefix,
+        repo = repoName!!,
+        digest = this.digest!!,
+        tags = this.tags?.map { it.name!! } ?: listOf(),
+        imageSize = this.propertySize ?: 0,
+        pushTime = this.pushTime?.toInstant()?.toEpochMilli()?.let { if (it < 0) 0 else it },
+        pullTime = this.pullTime?.toInstant()?.toEpochMilli()?.let { if (it < 0) 0 else it },
+        pullCommand = "docker pull ${ImageMeta.hostPrefix}/${repoName}@${this.digest}",
+    )
+
     fun getImagesByProject(projectID: Long): List<Image> {
         val project = Project.id(projectID)
         call.user().assertRead(project)
         return HarborClient.getImagesByProject(project.name)
             .getOrThrow()
             .flatMap { (repo, artifactList) ->
-                artifactList.map { artifact ->
-                    Image(
-                        hostPrefix = ImageMeta.hostPrefix,
-                        owner = project.name,
-                        repo = repo.name!!,
-                        tags = artifact.tags?.map { it.name!! } ?: listOf(),
-                        pushTime = artifact.pushTime?.toInstant()?.toEpochMilli() ?: 0L,
-                    )
-                }
+                artifactList.map { it.toImage(repo.name) }
+            }
+    }
+
+    fun getImageReposByProject(projectID: Long): List<ImageRepo> {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        return HarborClient.getImagesByProject(project.name)
+            .getOrThrow()
+            .map { (repo, artifactList) ->
+                ImageRepo(
+                    name = repo.name!!,
+                    artifactsCount = repo.artifactCount ?: 0,
+                    downloadCount = repo.pullCount ?: 0,
+                    updateTime = repo.updateTime?.toInstant()?.toEpochMilli()?.let { if (it < 0) 0 else it },
+                    images = artifactList.map { it.toImage(repo.name) }
+                )
             }
     }
 
