@@ -259,7 +259,27 @@ paths:
       description: 上传新文件，或修改旧文件。如果请求体中的fileId为空或为0，那么为创建新文件，或者为修改旧文件
       security:
         - Authorization: [ ]
-      parameters: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: owner
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: fileType
+          required: true
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: involvedId
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: fileId
       requestBody:
         content:
           multipart/form-data:

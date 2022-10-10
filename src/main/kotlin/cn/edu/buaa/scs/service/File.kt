@@ -240,6 +240,11 @@ class FileService(val call: ApplicationCall) : IService {
                     else -> Unit
                 }
             }
+            if (owner.isNullOrBlank()) owner = call.request.queryParameters["owner"]
+            if (fileType == null) fileType = call.request.queryParameters["fileType"]?.let { FileType.valueOf(it) }
+            if (involvedId == null) involvedId = call.request.queryParameters["involvedId"]?.toInt()
+            if (fileId == null)
+                fileId = call.request.queryParameters["fileId"]?.toInt()?.let { if (it == 0) null else it }
             return ParseFormDataResult(
                 fileParts,
                 owner!!,
