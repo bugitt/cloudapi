@@ -20,8 +20,6 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.*
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -32,7 +30,7 @@ import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.inList
 import org.ktorm.entity.*
-import java.io.File
+import java.net.URL
 import java.util.*
 
 val ApplicationCall.project
@@ -220,9 +218,9 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         }
     }
 
-    private fun PostProjectProjectIdImagesRequest.fetchGitUrl(): String? {
+    private fun PostProjectProjectIdImagesRequest.fetchGitUrl(): String {
         if (this.gitUrl.isNullOrBlank()) {
-            return null
+            throw BadRequestException("Git url is required")
         }
         var finalGitUrl = this.gitUrl
         if (!finalGitUrl.startsWith("https://") && !finalGitUrl.startsWith("http://")) {
@@ -247,86 +245,70 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
 
         val project = Project.id(projectID)
 
-        val fetchTaskContentFromJson: suspend () -> ImageBuildTask.Content = {
-            val req = call.receive<PostProjectProjectIdImagesRequest>()
-            if (req.gitUrl.isNullOrBlank() && req.dockerfileContent.isNullOrBlank()) {
-                throw BadRequestException("Git url and dockerfile content cannot be empty at the same time")
-            }
-            val imageMeta = ImageMeta(project.name, req.name, req.tag ?: "latest")
-            val dockerfileConfigmapName = req.dockerfileContent?.let {
-                ImageBuildTask.createDockerfileConfigmap(it).getOrThrow()
-            }
-            val gitUrl = req.fetchGitUrl()
-            ImageBuildTask.Content(
-                if (gitUrl.isNullOrBlank()) ImageBuildTask.BuildType.RawDockerfile else ImageBuildTask.BuildType.GIT,
-                req.dockerfilePath ?: "Dockerfile",
-                imageMeta,
-                null,
-                gitUrl,
-                req.gitRef,
-                dockerfileConfigmapName,
-            )
+        val req = call.receive<PostProjectProjectIdImagesRequest>()
+
+        val imageMeta = ImageMeta(project.name, req.name, req.tag ?: "latest")
+
+        // handle context
+
+        var contextFileName: String? = null
+        var gitUrl: String? = null
+        var buildType: ImageBuildTask.BuildType? = null
+
+        val prepareLocalContextTarFile: suspend (suspend (contextTarFilename: String) -> Unit) -> Unit = { prepare ->
+            val contextTarFilename = UUID.randomUUID().toString()
+            prepare(contextTarFilename)
+            contextFileName = contextTarFilename
+            buildType = ImageBuildTask.BuildType.LOCAL
         }
 
-        val fetchTaskContentFromMultipartForm: suspend () -> ImageBuildTask.Content = {
-            val multipartData = call.receiveMultipart()
-            var repo = ""
-            var tag = "latest"
-            var dockerfilePath = "Dockerfile"
-            var dockerfileContent: String? = null
-            val contextTarFilename = "image-build-context-tar-${UUID.randomUUID()}"
-            val contextTarPath = "$imageBuildContextLocalDir/$contextTarFilename"
-            multipartData.forEachPart { part ->
-                when (part) {
-                    is PartData.FormItem -> {
-                        when (part.name) {
-                            "name" -> repo = part.value
-                            "tag" -> tag = part.value
-                            "dockerfilePath" -> dockerfilePath = part.value
-                            "dockerfileContent" -> dockerfileContent = part.value
+        when {
+            !req.gitUrl.isNullOrBlank() -> {
+                gitUrl = req.fetchGitUrl()
+                buildType = ImageBuildTask.BuildType.GIT
+            }
+
+            req.contextFileId != null && req.contextFileId > 0 -> prepareLocalContextTarFile {
+                val file = File.id(req.contextFileId)
+                call.user().assertRead(file)
+                file.fileType.manageService(call).manager()
+                    .downloadFile(file.storeName, "$imageBuildContextLocalDir/$it")
+            }
+
+            !req.contextFileLink.isNullOrBlank() -> prepareLocalContextTarFile {
+                withContext(Dispatchers.IO) {
+                    URL(req.contextFileLink).openStream().use { input ->
+                        val targetFile = java.io.File("$imageBuildContextLocalDir/$it")
+                        targetFile.outputStream().use { output ->
+                            input.copyTo(output)
                         }
                     }
-
-                    is PartData.FileItem -> {
-                        if (part.originalFileName == null) {
-                            part.dispose()
-                            return@forEachPart
-                        }
-                        val contextTarFile = File(contextTarPath)
-                        withContext(Dispatchers.IO) {
-                            contextTarFile.createNewFile()
-                            part.streamProvider().use { input ->
-                                contextTarFile.outputStream().buffered().use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-                        }
-                        part.dispose()
-                    }
-
-                    else -> {}
                 }
             }
-            if (repo.isBlank()) {
-                throw BadRequestException("Repo cannot be empty")
+
+            !req.dockerfileContent.isNullOrBlank() -> {
+                buildType = ImageBuildTask.BuildType.RawDockerfile
             }
-            val dockerfileConfigmapName = dockerfileContent?.let {
-                ImageBuildTask.createDockerfileConfigmap(it).getOrThrow()
-            }
-            ImageBuildTask.Content(
-                ImageBuildTask.BuildType.LOCAL,
-                dockerfilePath,
-                ImageMeta(project.name, repo, tag),
-                contextTarFilename,
-                extraDockerfileConfigmap = dockerfileConfigmapName,
-            )
         }
 
-        val taskContent = when (call.request.contentType().value) {
-            ContentType.Application.Json.value -> fetchTaskContentFromJson()
-            ContentType.MultiPart.FormData.value -> fetchTaskContentFromMultipartForm()
-            else -> throw BadRequestException("Unsupported content type")
+        if (buildType == null) {
+            throw BadRequestException("No context provided")
         }
+
+        // handle dockerfile
+        val dockerfileConfigmapName = req.dockerfileContent?.let {
+            ImageBuildTask.createDockerfileConfigmap(it).getOrThrow()
+        }
+
+        val taskContent = ImageBuildTask.Content(
+            buildType!!,
+            imageMeta,
+            contextFileName,
+            gitUrl,
+            req.gitRef,
+            req.dockerfilePath ?: "Dockerfile",
+            dockerfileConfigmapName,
+        )
 
         return mysql.useTransaction {
             val imageBuildTaskIndex = ImageBuildTaskIndex.buildFromImageMeta(projectID, taskContent.imageMeta)

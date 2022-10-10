@@ -118,7 +118,7 @@ class FileService(val call: ApplicationCall) : IService {
             throw BadRequestException("上传作业时，仅允许上传单个文件")
         }
 
-        val service: IFileManageService = fileType.manageService()
+        val service: IFileManageService = fileType.manageService(call)
         // check owner
         if (!service.checkPermission(owner, involvedId)) {
             throw BadRequestException("owner mismatch")
@@ -271,12 +271,12 @@ class FileService(val call: ApplicationCall) : IService {
      * 本方法不包含鉴权操作
      */
     internal suspend fun deleteFileFromStorage(file: File) {
-        file.fileType.manageService().manager().deleteFile(file.storeName)
+        file.fileType.manageService(call).manager().deleteFile(file.storeName)
     }
 
     suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
-        val service = file.fileType.manageService()
+        val service = file.fileType.manageService(call)
         val inputStream = service.manager().getFile(file.storeName)
         return { inputStream.use { it.copyTo(this) } }
     }
@@ -307,7 +307,7 @@ class FileService(val call: ApplicationCall) : IService {
                 call.user().assertWrite(Project.id(involvedId.toLong()))
         }
         // get files
-        val service = fileType.manageService()
+        val service = fileType.manageService(call)
         val (files, readme, zipFilename) = service.packageFiles(involvedId, fileIdList)
         val packageId = "${UUID.randomUUID()}.package.tmp"
         packageResult[packageId] = false
@@ -330,15 +330,6 @@ class FileService(val call: ApplicationCall) : IService {
         }
     }
 
-    private fun FileType.manageService(): IFileManageService =
-        when (this) {
-            FileType.Assignment -> call.assignment
-            FileType.CourseResource -> call.courseResource
-            FileType.ExperimentResource -> call.experiment
-            FileType.AssignmentReview -> call.assignmentReview
-            FileType.ImageBuildContextTar -> call.project
-        }
-
     private fun FileType.getInvolvedEntity(involvedId: Int): IEntity =
         when (this) {
             FileType.Assignment -> Assignment.id(involvedId)
@@ -348,6 +339,15 @@ class FileService(val call: ApplicationCall) : IService {
             FileType.ImageBuildContextTar -> Project.id(involvedId.toLong())
         }
 }
+
+fun FileType.manageService(call: ApplicationCall): FileService.IFileManageService =
+    when (this) {
+        FileType.Assignment -> call.assignment
+        FileType.CourseResource -> call.courseResource
+        FileType.ExperimentResource -> call.experiment
+        FileType.AssignmentReview -> call.assignmentReview
+        FileType.ImageBuildContextTar -> call.project
+    }
 
 fun File.Companion.id(id: Int): File {
     return mysql.files.find { it.id eq id }

@@ -46,11 +46,11 @@ class ImageBuildTask(taskData: TaskData) : Task(taskData) {
 
     data class Content(
         @JsonProperty("type") val type: BuildType,
-        @JsonProperty("dockerfile_path") val dockerfilePath: String,
         @JsonProperty("image_meta") val imageMeta: ImageMeta,
         @JsonProperty("context_file_name") val contextFileName: String? = null,
         @JsonProperty("git_url") val gitUrl: String? = null,
         @JsonProperty("git_ref") val gitRef: String? = null,
+        @JsonProperty("dockerfile_path") val dockerfilePath: String,
         @JsonProperty("extra_dockerfile_configmap") val extraDockerfileConfigmap: String? = null,
     )
 

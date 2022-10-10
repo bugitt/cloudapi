@@ -1422,8 +1422,6 @@ paths:
                 tag:
                   type: string
                   description: 默认 latest
-                dockerfilePath:
-                  type: string
                 gitUrl:
                   type: string
                 gitUsername:
@@ -1432,31 +1430,20 @@ paths:
                   type: string
                 gitRef:
                   type: string
+                contextFileId:
+                  type: integer
+                  description: 构建上下文压缩包在云平台数据库中对应的文件ID
+                  format: int32
+                contextFileLink:
+                  type: string
+                  description: 构建上下文压缩包的网络路径
+                dockerfilePath:
+                  type: string
                 dockerfileContent:
                   type: string
               required:
                 - name
             examples: { }
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                tag:
-                  type: string
-                  description: 默认 latest
-                dockerfilePath:
-                  type: string
-                  description: 默认为 Dockerfile
-                context:
-                  description: file类型。用户长传的用于构建镜像的上下文压缩包
-                  nullable: true
-                dockerfileContent:
-                  type: string
-              required:
-                - name
-                - context
     get:
       summary: 获取项目中的镜像列表
       operationId: get-project-projectId-images
