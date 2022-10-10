@@ -4,7 +4,7 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
-import cn.edu.buaa.scs.storage.S3
+import cn.edu.buaa.scs.storage.file.S3
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.warn

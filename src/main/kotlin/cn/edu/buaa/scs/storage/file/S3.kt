@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.storage
+package cn.edu.buaa.scs.storage.file
 
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
@@ -13,30 +13,23 @@ import java.io.InputStream
 lateinit var minioClient: MinioClient
 var minioPartSize: Long = 10485760L
 
-class S3(private val bucket: String) {
+class S3(private val bucket: String) : FileManager {
 
     companion object {
         private val dispatcher: CoroutineDispatcher = Dispatchers.IO
     }
 
-    data class FileResp(
-        val storeName: String,
-        val size: Long,
-        val contentType: String,
-        val uploadTime: Long,
-    )
-
-    suspend fun uploadFile(
-        filename: String,
+    override suspend fun uploadFile(
+        storeName: String,
         inputStream: InputStream,
-        contentType: String = "application/octet-stream",
-        size: Long = -1L
+        contentType: String,
+        size: Long
     ): FileResp = withContext(dispatcher) {
         ensureBucketExists(bucket)
         PutObjectArgs
             .builder()
             .bucket(bucket)
-            .`object`(filename)
+            .`object`(storeName)
             .apply {
                 if (size == -1L) this.stream(inputStream, -1, minioPartSize)
                 else this.stream(inputStream, size, -1)
@@ -44,8 +37,8 @@ class S3(private val bucket: String) {
             .contentType(contentType)
             .build()
             .let { minioClient.putObject(it) }
-        inspectFile(filename).let {
-            FileResp(filename, it.size(), it.contentType(), it.lastModified().toInstant().toEpochMilli())
+        inspectFile(storeName).let {
+            FileResp(storeName, it.size(), it.contentType(), it.lastModified().toInstant().toEpochMilli())
         }
     }
 
@@ -59,7 +52,7 @@ class S3(private val bucket: String) {
     }
 
 
-    suspend fun deleteFile(filename: String) = withContext(dispatcher) {
+    override suspend fun deleteFile(filename: String) = withContext(dispatcher) {
         RemoveObjectArgs
             .builder()
             .bucket(bucket)
@@ -68,7 +61,7 @@ class S3(private val bucket: String) {
             .let { minioClient.removeObject(it) }
     }
 
-    suspend fun getFile(filename: String): InputStream = withContext(dispatcher) {
+    override suspend fun getFile(filename: String): InputStream = withContext(dispatcher) {
         GetObjectArgs
             .builder()
             .bucket(bucket)
@@ -77,7 +70,7 @@ class S3(private val bucket: String) {
             .let { minioClient.getObject(it) }
     }
 
-    suspend fun downloadFile(filename: String, targetFileName: String) = withContext(dispatcher) {
+    override suspend fun downloadFile(filename: String, targetFileName: String) = withContext(dispatcher) {
         DownloadObjectArgs
             .builder()
             .bucket(bucket)

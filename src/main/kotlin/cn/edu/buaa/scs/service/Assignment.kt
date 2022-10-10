@@ -8,7 +8,7 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
-import cn.edu.buaa.scs.storage.S3
+import cn.edu.buaa.scs.storage.file.S3
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getFileExtension

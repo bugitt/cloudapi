@@ -20,11 +20,12 @@ sealed interface FileType {
 
     companion object {
         fun valueOf(name: String): FileType {
-            return when (name) {
-                "Assignment" -> Assignment
-                "CourseResource" -> CourseResource
-                "ExperimentResource" -> ExperimentResource
-                "AssignmentReview" -> AssignmentReview
+            return when (name.lowercase()) {
+                "Assignment".lowercase() -> Assignment
+                "CourseResource".lowercase() -> CourseResource
+                "ExperimentResource".lowercase() -> ExperimentResource
+                "AssignmentReview".lowercase() -> AssignmentReview
+                "ImageBuildContextTar".lowercase() -> ImageBuildContextTar
                 else -> throw BadRequestException("Unknown file type: $name")
             }
         }
@@ -60,6 +61,11 @@ sealed interface FileType {
     object AssignmentReview : FileType {
         override val name: String
             get() = "AssignmentReview"
+    }
+
+    object ImageBuildContextTar : FileType {
+        override val name: String
+            get() = "ImageBuildContextTar"
     }
 }
 

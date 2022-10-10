@@ -14,6 +14,8 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
+import cn.edu.buaa.scs.storage.file.FileManager
+import cn.edu.buaa.scs.storage.file.LocalFileManager
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.*
@@ -36,7 +38,7 @@ import java.util.*
 val ApplicationCall.project
     get() = ProjectService.getSvc(this) { ProjectService(this) }
 
-class ProjectService(val call: ApplicationCall) : IService {
+class ProjectService(val call: ApplicationCall) : IService, FileService.IFileManageService {
     companion object : IService.Caller<ProjectService>() {
         const val imageBuildContextLocalDir = "image-build-context"
     }
@@ -392,5 +394,20 @@ class ProjectService(val call: ApplicationCall) : IService {
                 val content = jsonMapper.readValue<ImageBuildTask.Content>(taskData.data)
                 Pair(content.imageMeta, taskData)
             }
+    }
+
+    override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)
+
+    override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
+        return Pair(
+            "image-build-context-tar-$involvedId-${originalName ?: ""}",
+            "image-build-context-tar-${UUID.randomUUID()}"
+        )
+    }
+
+    override fun checkPermission(ownerId: String, involvedId: Int): Boolean = true
+
+    override fun storePath(): String {
+        return "local-fs:$imageBuildContextLocalDir"
     }
 }

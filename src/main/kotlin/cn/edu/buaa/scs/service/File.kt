@@ -8,7 +8,8 @@ import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.File
-import cn.edu.buaa.scs.storage.S3
+import cn.edu.buaa.scs.storage.file.FileManager
+import cn.edu.buaa.scs.storage.file.S3
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
@@ -80,7 +81,7 @@ class FileService(val call: ApplicationCall) : IService {
 
     sealed interface IFileManageService {
 
-        fun manager(): S3
+        fun manager(): FileManager
 
         // return filename and storeName
         fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String>
@@ -210,6 +211,7 @@ class FileService(val call: ApplicationCall) : IService {
                     part.streamProvider().copyTo(output)
                 }
                 contentType = Tika().detect(tmp)
+                part.dispose()
                 tmp
             }
             return FilePart(originalName, contentType, { BufferedInputStream(FileInputStream(tmpFile)) }, tmpFile)
@@ -300,6 +302,9 @@ class FileService(val call: ApplicationCall) : IService {
 
             FileType.AssignmentReview ->
                 Unit
+
+            FileType.ImageBuildContextTar ->
+                call.user().assertWrite(Project.id(involvedId.toLong()))
         }
         // get files
         val service = fileType.manageService()
@@ -331,6 +336,7 @@ class FileService(val call: ApplicationCall) : IService {
             FileType.CourseResource -> call.courseResource
             FileType.ExperimentResource -> call.experiment
             FileType.AssignmentReview -> call.assignmentReview
+            FileType.ImageBuildContextTar -> call.project
         }
 
     private fun FileType.getInvolvedEntity(involvedId: Int): IEntity =
@@ -339,6 +345,7 @@ class FileService(val call: ApplicationCall) : IService {
             FileType.CourseResource -> Course.id(involvedId)
             FileType.ExperimentResource -> Experiment.id(involvedId)
             FileType.AssignmentReview -> Assignment.id(involvedId)
+            FileType.ImageBuildContextTar -> Project.id(involvedId.toLong())
         }
 }
 
