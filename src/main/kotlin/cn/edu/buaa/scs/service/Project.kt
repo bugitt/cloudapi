@@ -308,6 +308,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             req.gitRef,
             req.dockerfilePath ?: "Dockerfile",
             dockerfileConfigmapName,
+            req.workspacePath,
         )
 
         return mysql.useTransaction {

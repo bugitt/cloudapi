@@ -52,6 +52,7 @@ class ImageBuildTask(taskData: TaskData) : Task(taskData) {
         @JsonProperty("git_ref") val gitRef: String? = null,
         @JsonProperty("dockerfile_path") val dockerfilePath: String,
         @JsonProperty("extra_dockerfile_configmap") val extraDockerfileConfigmap: String? = null,
+        @JsonProperty("workspace_path") val workspacePath: String? = null,
     )
 
 
@@ -130,7 +131,7 @@ class ImageBuildTask(taskData: TaskData) : Task(taskData) {
             this.image = "scs.buaa.edu.cn:8081/iobs/kaniko-executor"
             this.args = listOf(
                 "--dockerfile=${content.dockerfilePath}",
-                "--context=dir:///workspace",
+                "--context=dir:///workspace/${content.workspacePath ?: ""}",
                 "--destination=${content.imageMeta.uri()}",
             )
             this.volumeMounts = listOf(

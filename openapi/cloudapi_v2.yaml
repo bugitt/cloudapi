@@ -1441,6 +1441,9 @@ paths:
                   type: string
                 dockerfileContent:
                   type: string
+                workspacePath:
+                  type: string
+                  description: 构建镜像时，workspace相对于上下文的相对路径。默认为.
               required:
                 - name
             examples: { }

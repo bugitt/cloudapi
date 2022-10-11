@@ -24,6 +24,7 @@ package cn.edu.buaa.scs.controller.models
  * @param contextFileLink 构建上下文压缩包的网络路径
  * @param dockerfilePath
  * @param dockerfileContent
+ * @param workspacePath 构建镜像时，workspace相对于上下文的相对路径。默认为.
  */
 data class PostProjectProjectIdImagesRequest(
     val name: kotlin.String,
@@ -38,6 +39,8 @@ data class PostProjectProjectIdImagesRequest(
     /* 构建上下文压缩包的网络路径 */
     val contextFileLink: kotlin.String? = null,
     val dockerfilePath: kotlin.String? = null,
-    val dockerfileContent: kotlin.String? = null
+    val dockerfileContent: kotlin.String? = null,
+    /* 构建镜像时，workspace相对于上下文的相对路径。默认为. */
+    val workspacePath: kotlin.String? = null
 ) 
 
