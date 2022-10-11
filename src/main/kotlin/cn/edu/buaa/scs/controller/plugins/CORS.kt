@@ -18,6 +18,7 @@ fun Application.configureCORS() {
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
         allowHeadersPrefixed("X-Request-")
+        allowHeadersPrefixed("X-Requested-")
         allowHeadersPrefixed("x-scs-")
     }
 }
