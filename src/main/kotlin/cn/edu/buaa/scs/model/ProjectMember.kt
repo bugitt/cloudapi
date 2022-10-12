@@ -23,7 +23,7 @@ interface ProjectMember : Entity<ProjectMember> {
 }
 
 object ProjectMembers : Table<ProjectMember>("project_member") {
-    val id = long("id").primaryKey()
+    val id = long("id").primaryKey().bindTo { it.id }
     val projectId = long("project_id").bindTo { it.projectId }
     val userId = varchar("user_id").bindTo { it.userId }
     val username = varchar("username").bindTo { it.username }
