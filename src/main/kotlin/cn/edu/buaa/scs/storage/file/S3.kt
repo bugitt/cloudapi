@@ -13,11 +13,13 @@ import java.io.InputStream
 lateinit var minioClient: MinioClient
 var minioPartSize: Long = 10485760L
 
-class S3(private val bucket: String) : FileManager {
+class S3(storePath: String) : FileManager(storePath) {
 
     companion object {
         private val dispatcher: CoroutineDispatcher = Dispatchers.IO
     }
+
+    override suspend fun name(): String = "S3"
 
     override suspend fun uploadFile(
         storeName: String,
@@ -25,10 +27,10 @@ class S3(private val bucket: String) : FileManager {
         contentType: String,
         size: Long
     ): FileResp = withContext(dispatcher) {
-        ensureBucketExists(bucket)
+        ensureBucketExists(storePath)
         PutObjectArgs
             .builder()
-            .bucket(bucket)
+            .bucket(storePath)
             .`object`(storeName)
             .apply {
                 if (size == -1L) this.stream(inputStream, -1, minioPartSize)
@@ -45,7 +47,7 @@ class S3(private val bucket: String) : FileManager {
     private suspend fun inspectFile(filename: String): StatObjectResponse = withContext(dispatcher) {
         StatObjectArgs
             .builder()
-            .bucket(bucket)
+            .bucket(storePath)
             .`object`(filename)
             .build()
             .let { minioClient.statObject(it) }
@@ -55,7 +57,7 @@ class S3(private val bucket: String) : FileManager {
     override suspend fun deleteFile(filename: String) = withContext(dispatcher) {
         RemoveObjectArgs
             .builder()
-            .bucket(bucket)
+            .bucket(storePath)
             .`object`(filename)
             .build()
             .let { minioClient.removeObject(it) }
@@ -64,7 +66,7 @@ class S3(private val bucket: String) : FileManager {
     override suspend fun getFile(filename: String): InputStream = withContext(dispatcher) {
         GetObjectArgs
             .builder()
-            .bucket(bucket)
+            .bucket(storePath)
             .`object`(filename)
             .build()
             .let { minioClient.getObject(it) }
@@ -73,7 +75,7 @@ class S3(private val bucket: String) : FileManager {
     override suspend fun downloadFile(filename: String, targetFileName: String) = withContext(dispatcher) {
         DownloadObjectArgs
             .builder()
-            .bucket(bucket)
+            .bucket(storePath)
             .`object`(filename)
             .filename(targetFileName)
             .build()

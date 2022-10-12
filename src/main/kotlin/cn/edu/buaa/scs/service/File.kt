@@ -142,7 +142,7 @@ class FileService(val call: ApplicationCall) : IService {
 
             val file = File {
                 this.name = name
-                this.storeType = StoreType.S3
+                this.storeType = service.manager().name()
                 this.storeName = storeName
                 this.storePath = service.storePath()
                 this.uploadTime = uploadResp.uploadTime

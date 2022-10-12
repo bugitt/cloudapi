@@ -391,6 +391,6 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
     override fun checkPermission(ownerId: String, involvedId: Int): Boolean = true
 
     override fun storePath(): String {
-        return "local-fs:$imageBuildContextLocalDir"
+        return imageBuildContextLocalDir
     }
 }

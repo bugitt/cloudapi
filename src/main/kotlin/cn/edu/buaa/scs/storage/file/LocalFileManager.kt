@@ -5,8 +5,10 @@ import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
 import java.io.InputStream
 
-class LocalFileManager(private val basePath: String) : FileManager {
-    val filePath: (storeName: String) -> String = { "$basePath/$it" }
+class LocalFileManager(basePath: String) : FileManager(basePath) {
+    val filePath: (storeName: String) -> String = { "$storePath/$it" }
+
+    override suspend fun name(): String = "LOCAL"
 
     override suspend fun uploadFile(
         storeName: String,
