@@ -1,5 +1,7 @@
 package cn.edu.buaa.scs.storage
 
+import cn.edu.buaa.scs.storage.file.S3
+import cn.edu.buaa.scs.storage.file.minioClient
 import cn.edu.buaa.scs.testEnv
 import io.ktor.server.testing.*
 import io.minio.BucketExistsArgs
