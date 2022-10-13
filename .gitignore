@@ -51,3 +51,5 @@ benchmark
 
 dev.application.conf
 prod.application.conf
+
+.fleet
