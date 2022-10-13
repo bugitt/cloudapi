@@ -20,6 +20,14 @@ internal class JsonTest {
         var b: B
     }
 
+    private data class C(
+        val a: Int,
+    ) {
+        @Suppress("unused")
+        val b: Int
+            get() = a + 1
+    }
+
     @Test
     fun interfaceSerializer() {
         val a = A {
@@ -33,5 +41,12 @@ internal class JsonTest {
         assert(a.name == a2.name)
         assert(a.b.value == a2.b.value)
         assert(a.b.name == a2.b.name)
+    }
+
+    @Test
+    fun dataClass() {
+        val c1 = C(1)
+        val strValue = jsonMapper.writeValueAsString(c1)
+        assert(strValue.contains("""{"a":1,"b":2}"""))
     }
 }
