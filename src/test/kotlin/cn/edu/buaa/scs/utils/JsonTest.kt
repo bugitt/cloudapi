@@ -49,4 +49,21 @@ internal class JsonTest {
         val strValue = jsonMapper.writeValueAsString(c1)
         assert(strValue.contains("""{"a":1,"b":2}"""))
     }
+
+    interface KtormInterface : Entity<KtormInterface> {
+        companion object : Entity.Factory<KtormInterface>()
+
+        var id: Int
+
+        @Suppress("unused")
+        val idNext: Int
+            get() = id + 1
+    }
+
+    @Test
+    fun ktormInterfaceTest() {
+        val strValue = jsonMapper.writeValueAsString(KtormInterface { id = 1 })
+        println(strValue)
+        assert(strValue != """{"id":1,"idNext":2}""")
+    }
 }
