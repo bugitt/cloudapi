@@ -31,4 +31,5 @@ fun Application.kubeModule() {
     logger("kube")().info { "connected to official kubernetes apiserver successfully: ${kubeClient.kubernetesVersion.gitVersion}" }
 
     ImageBuildRoutine.run()
+    ContainerServiceRoutine.run()
 }

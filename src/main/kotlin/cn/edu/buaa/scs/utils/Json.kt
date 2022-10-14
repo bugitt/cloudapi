@@ -9,3 +9,7 @@ val jsonMapper = jacksonObjectMapper().also {
 }
 
 inline fun <reified T> jsonReadValue(str: String): T = jsonMapper.readValue(str)
+
+fun convertToMap(obj: Any): Map<String, String> {
+    return jsonReadValue(jsonMapper.writeValueAsString(obj))
+}

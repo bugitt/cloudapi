@@ -33,6 +33,20 @@ interface Routine {
                 }
             }
         }
+
+        fun alwaysDoInPool(
+            name: String,
+            poolSize: Int = 100,
+            poolBufferSize: Int = 100000,
+            poolDispatcher: CoroutineDispatcher = Dispatchers.Default,
+            dispatcher: CoroutineDispatcher = Dispatchers.IO,
+            detention: Long = 0L,
+            preAction: suspend () -> Unit = {},
+            loopAction: suspend (pool: Task.TaskExecutorPool) -> Unit,
+        ): RoutineTask {
+            val pool = Task.TaskExecutorPool(name, poolSize, poolBufferSize, poolDispatcher)
+            return alwaysDo(name, dispatcher, detention, { pool.start(); preAction() }, { loopAction(pool) })
+        }
     }
 
     val routineList: List<RoutineTask>

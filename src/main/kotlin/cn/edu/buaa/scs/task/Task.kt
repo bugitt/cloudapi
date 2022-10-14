@@ -14,7 +14,7 @@ abstract class Task(protected val taskData: TaskData) {
     }
 
     enum class Type {
-        VirtualMachine, ImageBuild
+        VirtualMachine, ImageBuild, ContainerService
     }
 
     protected abstract suspend fun internalProcess(): Result<Unit>
@@ -31,6 +31,16 @@ abstract class Task(protected val taskData: TaskData) {
         }
     }
 
+    fun doing(): Result<Unit> =
+        try {
+            taskData.doing()
+            Result.success(Unit)
+        } catch (e: Throwable) {
+            taskData.fail(e.stackTraceToString())
+            Result.failure(e)
+        }
+
+
     class TaskExecutorPool(
         private val name: String,
         private val poolSize: Int = 100,
@@ -38,8 +48,11 @@ abstract class Task(protected val taskData: TaskData) {
         private val dispatcher: CoroutineDispatcher = Dispatchers.Default
     ) {
         private val channel = Channel<Task>(bufferSize)
+
         suspend fun send(task: Task) {
-            channel.send(task)
+            if (task.doing().isSuccess) {
+                channel.send(task)
+            }
         }
 
         fun start() {

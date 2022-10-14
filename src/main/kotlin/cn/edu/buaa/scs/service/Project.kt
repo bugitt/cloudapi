@@ -1,8 +1,10 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.bugit.GitRepo
+import cn.edu.buaa.scs.controller.models.ContainerServiceRequest
 import cn.edu.buaa.scs.controller.models.Image
 import cn.edu.buaa.scs.controller.models.ImageRepo
 import cn.edu.buaa.scs.controller.models.PostProjectProjectIdImagesRequest
@@ -377,6 +379,67 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                 val content = jsonMapper.readValue<ImageBuildTask.Content>(taskData.data)
                 Pair(content.imageMeta, taskData)
             }
+    }
+
+    fun createContainerService(projectID: Long, req: ContainerServiceRequest) {
+        val project = Project.id(projectID)
+        call.user().assertWrite(project)
+        // check name valid
+        if (!req.name.isValidProjectName()) {
+            throw BadRequestException("Service name invalid")
+        }
+        // check name conflict
+        if (mysql.containerServiceList.exists { it.projectId.eq(projectID).and(it.name.eq(req.name)) }) {
+            throw BadRequestException("Service name conflict")
+        }
+        mysql.useTransaction {
+            val containerService = ContainerService {
+                this.name = req.name
+                this.creator = call.userId()
+                this.projectId = projectID
+                this.serviceType = ContainerService.Type.valueOf(req.serviceType)
+            }
+            mysql.containerServiceList.add(containerService)
+            req.containers.forEach { containerReq ->
+                val container = Container {
+                    this.name = containerReq.name
+                    this.image = containerReq.image
+                    this.command = containerReq.command
+                    this.workingDir = containerReq.workingDir
+                    this.envs = containerReq.envs?.associate { it.key to it.value }
+                    this.ports = containerReq.ports?.map {
+                        ContainerService.Port(
+                            it.name,
+                            it.port,
+                            IPProtocol.valueOf(it.protocol)
+                        )
+                    }
+                    this.serviceId = containerService.id
+                }
+                mysql.containerList.add(container)
+            }
+            val taskData = TaskData.create(
+                Task.Type.ContainerService,
+                containerService.id.toString(),
+                containerService.id,
+            )
+            mysql.taskDataList.add(taskData)
+        }
+    }
+
+    fun rerunContainerService(projectID: Long, serviceID: Long) {
+        val project = Project.id(projectID)
+        call.user().assertWrite(project)
+        val containerService = ContainerService.id(serviceID)
+        if (containerService.projectId != projectID) {
+            throw NotFoundException("Service not found")
+        }
+        val taskData = TaskData.create(
+            Task.Type.ContainerService,
+            containerService.id.toString(),
+            containerService.id,
+        )
+        mysql.taskDataList.add(taskData)
     }
 
     override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)

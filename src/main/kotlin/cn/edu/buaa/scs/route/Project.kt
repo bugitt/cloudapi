@@ -121,6 +121,24 @@ fun Route.projectRoute() {
                 )
             }
         }
+
+        route("/containers") {
+            post {
+                call.project.createContainerService(call.getProjectID(), call.receive())
+                call.respond("OK")
+            }
+
+            route("/{containerServiceId}") {
+                fun ApplicationCall.getContainerServiceId(): Long {
+                    return parameters["containerServiceId"]?.toLong()
+                        ?: throw BadRequestException("invalid containerServiceId")
+                }
+                post("/rerun") {
+                    call.project.rerunContainerService(call.getProjectID(), call.getContainerServiceId())
+                    call.respond("OK")
+                }
+            }
+        }
     }
 }
 

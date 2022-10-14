@@ -1,11 +1,15 @@
 package cn.edu.buaa.scs.kube
 
+import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.project.IProjectManager
+import cn.edu.buaa.scs.utils.getConfigString
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 
 object BusinessKubeClient : IProjectManager {
     val client by lazy(businessKubeClientBuilder)
+
+    val nodeIp by lazy { application.getConfigString("kube.business.nodeIp") }
 
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> {
         return Result.success(userID)

@@ -1464,6 +1464,70 @@ paths:
       description: 获取当前项目中的所有可用镜像
       tags:
         - 镜像
+  '/project/{projectId}/containers':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    post:
+      summary: 创建容器服务
+      operationId: post-project-projectId-containers
+      responses:
+        '200':
+          description: OK
+      description: 异步创建。不返回任何内容。
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContainerServiceRequest'
+            examples: { }
+      tags:
+        - 容器服务
+    get:
+      summary: 获取项目中的容器服务列表
+      operationId: get-project-projectId-containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContainerServiceResponse'
+      security:
+        - Authorization: [ ]
+      description: 获取当前项目中的所有容器服务
+      tags:
+        - 容器服务
+  '/project/{projectId}/containers/{containerServiceId}/rerun':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: containerServiceId
+        in: path
+        required: true
+    post:
+      summary: 重新部署容器服务
+      operationId: post-project-projectId-containers-rerun
+      responses:
+        '200':
+          description: OK
+      description: 异步创建。不返回任何内容。
+      security:
+        - Authorization: [ ]
+      tags:
+        - 容器服务
   '/project/{projectId}/imageBuildTasks':
     parameters:
       - schema:
@@ -2807,6 +2871,180 @@ components:
         - name
         - artifactsCount
         - downloadCount
+    ContainerServicePort:
+      title: ContainerServicePort
+      x-stoplight:
+        id: 7w8mfpdinzajp
+      type: object
+      properties:
+        name:
+          type: string
+        port:
+          type: integer
+          format: int32
+        protocol:
+          type: string
+          description: 'TCP, UDP, SCTP'
+        exportIP:
+          type: string
+        exportPort:
+          type: integer
+          format: int32
+      required:
+        - name
+        - port
+        - protocol
+    ContainerRequest:
+      title: ContainerRequest
+      x-stoplight:
+        id: x9luc5bc0qyu9
+      type: object
+      properties:
+        name:
+          type: string
+        image:
+          type: string
+        command:
+          type: string
+        workingDir:
+          type: string
+        envs:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+            required:
+              - key
+              - value
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerServicePort'
+      required:
+        - name
+        - image
+    ContainerResponse:
+      title: ContainerResponse
+      x-stoplight:
+        id: x9luc5bc0qyu9
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        image:
+          type: string
+        command:
+          type: string
+        workingDir:
+          type: string
+        envs:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+            required:
+              - key
+              - value
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerServicePort'
+      required:
+        - id
+        - name
+        - image
+    ContainerServiceResponse:
+      title: ContainerServiceResponse
+      x-stoplight:
+        id: 9owvee8mbbtn2
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        creator:
+          type: string
+        projectId:
+          type: integer
+          format: int64
+        serviceType:
+          type: string
+          description: 'SERVICE, JOB'
+        status:
+          type: string
+          description: 'UNDO, DOING, RUNNING, SUCCESS, FAIL'
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerResponse'
+        createdTime:
+          type: integer
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+      required:
+        - id
+        - name
+        - creator
+        - projectId
+        - serviceType
+        - status
+        - containers
+        - createdTime
+        - endTime
+    ContainerServiceRequest:
+      title: ContainerServiceRequest
+      x-stoplight:
+        id: 9owvee8mbbtn2
+      type: object
+      x-examples:
+        example-1:
+          name: string
+          creator: string
+          projectId: -9223372036854776000
+          serviceType: string
+          containers:
+            - name: string
+              image: string
+              command: string
+              workingDir: string
+              envs:
+                - key: string
+                  value: string
+              ports:
+                - name: string
+                  port: 0
+                  protocol: string
+                  exportIP: string
+                  exportPort: 0
+      properties:
+        name:
+          type: string
+        serviceType:
+          type: string
+          description: 'SERVICE, JOB'
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerRequest'
+      required:
+        - name
+        - serviceType
+        - containers
   securitySchemes:
     Authorization:
       type: apiKey

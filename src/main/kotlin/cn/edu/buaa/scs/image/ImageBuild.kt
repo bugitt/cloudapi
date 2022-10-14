@@ -1,9 +1,7 @@
 package cn.edu.buaa.scs.image
 
 import cn.edu.buaa.scs.application
-import cn.edu.buaa.scs.kube.createConfigMapSync
-import cn.edu.buaa.scs.kube.createJobSync
-import cn.edu.buaa.scs.kube.kubeClient
+import cn.edu.buaa.scs.kube.*
 import cn.edu.buaa.scs.model.ImageMeta
 import cn.edu.buaa.scs.model.TaskData
 import cn.edu.buaa.scs.model.taskDataList
@@ -37,8 +35,10 @@ class ImageBuildTask(taskData: TaskData) : Task(taskData) {
         suspend fun createDockerfileConfigmap(dockerfile: String): Result<String> {
             val name = "dockerfile-${UUID.randomUUID()}"
             return kubeClient.createConfigMapSync(
-                name,
-                buildNamespace,
+                KubeResourceCreationOptionBaseMeta(
+                    name,
+                    buildNamespace,
+                ),
                 mapOf(dockerfileConfigmapDataKey to dockerfile)
             ).map { name }
         }
@@ -199,27 +199,28 @@ class ImageBuildTask(taskData: TaskData) : Task(taskData) {
             }
         }
 
-        kubeClient.createJobSync("image-build-task-${taskData.id}", buildNamespace, podTemplate).getOrThrow()
+        kubeClient.createJobSync(
+            PodControllerCreationOption(
+                "image-build-task-${taskData.id}",
+                buildNamespace,
+                podTemplate
+            )
+        ).getOrThrow()
     }
 }
 
 object ImageBuildRoutine : Routine {
 
-    private val buildImage = run {
-        val buildImageExecutorPool = Task.TaskExecutorPool("build-image")
-        Routine.alwaysDo(
-            "build-image",
-            preAction = { buildImageExecutorPool.start() }
-        ) {
+    private val buildImage =
+        Routine.alwaysDoInPool("build-image") { pool ->
             mysql.taskDataList
                 .filter { it.type.eq(Task.Type.ImageBuild) and it.status.eq(Task.Status.UNDO) }
                 .toList()
                 .map { ImageBuildTask(it) }
                 .forEach {
-                    buildImageExecutorPool.send(it)
+                    pool.send(it)
                 }
         }
-    }
 
     override val routineList: List<RoutineTask> = listOf(
         buildImage
