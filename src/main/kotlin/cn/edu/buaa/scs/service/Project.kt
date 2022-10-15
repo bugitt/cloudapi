@@ -374,7 +374,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             .map { it.id }
         if (indexIdList.isEmpty()) return listOf()
         return mysql.taskDataList
-            .filter { it.indexRef inList indexIdList }
+            .filter { it.type.eq(Task.Type.ImageBuild).and(it.indexRef inList indexIdList) }
             .toList()
             .map { taskData ->
                 val content = jsonMapper.readValue<ImageBuildTask.Content>(taskData.data)
