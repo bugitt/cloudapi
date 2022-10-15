@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.task.Task
+import cn.edu.buaa.scs.utils.jsonMapper
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
@@ -21,6 +22,9 @@ interface TaskData : Entity<TaskData> {
             this.endTime = 0
             this.indexRef = indexRef
         }
+
+        fun create(type: Task.Type, data: Any, indexRef: Long = 0L) =
+            create(type, jsonMapper.writeValueAsString(data), indexRef)
     }
 
     var id: Long

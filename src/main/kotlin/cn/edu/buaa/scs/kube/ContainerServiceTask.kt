@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.task.Routine
 import cn.edu.buaa.scs.task.RoutineTask
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.convertToMap
+import cn.edu.buaa.scs.utils.jsonReadValue
 import com.fkorotkov.kubernetes.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
@@ -45,8 +46,13 @@ class ContainerServiceTask(taskData: TaskData) : Task(taskData) {
         val client by lazy { BusinessKubeClient.client }
     }
 
+    data class Content(
+        val rerun: Boolean = false,
+    )
+
     override suspend fun internalProcess(): Result<Unit> = runCatching {
-        val containerService = ContainerService.id(taskData.data.toLong())
+        val containerService = ContainerService.id(taskData.indexRef)
+        val content = jsonReadValue<Content>(taskData.data)
         val project = Project.id(containerService.projectId)
         val containerList = containerService.containers
         val selectorLabels = mapOf("app" to containerService.name)
@@ -66,6 +72,7 @@ class ContainerServiceTask(taskData: TaskData) : Task(taskData) {
             podTemplateSpec = podTemplateSpec,
             labels = labels,
             selectorLabels = selectorLabels,
+            rerun = content.rerun,
         )
         when (containerService.serviceType) {
             ContainerService.Type.SERVICE -> {

@@ -15,13 +15,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-open class KubeResourceCreationOptionBaseMeta(
+
+internal const val defaultTimeout = 1000 * 60 * 60L
+
+open class NameWithNamespace(
     val name: String,
-    val namespace: String,
+    val namespace: String
+)
+
+open class KubeResourceCreationOptionBaseMeta(
+    name: String,
+    namespace: String,
     private val labels: Map<String, String> = mapOf(),
     private val annotations: Map<String, String> = mapOf(),
-    val timeout: Long = 1000 * 60 * 60,
-) {
+    val timeout: Long = defaultTimeout,
+) : NameWithNamespace(name, namespace) {
     fun getObjectMeta(): ObjectMeta {
         val opt = this
         return newObjectMeta {
@@ -39,7 +47,7 @@ open class KubeResourceCreationOptionBaseMetaWithSelector(
     labels: Map<String, String> = mapOf(),
     annotations: Map<String, String> = mapOf(),
     val selectorLabels: Map<String, String> = mapOf(),
-    timeout: Long = 1000 * 60 * 60,
+    timeout: Long = defaultTimeout,
 ) : KubeResourceCreationOptionBaseMeta(
     name,
     namespace,
@@ -55,7 +63,8 @@ class PodControllerCreationOption(
     labels: Map<String, String> = mapOf(),
     annotations: Map<String, String> = mapOf(),
     selectorLabels: Map<String, String> = mapOf(),
-    timeout: Long = 1000 * 60 * 60,
+    timeout: Long = defaultTimeout,
+    val rerun: Boolean = false,
 ) : KubeResourceCreationOptionBaseMetaWithSelector(
     name,
     namespace,
@@ -67,14 +76,18 @@ class PodControllerCreationOption(
 
 suspend fun KubernetesClient.createJobSync(
     opt: PodControllerCreationOption,
+    restartPolicy: String = "Never",
     backoffLimit: Int = 4,
 ): Result<Unit> = runCatching {
     val job = newJob {
         metadata = opt.getObjectMeta()
         spec = newJobSpec {
-            this.template = opt.podTemplateSpec
+            this.template = opt.podTemplateSpec.also { it.spec.restartPolicy = restartPolicy }
             this.backoffLimit = backoffLimit
         }
+    }
+    if (opt.rerun) {
+        this.deleteJob(opt).getOrThrow()
     }
     this.batch().v1().jobs().inNamespace(opt.namespace).resource(job).createOrReplace()
     waitForDone(opt.timeout) {
@@ -89,6 +102,11 @@ suspend fun KubernetesClient.createDeploymentSync(
 ): Result<Unit> = runCatching {
     val client = this
     withContext(Dispatchers.IO) {
+        if (opt.rerun) {
+            if (client.restartDeployment(opt).getOrThrow()) {
+                return@withContext
+            }
+        }
         val deployment = newDeployment {
             metadata = opt.getObjectMeta()
             spec {
@@ -102,6 +120,41 @@ suspend fun KubernetesClient.createDeploymentSync(
         client.apps().deployments().inNamespace(opt.namespace).resource(deployment).createOrReplace()
         client.apps().deployments().inNamespace(opt.namespace).withName(opt.name)
             .waitUntilReady(opt.timeout, TimeUnit.MILLISECONDS)
+    }
+}
+
+suspend fun KubernetesClient.restartDeployment(
+    nameWithNamespace: NameWithNamespace,
+    timeout: Long = (nameWithNamespace as? PodControllerCreationOption)?.timeout ?: defaultTimeout,
+): Result<Boolean> = runCatching {
+    val client = this
+    withContext(Dispatchers.IO) {
+        val deploymentOperation = client.apps().deployments()
+            .inNamespace(nameWithNamespace.namespace)
+            .withName(nameWithNamespace.name)
+        if (deploymentOperation.get() == null) return@withContext false
+        deploymentOperation.rolling().restart()
+        client.apps().deployments().inNamespace(nameWithNamespace.namespace).withName(nameWithNamespace.name)
+            .waitUntilReady(timeout, TimeUnit.MILLISECONDS)
+        true
+    }
+}
+
+suspend fun KubernetesClient.deleteJob(
+    nameWithNamespace: NameWithNamespace,
+    timeout: Long = (nameWithNamespace as? PodControllerCreationOption)?.timeout ?: defaultTimeout,
+): Result<Unit> = runCatching {
+    val client = this
+    withContext(Dispatchers.IO) {
+        val jobOperation = client.batch().v1().jobs()
+            .inNamespace(nameWithNamespace.namespace)
+            .withName(nameWithNamespace.name)
+        if (jobOperation.get() == null) return@withContext
+        jobOperation.delete()
+        waitForDone(timeout) {
+            client.batch().v1().jobs().inNamespace(nameWithNamespace.namespace).withName(nameWithNamespace.name)
+                .get() == null
+        }.getOrThrow()
     }
 }
 

@@ -12,6 +12,7 @@ import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
+import cn.edu.buaa.scs.kube.ContainerServiceTask
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
@@ -420,7 +421,9 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             }
             val taskData = TaskData.create(
                 Task.Type.ContainerService,
-                containerService.id.toString(),
+                ContainerServiceTask.Content(
+                    rerun = false,
+                ),
                 containerService.id,
             )
             mysql.taskDataList.add(taskData)
@@ -434,12 +437,16 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         if (containerService.projectId != projectID) {
             throw NotFoundException("Service not found")
         }
-        val taskData = TaskData.create(
-            Task.Type.ContainerService,
-            containerService.id.toString(),
-            containerService.id,
-        )
-        mysql.taskDataList.add(taskData)
+        mysql.useTransaction {
+            val taskData = TaskData.create(
+                Task.Type.ContainerService,
+                ContainerServiceTask.Content(rerun = true),
+                containerService.id,
+            )
+            mysql.taskDataList.add(taskData)
+            containerService.createTime = System.currentTimeMillis()
+            mysql.containerServiceList.update(containerService)
+        }
     }
 
     override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)
