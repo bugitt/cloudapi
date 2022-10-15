@@ -399,6 +399,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                 this.creator = call.userId()
                 this.projectId = projectID
                 this.serviceType = ContainerService.Type.valueOf(req.serviceType)
+                this.createTime = System.currentTimeMillis()
             }
             mysql.containerServiceList.add(containerService)
             req.containers.forEach { containerReq ->
