@@ -32,6 +32,14 @@ interface ContainerService : Entity<ContainerService>, IService {
         JOB
     }
 
+    enum class Status {
+        UNDO,
+        NOT_READY,
+        RUNNING,
+        SUCCESS,
+        FAIL,
+    }
+
     data class Port(
         val name: String,
         val port: Int,
@@ -48,6 +56,7 @@ interface ContainerService : Entity<ContainerService>, IService {
     var creator: String
     var projectId: Long
     var serviceType: Type
+    var createTime: Long
     val containers: List<Container>
         get() = mysql.containerList.filter { it.serviceId eq this.id }.toList()
 }
@@ -73,6 +82,7 @@ object ContainerServiceList : Table<ContainerService>("container_service") {
     val serviceType =
         varchar("service_type").transform({ ContainerService.Type.valueOf(it) }, { it.toString() })
             .bindTo { it.serviceType }
+    val createTime = long("create_time").bindTo { it.createTime }
 }
 
 object ContainerList : Table<Container>("container") {

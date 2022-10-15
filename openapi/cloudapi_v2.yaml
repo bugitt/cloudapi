@@ -2985,15 +2985,12 @@ components:
           description: 'SERVICE, JOB'
         status:
           type: string
-          description: 'UNDO, DOING, RUNNING, SUCCESS, FAIL'
+          description: 'UNDO, NOT_READY, RUNNING, SUCCESS, FAIL'
         containers:
           type: array
           items:
             $ref: '#/components/schemas/ContainerResponse'
         createdTime:
-          type: integer
-          format: int64
-        endTime:
           type: integer
           format: int64
       required:
@@ -3005,7 +3002,6 @@ components:
         - status
         - containers
         - createdTime
-        - endTime
     ContainerServiceRequest:
       title: ContainerServiceRequest
       x-stoplight:

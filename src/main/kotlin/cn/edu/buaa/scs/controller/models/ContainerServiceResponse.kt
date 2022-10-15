@@ -18,10 +18,9 @@ package cn.edu.buaa.scs.controller.models
  * @param creator
  * @param projectId
  * @param serviceType SERVICE, JOB
- * @param status UNDO, DOING, RUNNING, SUCCESS, FAIL
+ * @param status UNDO, NOT_READY, RUNNING, SUCCESS, FAIL
  * @param containers
  * @param createdTime
- * @param endTime
  */
 data class ContainerServiceResponse(
     val id: kotlin.Long,
@@ -30,10 +29,9 @@ data class ContainerServiceResponse(
     val projectId: kotlin.Long,
     /* SERVICE, JOB */
     val serviceType: kotlin.String,
-    /* UNDO, DOING, RUNNING, SUCCESS, FAIL */
+    /* UNDO, NOT_READY, RUNNING, SUCCESS, FAIL */
     val status: kotlin.String,
     val containers: kotlin.collections.List<ContainerResponse>,
-    val createdTime: kotlin.Long,
-    val endTime: kotlin.Long
+    val createdTime: kotlin.Long
 ) 
 

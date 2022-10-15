@@ -4,16 +4,16 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.bugit.GitRepo
-import cn.edu.buaa.scs.controller.models.ContainerServiceRequest
-import cn.edu.buaa.scs.controller.models.Image
-import cn.edu.buaa.scs.controller.models.ImageRepo
-import cn.edu.buaa.scs.controller.models.PostProjectProjectIdImagesRequest
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.kube.ContainerServiceTask
+import cn.edu.buaa.scs.kube.getStatus
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.model.Project
+import cn.edu.buaa.scs.model.ProjectMember
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
@@ -447,6 +447,48 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             containerService.createTime = System.currentTimeMillis()
             mysql.containerServiceList.update(containerService)
         }
+    }
+
+    fun getContainerServiceList(projectID: Long): List<ContainerServiceResponse> {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        return mysql.containerServiceList
+            .filter { it.projectId eq projectID }
+            .toList()
+            .map { containerService ->
+                val containers = mysql.containerList
+                    .filter { it.serviceId eq containerService.id }
+                    .toList()
+                    .map { container ->
+                        ContainerResponse(
+                            id = container.id,
+                            name = container.name,
+                            image = container.image,
+                            command = container.command,
+                            workingDir = container.workingDir,
+                            envs = container.envs?.map { (key, value) -> ContainerRequestEnvsInner(key, value) },
+                            ports = container.ports?.map {
+                                ContainerServicePort(
+                                    name = it.name,
+                                    port = it.port,
+                                    protocol = it.protocol.name,
+                                    exportIP = it.exportIP,
+                                    exportPort = it.exportPort,
+                                )
+                            },
+                        )
+                    }
+                ContainerServiceResponse(
+                    id = containerService.id,
+                    name = containerService.name,
+                    serviceType = containerService.serviceType.name,
+                    createdTime = containerService.createTime,
+                    containers = containers,
+                    creator = containerService.creator,
+                    projectId = containerService.projectId,
+                    status = containerService.getStatus().name,
+                )
+            }
     }
 
     override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)

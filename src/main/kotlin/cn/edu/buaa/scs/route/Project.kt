@@ -128,6 +128,12 @@ fun Route.projectRoute() {
                 call.respond("OK")
             }
 
+            get {
+                call.respond(
+                    call.project.getContainerServiceList(call.getProjectID())
+                )
+            }
+
             route("/{containerServiceId}") {
                 fun ApplicationCall.getContainerServiceId(): Long {
                     return parameters["containerServiceId"]?.toLong()
