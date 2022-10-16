@@ -497,8 +497,8 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         call.user().assertRead(project)
         return GitClient.getRepoListOfProject(project.name).getOrThrow().map { gitRepo ->
             Repository(
-                name = gitRepo.name,
-                url = "${GitClient.gitRepoUrlPrefix}/${gitRepo.name}",
+                name = "${project.name}/${gitRepo.name}",
+                url = "${GitClient.gitRepoUrlPrefix}/${project.name}/${gitRepo.name}",
                 username = call.userId(),
                 token = call.user().paasToken,
             )
