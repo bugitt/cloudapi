@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.utils.user
+import cn.edu.buaa.scs.utils.userId
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -130,7 +131,7 @@ fun Route.projectRoute() {
 
             get {
                 call.respond(
-                    call.project.getContainerServiceList(call.getProjectID())
+                    call.project.getContainerServiceListByProject(call.getProjectID())
                 )
             }
 
@@ -145,6 +146,14 @@ fun Route.projectRoute() {
                 }
             }
         }
+
+        route("/repos") {
+            get {
+                call.respond(
+                    call.project.getReposByProject(call.getProjectID())
+                )
+            }
+        }
     }
 }
 
@@ -154,7 +163,7 @@ suspend fun ApplicationCall.convertProjectResponse(project: Project): ProjectRes
         name = project.name,
         token = this.user().paasToken,
         owner = project.owner,
-        repositories = this.project.getAllReposForProject(project.name).map { convertRepositoryResponse(it) },
+        repositories = this.project.getAllReposForProject(project.name).map { this.convertRepositoryResponse(it) },
         members = this.project.getProjectMembers(project.id).map { convertProjectMemberResponse(it) },
         displayName = project.displayName,
         description = project.description,
@@ -181,10 +190,12 @@ fun convertProjectMemberResponse(projectMember: ProjectMember) =
         role = projectMember.role.name,
     )
 
-fun convertRepositoryResponse(repo: GitRepo) =
+fun ApplicationCall.convertRepositoryResponse(repo: GitRepo) =
     Repository(
         name = repo.name,
         url = repo.htmlURL,
+        username = this.userId(),
+        token = this.user().paasToken,
     )
 
 fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = ImageBuildTask(

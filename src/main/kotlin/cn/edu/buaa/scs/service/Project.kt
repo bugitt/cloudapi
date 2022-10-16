@@ -450,7 +450,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         }
     }
 
-    fun getContainerServiceList(projectID: Long): List<ContainerServiceResponse> {
+    fun getContainerServiceListByProject(projectID: Long): List<ContainerServiceResponse> {
         val project = Project.id(projectID)
         call.user().assertRead(project)
         return mysql.containerServiceList
@@ -490,6 +490,19 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                     status = containerService.getStatus().name,
                 )
             }
+    }
+
+    suspend fun getReposByProject(projectID: Long): List<Repository> {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        return GitClient.getRepoListOfProject(project.name).getOrThrow().map { gitRepo ->
+            Repository(
+                name = gitRepo.name,
+                url = "${GitClient.gitRepoUrlPrefix}/${gitRepo.name}",
+                username = call.userId(),
+                token = call.user().paasToken,
+            )
+        }
     }
 
     override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)

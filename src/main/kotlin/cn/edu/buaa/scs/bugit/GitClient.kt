@@ -17,6 +17,8 @@ import org.ktorm.jackson.KtormModule
 
 object GitClient : IProjectManager {
 
+    const val gitRepoUrlPrefix = "https://scs.buaa.edu.cn/git/"
+
     internal val client by lazy {
         HttpClient(CIO) {
             val adminToken = application.getConfigString("bugit.adminToken")

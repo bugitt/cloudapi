@@ -1552,6 +1552,30 @@ paths:
       description: 获取当前项目下的所有镜像构建任务
       security:
         - Authorization: [ ]
+  '/project/{projectId}/repos':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    get:
+      summary: 获取项目下的代码仓库列表
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+      operationId: get-project-projectId-repos
+      description: 获取代码仓库列表
+      security:
+        - Authorization: [ ]
+      tags:
+        - 代码仓库
   '/project/{projectId}/imageRepos':
     parameters:
       - schema:
@@ -2691,9 +2715,15 @@ components:
         url:
           type: string
           description: 代码仓库的URL
+        username:
+          type: string
+        token:
+          type: string
       required:
         - name
         - url
+        - username
+        - token
     Project:
       title: Project
       x-stoplight:

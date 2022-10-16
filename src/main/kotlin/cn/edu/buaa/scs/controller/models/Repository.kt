@@ -16,10 +16,14 @@ package cn.edu.buaa.scs.controller.models
  *
  * @param name
  * @param url 代码仓库的URL
+ * @param username
+ * @param token
  */
 data class Repository(
     val name: kotlin.String,
     /* 代码仓库的URL */
-    val url: kotlin.String
+    val url: kotlin.String,
+    val username: kotlin.String,
+    val token: kotlin.String
 ) 
 
