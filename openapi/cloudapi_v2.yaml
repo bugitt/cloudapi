@@ -497,7 +497,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ExperimentResponse'
-      operationId: get-expriments
+      operationId: get-experiments
       description: 学生获取属于自己的实验信息列表
       security:
         - Authorization: [ ]
