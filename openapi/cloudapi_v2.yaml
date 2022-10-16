@@ -1221,7 +1221,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SimpleProject'
+                  $ref: '#/components/schemas/Project'
       operationId: get-projects
       tags:
         - 项目
@@ -2758,32 +2758,6 @@ components:
         - owner
         - token
         - createdTime
-    SimpleProject:
-      title: SimpleProject
-      x-stoplight:
-        id: 26t0e0o4vj3h3
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        owner:
-          type: string
-        token:
-          type: string
-          description: 当前该用户访问该Project中的资源，例如clone代码仓库、push和pull镜像等，所需要使用的token，即密码
-        displayName:
-          type: string
-          description: 区别于name之外的一个格式随便的，便于记忆和展示的名字
-        description:
-          type: string
-      required:
-        - id
-        - name
-        - owner
-        - token
     ProjectMember:
       title: ProjectMember
       x-stoplight:

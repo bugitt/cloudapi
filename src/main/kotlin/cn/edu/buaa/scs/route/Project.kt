@@ -25,7 +25,7 @@ fun Route.projectRoute() {
             val expID = call.parameters["expId"]?.toInt()
             call.respond(
                 call.project.getProjects(expID).map {
-                    call.convertSimpleProjectResponse(it)
+                    call.convertProjectResponse(it)
                 }
             )
         }
@@ -165,17 +165,6 @@ fun ApplicationCall.convertProjectResponse(project: Project): ProjectResponse {
         description = project.description,
         expId = project.expID,
         createdTime = project.createTime,
-    )
-}
-
-fun ApplicationCall.convertSimpleProjectResponse(project: Project): SimpleProject {
-    return SimpleProject(
-        id = project.id,
-        name = project.name,
-        token = this.user().paasToken,
-        owner = project.owner,
-        displayName = project.displayName,
-        description = project.description,
     )
 }
 
