@@ -1287,6 +1287,8 @@ paths:
               required:
                 - name
         description: ''
+      security:
+        - Authorization: [ ]
   '/project/{projectId}':
     parameters:
       - schema:
