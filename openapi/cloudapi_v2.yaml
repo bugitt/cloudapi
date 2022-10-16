@@ -2741,26 +2741,23 @@ components:
         token:
           type: string
           description: 当前该用户访问该Project中的资源，例如clone代码仓库、push和pull镜像等，所需要使用的token，即密码
-        repositories:
-          type: array
-          items:
-            $ref: '#/components/schemas/Repository'
-        members:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProjectMember'
         displayName:
           type: string
           description: 区别于name之外的一个格式随便的，便于记忆和展示的名字
         description:
           type: string
+        expId:
+          type: integer
+          format: int32
+        createdTime:
+          type: integer
+          format: int64
       required:
         - id
         - name
         - owner
         - token
-        - repositories
-        - members
+        - createdTime
     SimpleProject:
       title: SimpleProject
       x-stoplight:

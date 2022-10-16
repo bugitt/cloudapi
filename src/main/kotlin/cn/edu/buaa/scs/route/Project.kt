@@ -1,13 +1,11 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.bugit.GitRepo
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -157,16 +155,16 @@ fun Route.projectRoute() {
     }
 }
 
-suspend fun ApplicationCall.convertProjectResponse(project: Project): ProjectResponse {
+fun ApplicationCall.convertProjectResponse(project: Project): ProjectResponse {
     return ProjectResponse(
         id = project.id,
         name = project.name,
         token = this.user().paasToken,
         owner = project.owner,
-        repositories = this.project.getAllReposForProject(project.name).map { this.convertRepositoryResponse(it) },
-        members = this.project.getProjectMembers(project.id).map { convertProjectMemberResponse(it) },
         displayName = project.displayName,
         description = project.description,
+        expId = project.expID,
+        createdTime = project.createTime,
     )
 }
 
@@ -190,13 +188,6 @@ fun convertProjectMemberResponse(projectMember: ProjectMember) =
         role = projectMember.role.name,
     )
 
-fun ApplicationCall.convertRepositoryResponse(repo: GitRepo) =
-    Repository(
-        name = repo.name,
-        url = repo.htmlURL,
-        username = this.userId(),
-        token = this.user().paasToken,
-    )
 
 fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = ImageBuildTask(
     hostPrefix = ImageMeta.hostPrefix,

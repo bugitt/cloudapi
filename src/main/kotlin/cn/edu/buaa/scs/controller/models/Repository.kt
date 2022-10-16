@@ -14,12 +14,13 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  *
- * @param name
+ * @param name example: owner_name/repo_name
  * @param url 代码仓库的URL
  * @param username
  * @param token
  */
 data class Repository(
+    /* example: owner_name/repo_name */
     val name: kotlin.String,
     /* 代码仓库的URL */
     val url: kotlin.String,
