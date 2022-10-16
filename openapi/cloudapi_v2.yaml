@@ -483,7 +483,7 @@ paths:
       description: 获取课程中所有实验的统计信息，本课程的助教或教师调用
       security:
         - Authorization: [ ]
-  /expriments:
+  /experiments:
     get:
       summary: 获取实验信息列表
       tags:
@@ -518,6 +518,7 @@ paths:
           in: query
           name: courseId
           description: 当为空或不合法时，获取所有符合上述条件的课程的实验列表
+    parameters: [ ]
   /experiment:
     post:
       summary: 创建实验/作业
