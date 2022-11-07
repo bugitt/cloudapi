@@ -12,3 +12,9 @@ fun RedisClient.checkToken(token: String): String? =
         it.async().set(token, value, SetArgs.Builder.ex(60 * 60 * 24))
         value?.trim('"')?.lowercase()
     }
+
+fun RedisClient.setToken(token: String, userId: String) =
+    this.connect().use {
+        it.async().set(token, "'$userId'", SetArgs.Builder.ex(60 * 60 * 24))
+        Unit
+    }

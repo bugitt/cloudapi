@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.edu.buaa.scs.utils
 
 import cn.edu.buaa.scs.model.User

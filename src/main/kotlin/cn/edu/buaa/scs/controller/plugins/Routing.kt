@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.controller.plugins
 
-import cn.edu.buaa.scs.auth.authRoute
 import cn.edu.buaa.scs.auth.fetchToken
 import cn.edu.buaa.scs.route.*
 import cn.edu.buaa.scs.utils.test.test

@@ -1603,6 +1603,104 @@ paths:
       description: 获取当前项目下的所有Harbor镜像仓库
       security:
         - Authorization: [ ]
+  /captcha:
+    get:
+      summary: 获取验证码
+      tags:
+        - 鉴权
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  image:
+                    type: string
+                    description: base64编码后的png图片
+                required:
+                  - token
+                  - image
+      operationId: get-captcha
+      description: 获取验证码
+  /login:
+    post:
+      summary: 浏览器登录
+      operationId: post-login
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+      tags:
+        - 鉴权
+      description: 浏览器登录
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                password:
+                  type: string
+                captchaToken:
+                  type: string
+                captchaText:
+                  type: string
+              required:
+                - userId
+                - password
+                - captchaToken
+                - captchaText
+    parameters: [ ]
+  /whoami:
+    get:
+      summary: whoami
+      tags:
+        - 鉴权
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+      operationId: get-whoami
+      description: whoami，通过当前token，得知当前用户的基本信息
+      security:
+        - Authorization: [ ]
+  /buaaSSOLogin:
+    get:
+      summary: Your GET endpoint
+      tags: [ ]
+      responses: { }
+      operationId: get-buaaSSOLogin
+    post:
+      summary: 统一认证登录
+      operationId: post-buaaSSOLogin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+      tags:
+        - 鉴权
+      description: 统一认证登录
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: ssoToken
+          required: true
 components:
   schemas:
     AssignmentResponse:
@@ -3046,6 +3144,31 @@ components:
         - name
         - serviceType
         - containers
+    LoginUserResponse:
+      title: LoginUserResponse
+      x-stoplight:
+        id: zj0j34qb6ra6r
+      type: object
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+        isAssistant:
+          type: boolean
+        token:
+          type: string
+        paasToken:
+          type: string
+      required:
+        - userId
+        - username
+        - role
+        - isAssistant
+        - token
+        - paasToken
   securitySchemes:
     Authorization:
       type: apiKey

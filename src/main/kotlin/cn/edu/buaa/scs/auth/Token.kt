@@ -5,9 +5,11 @@ import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.model.UserRole
-import cn.edu.buaa.scs.model.Users
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.*
+import cn.edu.buaa.scs.utils.encrypt.RSAEncrypt
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 
@@ -20,10 +22,28 @@ val adminUser = User {
     role = UserRole.SYS
 }
 
+data class TokenInfo(
+    @JsonProperty("user_id") val userId: String,
+    @JsonProperty("created_time") val createdTime: Long,
+)
+
+// 如有需要，可以继续添加其他不需要鉴权的例外情况
+val escapeApiMap = mapOf(
+    "/api/v2/captcha" to listOf(HttpMethod.Get),
+    "/api/v2/login" to listOf(HttpMethod.Post),
+    "/api/v2/buaaSSOLogin" to listOf(HttpMethod.Post),
+    "/test" to listOf(HttpMethod.Get),
+)
+
+fun generateRSAToken(userId: String): String {
+    val tokenInfo = TokenInfo(userId, System.currentTimeMillis())
+    return RSAEncrypt.encrypt(jsonMapper.writeValueAsString(tokenInfo))
+}
+
 /**
  * 尝试各种方法fetch token
  * 并给出身份识别
- * 目前仅兼容旧平台的用法
+ * 兼容旧平台
  */
 fun fetchToken(call: ApplicationCall) {
     val token: String = when {
@@ -47,12 +67,10 @@ fun fetchToken(call: ApplicationCall) {
         call.attributes.put(USER_ID_KEY, user.id)
     }
 
-    // just for test
-    if (call.request.path() == "/test") {
-        return
-    }
-    // 如有需要，可以继续添加其他不需要token例外情况
     if (token.isEmpty()) {
+        if (escapeApiMap[call.request.path()]?.contains(call.request.httpMethod) == true) {
+            return
+        }
         throw AuthenticationException()
     }
 
@@ -63,9 +81,17 @@ fun fetchToken(call: ApplicationCall) {
         return
     }
 
-    // common token
-    val user = authRedis.checkToken(token)?.let { Users.getByID(it) }
-        ?: throw throw AuthorizationException("incorrect token")
+    val userId =
+        // rsa token
+        RSAEncrypt.decrypt(token).getOrNull()?.let { tokenInfo ->
+            jsonReadValue<TokenInfo>(tokenInfo).userId
+        } ?:
+        // redis uuid token
+        authRedis.checkToken(token) ?:
+        // error
+        throw throw AuthorizationException("incorrect token")
+
+    val user = User.id(userId)
     setUser(user)
 }
 

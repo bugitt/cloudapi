@@ -36,7 +36,6 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-jackson:$ktor_version")
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
-
     implementation("io.ktor:ktor-client-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-cio-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
@@ -47,6 +46,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutine_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutine_version")
 
+    // json
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4")
 
@@ -76,6 +76,7 @@ dependencies {
     // common utils
     implementation("com.google.guava:guava:31.0.1-jre")
     implementation("io.netty:netty-all:4.1.78.Final")
+    implementation("io.github.yufeixuan:easy-captcha:1.5.2")
 
     // kubernetes
     val kubernetes_client_version = "6.0.0"
