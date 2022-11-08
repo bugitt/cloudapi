@@ -49,7 +49,7 @@ class VmService(val call: ApplicationCall) : IService {
     }
 
     fun getVms(studentId: String?, teacherId: String?, experimentId: Int?): List<VirtualMachine> {
-        val finalStudentId =
+        var finalStudentId =
             if (studentId != null)
                 if (call.user().hasAccessToStudent(studentId)) studentId
                 else throw AuthorizationException("has no access to student($studentId)")
@@ -72,6 +72,11 @@ class VmService(val call: ApplicationCall) : IService {
             } else {
                 null
             }
+
+        // 处理一下是助教的特殊情况
+        if (experimentId != null && call.user().isCourseAssistant(Experiment.id(experimentId).course)) {
+            finalStudentId = null
+        }
 
         var condition: ColumnDeclaring<Boolean> = VirtualMachines.uuid.isNotNull()
         finalStudentId?.let { condition = condition.and(VirtualMachines.studentId.eq(it)) }
