@@ -38,12 +38,26 @@ object RSAEncrypt {
     fun encrypt(message: String): String {
         val cipher = Cipher.getInstance("RSA")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
-        return Base64.getEncoder().encodeToString(cipher.doFinal(message.toByteArray()))
+        return encode(Base64.getEncoder().encodeToString(cipher.doFinal(message.toByteArray())))
     }
 
     fun decrypt(secret: String): Result<String> = runCatching {
         val cipher = Cipher.getInstance("RSA")
         cipher.init(Cipher.DECRYPT_MODE, privateKey)
-        return Result.success(String(cipher.doFinal(Base64.getDecoder().decode(secret)), Charsets.UTF_8))
+        return Result.success(String(cipher.doFinal(Base64.getDecoder().decode(decode(secret))), Charsets.UTF_8))
+    }
+
+    private const val partition = "l"
+
+    private fun encode(src: String): String {
+        return src.toCharArray().joinToString(partition) {
+            it.code.toString(16).lowercase()
+        }
+    }
+
+    private fun decode(src: String): String {
+        return src.split(partition).map {
+            it.toInt(16).toChar()
+        }.joinToString("")
     }
 }

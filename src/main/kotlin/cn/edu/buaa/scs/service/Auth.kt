@@ -66,7 +66,7 @@ class AuthService(val call: ApplicationCall) : IService {
         }
         // check captcha
         val shouldCaptchaText = RSAEncrypt.decrypt(captchaToken).getOrNull()
-        if (shouldCaptchaText != captchaText) {
+        if (shouldCaptchaText?.lowercase() != captchaText.lowercase()) {
             throw BadRequestException("验证码错误")
         }
 
