@@ -21,12 +21,14 @@ jobs:
       - name: Build
         run: ./gradlew clean build -x test --no-daemon
 
-      - name: Docker Build and Push
-        uses: mr-smithers-excellent/docker-build-push@v5
-        with:
+      - name: Build and Push Docker Image
+        env:
           image: ${{ secrets.ALIYUN_DOCKER_NAMESPACE }}/cloudapi
           tags: ${{ github.ref_name }}
           registry: ${{ secrets.ALIYUN_DOCKER_REGISTRY }}
           username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
           password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
-
+        run: |
+          docker login ${registry} -u ${username} -p ${password}
+          docker build -t ${image}:${tags} .
+          docker push ${image}:${tags}
