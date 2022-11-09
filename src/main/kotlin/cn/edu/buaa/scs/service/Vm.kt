@@ -157,9 +157,8 @@ class VmService(val call: ApplicationCall) : IService {
                 else {
                     vmApply.studentIdList = vmApply.studentIdList.minus(studentIdList.toSet())
                     vmApply.expectedNum = vmApply.studentIdList.size
-                    if (vmApply.studentIdList.isEmpty()) listOf()
-                    else mysql.virtualMachines.filter {
-                        it.studentId.inList(vmApply.studentIdList) and
+                    mysql.virtualMachines.filter {
+                        it.studentId.inList(studentIdList) and
                                 it.applyId.eq(vmApply.id)
                     }.toList()
                 }
@@ -169,7 +168,10 @@ class VmService(val call: ApplicationCall) : IService {
         }
         mysql.useTransaction {
             mysql.vmApplyList.update(vmApply)
-            vmList.map { VMTask.vmDeleteTask(it.uuid) }.forEach { mysql.taskDataList.add(it) }
+            vmList.forEach {
+                it.markDeleted()
+                mysql.virtualMachines.update(it)
+            }
         }
         return vmApply
     }

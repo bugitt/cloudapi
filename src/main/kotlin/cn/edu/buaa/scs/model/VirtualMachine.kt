@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.utils.jsonMapper
@@ -45,6 +47,11 @@ data class VirtualMachineExtraInfo(
 interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     companion object : Entity.Factory<VirtualMachine>()
 
+    enum class Lifetime {
+        USING,
+        DELETED
+    }
+
     data class NetInfo(
         val macAddress: String,
         val ipList: List<String>
@@ -65,6 +72,8 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var experimentId: Int
     var applyId: String
 
+    var lifeTime: Lifetime
+
 
     var memory: Int // MB
     var cpu: Int
@@ -74,6 +83,10 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var powerState: VirtualMachinePowerState
     var overallStatus: ManagedEntityStatus
     var netInfos: List<NetInfo>
+
+    fun markDeleted() {
+        this.lifeTime = Lifetime.DELETED
+    }
 }
 
 object VirtualMachines : Table<VirtualMachine>("vm") {
@@ -88,6 +101,8 @@ object VirtualMachines : Table<VirtualMachine>("vm") {
     val isExperimental = boolean("is_experimental").bindTo { it.isExperimental }
     val experimentId = int("experiment_id").bindTo { it.experimentId }
     val applyId = varchar("apply_id").bindTo { it.applyId }
+    val lifetime =
+        varchar("lifetime").transform({ VirtualMachine.Lifetime.valueOf(it) }, { it.name }).bindTo { it.lifeTime }
     val memory = int("memory").bindTo { it.memory }
     val cpu = int("cpu").bindTo { it.cpu }
     val osFullName = varchar("os_full_name").bindTo { it.osFullName }

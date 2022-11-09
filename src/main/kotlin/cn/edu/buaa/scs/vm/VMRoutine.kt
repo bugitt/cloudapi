@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.vm
 
+import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.taskDataList
 import cn.edu.buaa.scs.model.virtualMachines
@@ -86,9 +87,20 @@ object VMRoutine : Routine {
             .forEach { it.process() }
     }
 
+    private val deleteVm = Routine.alwaysDo("delete-virtual-machine") {
+        mysql.virtualMachines.filter { it.lifetime.eq(VirtualMachine.Lifetime.DELETED) }
+            .toList()
+            .forEach {
+                val vm = it
+                vmClient.deleteVM(vm.uuid)
+                    .onSuccess { vm.delete() }
+            }
+    }
+
     override val routineList: List<RoutineTask> = listOf(
         updateVMsToDatabase,
         createVm,
+        deleteVm,
         // add more routines if needed
     )
 }
