@@ -1211,6 +1211,7 @@ paths:
                 - userId
       tags:
         - 项目
+      deprecated: true
   /projects:
     get:
       summary: 获取项目列表

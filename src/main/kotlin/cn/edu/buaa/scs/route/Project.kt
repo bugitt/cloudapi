@@ -1,6 +1,9 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.*
+import cn.edu.buaa.scs.controller.models.DeleteProjectProjectIdMembersRequest
+import cn.edu.buaa.scs.controller.models.ImageBuildTask
+import cn.edu.buaa.scs.controller.models.PostProjectProjectIdMembersRequest
+import cn.edu.buaa.scs.controller.models.PostProjectsRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.id
@@ -15,8 +18,7 @@ import cn.edu.buaa.scs.controller.models.ProjectMember as ProjectMemberResponse
 
 fun Route.projectRoute() {
     post("/paasUser") {
-        val req = call.receive<PostPaasUserRequest>()
-        call.project.createUser(req.userId)
+        // this api will do nothing as it is not used anymore
         call.respond("OK")
     }
 
