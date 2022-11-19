@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.IntOrString
 import cn.edu.buaa.scs.utils.exists
+import cn.edu.buaa.scs.utils.tryToInt
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
@@ -77,6 +78,12 @@ interface User : Entity<User>, IEntity {
         mysql.assistants.find {
             (it.courseId eq courseId.toString()) and (it.studentId eq this.id)
         }?.let { true } ?: false
+
+    fun isAssistant(): Boolean =
+        mysql.assistants.exists { it.studentId eq this.id }
+
+    fun getAssistantCourseIdList(): List<Int> =
+        mysql.assistants.filter { it.studentId eq this.id }.map { it.courseId.tryToInt() }.filterNotNull().distinct()
 
     fun isCourseTeacher(course: Course): Boolean = course.teacher.id == this.id
 

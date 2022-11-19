@@ -10,6 +10,8 @@ info:
     email: loheagn@icloud.com
   termsOfService: 'https://scs.buaa.edu.cn'
 tags:
+  - name: 人员
+    description: 人员管理相关
   - name: 课程
     description: 课程相关
   - name: 作业
@@ -1678,11 +1680,6 @@ paths:
       security:
         - Authorization: [ ]
   /buaaSSOLogin:
-    get:
-      summary: Your GET endpoint
-      tags: [ ]
-      responses: { }
-      operationId: get-buaaSSOLogin
     post:
       summary: 统一认证登录
       operationId: post-buaaSSOLogin
@@ -1702,6 +1699,37 @@ paths:
           in: query
           name: ssoToken
           required: true
+  /students:
+    get:
+      summary: 获取学生列表
+      tags:
+        - 人员
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserModel'
+      operationId: get-students
+      description: |-
+        获取学生列表。仅限管理员、教师调用。
+        按照学生学号倒序排列（新注册的学生排序靠前）
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: search
+          description: 支持按照学号和姓名模糊搜索学生
+        - schema:
+            type: integer
+          in: query
+          name: limit
+          description: '-1表示无限制。默认为10'
 components:
   schemas:
     AssignmentResponse:

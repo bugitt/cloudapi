@@ -7,3 +7,11 @@ fun String.isValidProjectName(): Boolean {
             this.first().isLowerCase() &&
             this.last().isLetterOrDigit()
 }
+
+fun String.tryToInt(): Int? {
+    return try {
+        this.toInt()
+    } catch (e: NumberFormatException) {
+        null
+    }
+}
