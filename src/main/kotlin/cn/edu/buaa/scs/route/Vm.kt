@@ -180,3 +180,10 @@ internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
     expectedNum = vmApply.expectedNum,
     actualNum = vmApply.getActualNum(),
 )
+
+internal fun convertExpVmInfo(vmApply: VmApply) = ExpVmInfo(
+    status = vmApply.status,
+    applyId = vmApply.id,
+    expectedNum = vmApply.expectedNum,
+    actualNum = vmApply.getActualNum(),
+)

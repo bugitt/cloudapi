@@ -1,6 +1,9 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.*
+import cn.edu.buaa.scs.controller.models.StatCourseExp
+import cn.edu.buaa.scs.controller.models.StatCourseExpsResponse
+import cn.edu.buaa.scs.controller.models.StatExpAssignmentResponse
+import cn.edu.buaa.scs.controller.models.StatExpAssignmentResponseAssignments
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.CourseService
@@ -70,13 +73,7 @@ internal fun convertStatCourseExp(expDetail: CourseService.StatCourseExps.ExpDet
         peerAssessmentRules = experiment.peerAssessmentRules,
         peerAssessmentStart = experiment.peerAssessmentStart,
         sentEmail = experiment.sentEmail,
-        vm = if (experiment.vmStatus == 0) null else ExpVmInfo(
-            status = experiment.vmStatus,
-            name = experiment.vmName,
-            applyId = experiment.vmApplyId,
-            password = experiment.vmPasswd,
-            cnt = expDetail.vmCnt,
-        ),
+        vm = experiment.getVmApply()?.let { convertExpVmInfo(it) },
         submittedAssignmentsCnt = expDetail.submittedAssignmentsCnt
     )
 }

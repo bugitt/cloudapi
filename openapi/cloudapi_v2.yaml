@@ -2046,6 +2046,8 @@ components:
           type: boolean
         course:
           $ref: '#/components/schemas/CourseResponse'
+        vm:
+          $ref: '#/components/schemas/ExpVmInfo'
       required:
         - id
         - name
@@ -2234,25 +2236,24 @@ components:
       type: object
       description: 某次实验所分配的虚拟机情况
       properties:
+        applyId:
+          type: string
+          format: int32
+        expectedNum:
+          type: integer
+          format: int32
+        actualNum:
+          type: integer
+          format: int32
         status:
           type: integer
-          format: int32
-        applyId:
-          type: integer
-          format: int32
-        name:
-          type: string
-        password:
-          type: string
-        cnt:
-          type: integer
+          description: 虚拟机申请状态
           format: int32
       required:
-        - status
         - applyId
-        - name
-        - password
-        - cnt
+        - expectedNum
+        - actualNum
+        - status
     CreateExperimentRequest:
       title: CreateExperimentRequest
       type: object

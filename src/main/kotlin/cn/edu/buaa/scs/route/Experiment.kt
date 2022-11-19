@@ -162,6 +162,7 @@ internal fun convertExperimentResponse(call: ApplicationCall, experiment: Experi
         peerAssessmentStart = experiment.peerAssessmentStart,
         sentEmail = experiment.sentEmail,
         course = convertCourseResponse(call, experiment.course),
+        vm = experiment.getVmApply()?.let { convertExpVmInfo(it) },
     )
 
 internal fun convertAssignmentList(assignmentList: List<Assignment>): AssignmentListResponse =

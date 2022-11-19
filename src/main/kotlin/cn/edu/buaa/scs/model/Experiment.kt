@@ -1,8 +1,11 @@
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.IntOrString
 import org.ktorm.database.Database
+import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
+import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
@@ -29,6 +32,10 @@ interface Experiment : Entity<Experiment>, IEntity {
     var peerAssessmentRules: String
     var peerAssessmentStart: Boolean
     var sentEmail: Boolean
+
+    // not database fields
+    fun getVmApply(): VmApply? =
+        mysql.vmApplyList.find { it.experimentId.eq(this.id) }
 
     override fun entityId(): IntOrString {
         return IntOrString(this.id)
