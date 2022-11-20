@@ -58,6 +58,7 @@ dependencies {
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
 
     // database
+    // mysql
     val ktorm_version = "3.4.1"
     implementation("com.zaxxer:HikariCP:4.0.3")
     implementation("org.ktorm:ktorm-core:$ktorm_version")
@@ -65,6 +66,10 @@ dependencies {
     implementation("org.ktorm:ktorm-support-mysql:$ktorm_version")
     implementation("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.25")
+    // mongodb
+    val kmongo_version = "4.7.2"
+    implementation("org.litote.kmongo:kmongo-coroutine:$kmongo_version")
+    implementation("org.litote.kmongo:kmongo-id:$kmongo_version")
 
     // minio
     implementation("io.minio:minio:8.3.4")

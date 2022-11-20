@@ -1,18 +1,25 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.DeleteProjectProjectIdMembersRequest
-import cn.edu.buaa.scs.controller.models.ImageBuildTask
-import cn.edu.buaa.scs.controller.models.PostProjectProjectIdMembersRequest
-import cn.edu.buaa.scs.controller.models.PostProjectsRequest
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.kube.getStatus
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.model.Resource
+import cn.edu.buaa.scs.model.ResourceExchangeRecord
+import cn.edu.buaa.scs.model.ResourcePool
+import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
+import cn.edu.buaa.scs.storage.mongo
+import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.ktorm.dsl.eq
+import org.ktorm.entity.filter
+import org.ktorm.entity.toList
 import cn.edu.buaa.scs.controller.models.Project as ProjectResponse
 import cn.edu.buaa.scs.controller.models.ProjectMember as ProjectMemberResponse
 
@@ -132,6 +139,7 @@ fun Route.projectRoute() {
             get {
                 call.respond(
                     call.project.getContainerServiceListByProject(call.getProjectID())
+                        .map { convertContainerServiceResponse(it) }
                 )
             }
 
@@ -153,6 +161,20 @@ fun Route.projectRoute() {
                     call.project.getReposByProject(call.getProjectID())
                 )
             }
+        }
+    }
+
+    route("/resourcePools") {
+        post {
+            val req = call.receive<PostResourcePoolsRequest>()
+            call.respond(
+                call.convertResourcePoolResponse(
+                    call.project.createResourcePool(
+                        req.ownerId,
+                        reConvertResource(req.resource),
+                    )
+                )
+            )
         }
     }
 }
@@ -179,6 +201,44 @@ fun convertProjectMemberResponse(projectMember: ProjectMember) =
         role = projectMember.role.name,
     )
 
+fun convertContainerResponse(container: Container) = ContainerResponse(
+    id = container.id,
+    name = container.name,
+    image = container.image,
+    command = container.command,
+    workingDir = container.workingDir,
+    envs = container.envs?.map { (key, value) -> ContainerRequestEnvsInner(key, value) },
+    ports = container.ports?.map {
+        ContainerServicePort(
+            name = it.name,
+            port = it.port,
+            protocol = it.protocol.name,
+            exportIP = it.exportIP,
+            exportPort = it.exportPort,
+        )
+    },
+)
+
+fun convertContainerServiceResponse(
+    containerService: ContainerService,
+    getStatus: Boolean = true
+): ContainerServiceResponse {
+    val containers = mysql.containerList
+        .filter { it.serviceId eq containerService.id }
+        .toList()
+        .map { convertContainerResponse(it) }
+    val resp = ContainerServiceResponse(
+        id = containerService.id,
+        name = containerService.name,
+        serviceType = containerService.serviceType.name,
+        createdTime = containerService.createTime,
+        containers = containers,
+        creator = containerService.creator,
+        projectId = containerService.projectId,
+    )
+    if (getStatus) return resp.copy(status = containerService.getStatus().name)
+    return resp
+}
 
 fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = ImageBuildTask(
     hostPrefix = ImageMeta.hostPrefix,
@@ -192,3 +252,50 @@ fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = Im
 
 fun convertImageBuildTaskResponse(imageWithTaskData: Pair<ImageMeta, TaskData>) =
     convertImageBuildTaskResponse(imageWithTaskData.first, imageWithTaskData.second)
+
+fun convertResource(resource: Resource) = cn.edu.buaa.scs.controller.models.Resource(
+    cpu = resource.cpu,
+    memory = resource.memory,
+)
+
+fun reConvertResource(resource: cn.edu.buaa.scs.controller.models.Resource) = Resource(
+    cpu = resource.cpu,
+    memory = resource.memory,
+)
+
+fun convertResourceExchangeRecord(resourceExchangeRecord: ResourceExchangeRecord) =
+    cn.edu.buaa.scs.controller.models.ResourceExchangeRecord(
+        id = resourceExchangeRecord._id.toString(),
+        sender = resourceExchangeRecord.sender,
+        receiver = resourceExchangeRecord.receiver,
+        resource = convertResource(resourceExchangeRecord.resource),
+        time = resourceExchangeRecord.time,
+    )
+
+fun ApplicationCall.convertResourceUsedRecord(resourceUsedRecord: ResourceUsedRecord) =
+    cn.edu.buaa.scs.controller.models.ResourceUsedRecord(
+        id = resourceUsedRecord._id.toString(),
+        resource = convertResource(resourceUsedRecord.resource),
+        project = this.convertProjectResponse(resourceUsedRecord.project),
+        containerService = convertContainerServiceResponse(resourceUsedRecord.containerService, false),
+        container = convertContainerResponse(resourceUsedRecord.container),
+        time = resourceUsedRecord.time,
+    )
+
+suspend fun ApplicationCall.convertResourcePoolResponse(resourcePool: ResourcePool) =
+    cn.edu.buaa.scs.controller.models.ResourcePool(
+        id = resourcePool._id.toString(),
+        name = resourcePool.name,
+        ownerId = resourcePool.ownerId,
+        used = convertResource(resourcePool.used),
+        usedRecordList = resourcePool.usedRecordList.map {
+            convertResourceUsedRecord(
+                mongo.resourceUsedRecord.findOneById(it)!!
+            )
+        },
+        exchangeRecordList = resourcePool.exchangeRecordList.map {
+            convertResourceExchangeRecord(
+                mongo.resourceExchangeRecord.findOneById(it)!!
+            )
+        }
+    )

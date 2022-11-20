@@ -1730,6 +1730,36 @@ paths:
           in: query
           name: limit
           description: '-1表示无限制。默认为10'
+  /resourcePools:
+    post:
+      summary: 创建资源池
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcePool'
+      operationId: post-resourcePools
+      description: 为用户创建资源池。仅供管理员调用
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resource:
+                  $ref: '#/components/schemas/Resource'
+                ownerId:
+                  type: string
+              required:
+                - resource
+                - ownerId
+    parameters: [ ]
 components:
   schemas:
     AssignmentResponse:
@@ -2006,7 +2036,7 @@ components:
       description: ''
       type: object
       x-examples: { }
-      title: ''
+      title: ExperimentResponse
       properties:
         id:
           type: integer
@@ -3132,7 +3162,6 @@ components:
         - creator
         - projectId
         - serviceType
-        - status
         - containers
         - createdTime
     ContainerServiceRequest:
@@ -3199,6 +3228,101 @@ components:
         - isAssistant
         - token
         - paasToken
+    Resource:
+      title: Resource
+      x-stoplight:
+        id: ox84hfbudazvi
+      type: object
+      properties:
+        cpu:
+          type: integer
+          format: int32
+          description: 'm, 1000m = 1core'
+        memory:
+          type: integer
+          format: int32
+          description: MB
+      required:
+        - cpu
+        - memory
+    ResourcePool:
+      title: ResourcePool
+      x-stoplight:
+        id: 4l2ezks4ru2a9
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        ownerId:
+          type: string
+        used:
+          $ref: '#/components/schemas/Resource'
+        usedRecordList:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceUsedRecord'
+        exchangeRecordList:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceExchangeRecord'
+      required:
+        - id
+        - name
+        - ownerId
+        - used
+        - usedRecordList
+        - exchangeRecordList
+    ResourceUsedRecord:
+      title: ResourceUsedRecord
+      x-stoplight:
+        id: tzurduyhikw2z
+      type: object
+      properties:
+        id:
+          type: string
+        resource:
+          $ref: '#/components/schemas/Resource'
+        project:
+          $ref: '#/components/schemas/Project'
+        containerService:
+          $ref: '#/components/schemas/ContainerServiceResponse'
+        container:
+          $ref: '#/components/schemas/ContainerResponse'
+        time:
+          type: integer
+          format: int64
+      required:
+        - id
+        - resource
+        - project
+        - containerService
+        - container
+        - time
+    ResourceExchangeRecord:
+      title: ResourceExchangeRecord
+      x-stoplight:
+        id: g5aqfkbtk1bur
+      type: object
+      properties:
+        id:
+          type: string
+        sender:
+          type: string
+        receiver:
+          type: string
+        resource:
+          $ref: '#/components/schemas/Resource'
+        time:
+          type: integer
+          format: int64
+      required:
+        - id
+        - sender
+        - receiver
+        - resource
+        - time
   securitySchemes:
     Authorization:
       type: apiKey
