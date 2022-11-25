@@ -82,6 +82,15 @@ interface User : Entity<User>, IEntity {
     fun isAssistant(): Boolean =
         mysql.assistants.exists { it.studentId eq this.id }
 
+    fun isAssistantForStudent(studentId: String): Boolean {
+        val student = User.id(studentId)
+        if (!student.isStudent()) return false
+        val courseIdList =
+            mysql.courseStudents.filter { it.studentId eq studentId }.map { it.courseId }.toList().map { it.toString() }
+        if (courseIdList.isEmpty()) return false
+        return mysql.assistants.exists { (it.studentId eq this.id).and(it.courseId.inList(courseIdList)) }
+    }
+
     fun getAssistantCourseIdList(): List<Int> =
         mysql.assistants.filter { it.studentId eq this.id }.map { it.courseId.tryToInt() }.filterNotNull().distinct()
 

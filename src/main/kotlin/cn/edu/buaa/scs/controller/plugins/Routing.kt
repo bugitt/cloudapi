@@ -24,6 +24,7 @@ fun Application.configureRouting() {
             projectRoute()
             vmRoute()
             websocketRoute()
+            routineRoute()
             // 添加其他的 route
         }
 

@@ -72,6 +72,8 @@ interface Container : Entity<Container> {
     var workingDir: String?
     var envs: Map<String, String>?
     var ports: List<ContainerService.Port>?
+    var resourcePoolId: String
+    var resourceUsedRecordId: String
 }
 
 object ContainerServiceList : Table<ContainerService>("container_service") {
@@ -97,6 +99,8 @@ object ContainerList : Table<Container>("container") {
             .bindTo { it.envs }
     val ports = varchar("ports").transform({ jsonReadValue<List<ContainerService.Port>>(it) },
         { jsonMapper.writeValueAsString(it) }).bindTo { it.ports }
+    val resourcePoolId = varchar("resource_pool_id").bindTo { it.resourcePoolId }
+    val resourceUsedRecordId = varchar("resource_used_record_id").bindTo { it.resourceUsedRecordId }
 }
 
 val Database.containerServiceList get() = this.sequenceOf(ContainerServiceList)

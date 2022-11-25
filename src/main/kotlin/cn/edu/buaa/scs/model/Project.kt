@@ -6,9 +6,8 @@ import cn.edu.buaa.scs.storage.mysql
 import io.ktor.server.plugins.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
-import org.ktorm.entity.Entity
-import org.ktorm.entity.find
-import org.ktorm.entity.sequenceOf
+import org.ktorm.dsl.or
+import org.ktorm.entity.*
 import org.ktorm.schema.*
 
 interface Project : Entity<Project>, IEntity {
@@ -16,6 +15,14 @@ interface Project : Entity<Project>, IEntity {
         fun id(projectID: Long): Project {
             return mysql.projects.find { it.id.eq(projectID) }
                 ?: throw NotFoundException("project(${projectID}) not found")
+        }
+
+        fun inAnySameProject(userIdA: String, userIdB: String): Boolean {
+            return mysql.projectMembers.filter { it.userId.eq(userIdA).or(it.userId.eq(userIdB)) }.map { it.projectId }
+                .toList()
+                .let {
+                    it.toSet().size != it.size
+                }
         }
     }
 

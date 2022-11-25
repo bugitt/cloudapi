@@ -18,6 +18,7 @@ package cn.edu.buaa.scs.controller.models
  * @param project
  * @param containerService
  * @param container
+ * @param released
  * @param time
  */
 data class ResourceUsedRecord(
@@ -26,6 +27,7 @@ data class ResourceUsedRecord(
     val project: Project,
     val containerService: ContainerServiceResponse,
     val container: ContainerResponse,
+    val released: kotlin.Boolean,
     val time: kotlin.Long
 ) 
 

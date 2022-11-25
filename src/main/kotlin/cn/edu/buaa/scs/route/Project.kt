@@ -10,7 +10,6 @@ import cn.edu.buaa.scs.model.ResourcePool
 import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
-import cn.edu.buaa.scs.storage.mongo
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import io.ktor.server.application.*
@@ -152,6 +151,7 @@ fun Route.projectRoute() {
                     call.project.rerunContainerService(call.getProjectID(), call.getContainerServiceId())
                     call.respond("OK")
                 }
+
                 delete {
                     call.project.deleteContainerService(call.getProjectID(), call.getContainerServiceId())
                     call.respond("OK")
@@ -238,6 +238,7 @@ fun convertContainerResponse(container: Container) = ContainerResponse(
             exportPort = it.exportPort,
         )
     },
+    resourcePoolId = container.resourcePoolId,
 )
 
 fun convertContainerServiceResponse(
@@ -300,6 +301,7 @@ fun ApplicationCall.convertResourceUsedRecord(record: ResourceUsedRecord) =
         project = this.convertProjectResponse(record.project),
         containerService = convertContainerServiceResponse(record.containerService, false),
         container = convertContainerResponse(record.container),
+        released = record.released,
         time = record.time,
     )
 
@@ -309,15 +311,7 @@ suspend fun ApplicationCall.convertResourcePoolResponse(pool: ResourcePool) =
         name = pool.name,
         ownerId = pool.ownerId,
         used = convertResource(pool.used),
-        usedRecordList = pool.usedRecordList.map {
-            convertResourceUsedRecord(
-                mongo.resourceUsedRecord.findOneById(it)!!
-            )
-        },
-        exchangeRecordList = pool.exchangeRecordList.map {
-            convertResourceExchangeRecord(
-                mongo.resourceExchangeRecord.findOneById(it)!!
-            )
-        },
+        usedRecordList = pool.usedRecordList.map { convertResourceUsedRecord(ResourceUsedRecord.id(it)) },
+        exchangeRecordList = pool.exchangeRecordList.map { convertResourceExchangeRecord(ResourceExchangeRecord.id(it)) },
         time = pool.time,
     )

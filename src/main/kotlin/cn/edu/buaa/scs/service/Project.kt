@@ -11,6 +11,7 @@ import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.kube.ContainerServiceTask
+import cn.edu.buaa.scs.kube.releaseResource
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.Project
 import cn.edu.buaa.scs.model.ProjectMember
@@ -388,7 +389,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             }
     }
 
-    fun createContainerService(projectID: Long, req: ContainerServiceRequest) {
+    suspend fun createContainerService(projectID: Long, req: ContainerServiceRequest) {
         val project = Project.id(projectID)
         call.user().assertWrite(project)
         // check name valid
@@ -398,6 +399,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         // check name conflict
         if (mysql.containerServiceList.exists { it.projectId.eq(projectID).and(it.name.eq(req.name)) }) {
             throw BadRequestException("Service name conflict")
+        }
+        // check permission to use the resourcePool
+        req.containers.forEach { container ->
+            call.user().assertWrite(ResourcePool.id(container.resourcePoolId))
         }
         mysql.useTransaction {
             val containerService = ContainerService {
@@ -423,8 +428,16 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                         )
                     }
                     this.serviceId = containerService.id
+                    this.resourcePoolId = containerReq.resourcePoolId
+                    this.resourceUsedRecordId = ""
                 }
                 mysql.containerList.add(container)
+                val reqResource = containerReq.limitedResource
+                val (_, resourceUsedRecord) =
+                    ResourcePool.id(container.resourcePoolId)
+                        .use(Resource(reqResource.cpu, reqResource.memory), project, container, containerService)
+                container.resourceUsedRecordId = resourceUsedRecord._id.toString()
+                mysql.containerList.update(container)
             }
             val taskData = TaskData.create(
                 Task.Type.ContainerService,
@@ -437,7 +450,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         }
     }
 
-    fun deleteContainerService(projectID: Long, serviceID: Long) {
+    suspend fun deleteContainerService(projectID: Long, serviceID: Long) {
         val project = Project.id(projectID)
         call.user().assertWrite(project)
         mysql.useTransaction {
@@ -446,6 +459,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                 throw NotFoundException("Service not found")
             }
             BusinessKubeClient.deleteResource(project.name, containerService.name).getOrThrow()
+            containerService.releaseResource().getOrThrow()
             containerService.delete()
             mysql.delete(ContainerList) { it.serviceId eq serviceID }
         }

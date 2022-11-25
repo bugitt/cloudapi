@@ -33,8 +33,12 @@ abstract class Task(protected val taskData: TaskData) {
 
     fun doing(): Result<Unit> =
         try {
-            taskData.doing()
-            Result.success(Unit)
+            if (taskData.status == Status.UNDO) {
+                taskData.doing()
+                Result.success(Unit)
+            } else {
+                Result.failure(IllegalStateException("Task(${taskData.id}) is not in UNDO status"))
+            }
         } catch (e: Throwable) {
             taskData.fail(e.stackTraceToString())
             Result.failure(e)
@@ -75,12 +79,15 @@ abstract class Task(protected val taskData: TaskData) {
 
 fun TaskData.doing() {
     this.status = Task.Status.DOING
+    this.error = ""
+    this.endTime = 0
     this.updateTime = System.currentTimeMillis()
     mysql.taskDataList.update(this)
 }
 
 fun TaskData.success() {
     this.status = Task.Status.SUCCESS
+    this.error = ""
     this.updateTime = System.currentTimeMillis()
     this.endTime = System.currentTimeMillis()
     mysql.taskDataList.update(this)

@@ -10,6 +10,8 @@ info:
     email: loheagn@icloud.com
   termsOfService: 'https://scs.buaa.edu.cn'
 tags:
+  - name: General
+    description: 通用接口
   - name: 人员
     description: 人员管理相关
   - name: 课程
@@ -1806,6 +1808,25 @@ paths:
         即把当前项目中所有用户的所有资源池列表总和
       security:
         - Authorization: [ ]
+  '/daemon/trigger/{action}':
+    post:
+      summary: 守护进程触发
+      operationId: post-daemon-trigger
+      responses:
+        '200':
+          description: OK
+      description: 仅限管理员调用的守护进程任务触发调用动作
+      tags:
+        - General
+      security:
+        - Authorization: [ ]
+    parameters:
+      - schema:
+          type: string
+        name: action
+        in: path
+        required: true
+        description: 需要触发的具体动作
 components:
   schemas:
     AssignmentResponse:
@@ -3133,9 +3154,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ContainerServicePort'
+        resourcePoolId:
+          type: string
+        limitedResource:
+          $ref: '#/components/schemas/Resource'
       required:
         - name
         - image
+        - resourcePoolId
+        - limitedResource
     ContainerResponse:
       title: ContainerResponse
       x-stoplight:
@@ -3169,10 +3196,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ContainerServicePort'
+        resourcePoolId:
+          type: string
       required:
         - id
         - name
         - image
+        - resourcePoolId
     ContainerServiceResponse:
       title: ContainerServiceResponse
       x-stoplight:
@@ -3341,6 +3371,8 @@ components:
           $ref: '#/components/schemas/ContainerServiceResponse'
         container:
           $ref: '#/components/schemas/ContainerResponse'
+        released:
+          type: boolean
         time:
           type: integer
           format: int64
@@ -3350,6 +3382,7 @@ components:
         - project
         - containerService
         - container
+        - released
         - time
     ResourceExchangeRecord:
       title: ResourceExchangeRecord

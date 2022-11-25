@@ -113,6 +113,14 @@ fun User.authWrite(entity: IEntity): Boolean {
         is Project ->
             authRead(entity)
 
+        is ResourcePool ->
+            // who can use the ResourcePool
+            this.id == entity.ownerId
+                    || Project.inAnySameProject(this.id, entity.ownerId)
+                    || this.isTeacher()
+                    || this.isAssistantForStudent(entity.ownerId)
+
+
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }
 }
@@ -155,6 +163,11 @@ fun User.authAdmin(entity: IEntity): Boolean {
         is PeerAppeal ->
             entity.studentId == this.id
                     || authWrite(Experiment.id(entity.expId))
+
+        is ResourcePool ->
+            // who can change the capacity of the ResourcePool
+            this.isTeacher()
+                    || this.isAssistantForStudent(entity.ownerId)
 
         else -> throw BadRequestException("unsupported auth entity: $entity")
     }

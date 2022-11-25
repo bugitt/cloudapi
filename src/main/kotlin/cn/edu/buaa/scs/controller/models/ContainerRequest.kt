@@ -15,6 +15,8 @@ package cn.edu.buaa.scs.controller.models
  *
  * @param name
  * @param image
+ * @param resourcePoolId
+ * @param limitedResource
  * @param command
  * @param workingDir
  * @param envs
@@ -23,6 +25,8 @@ package cn.edu.buaa.scs.controller.models
 data class ContainerRequest(
     val name: kotlin.String,
     val image: kotlin.String,
+    val resourcePoolId: kotlin.String,
+    val limitedResource: Resource,
     val command: kotlin.String? = null,
     val workingDir: kotlin.String? = null,
     val envs: kotlin.collections.List<ContainerRequestEnvsInner>? = null,

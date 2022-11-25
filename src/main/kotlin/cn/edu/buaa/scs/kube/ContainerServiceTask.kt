@@ -2,8 +2,6 @@ package cn.edu.buaa.scs.kube
 
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.task.Routine
-import cn.edu.buaa.scs.task.RoutineTask
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.convertToMap
 import cn.edu.buaa.scs.utils.exists
@@ -11,13 +9,13 @@ import cn.edu.buaa.scs.utils.jsonReadValue
 import com.fkorotkov.kubernetes.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
-import org.ktorm.entity.filter
-import org.ktorm.entity.toList
+import org.ktorm.entity.find
 import org.ktorm.entity.update
 import io.fabric8.kubernetes.api.model.Container as kubeContainer
 
-fun Container.convertToKubeContainer(): kubeContainer {
+suspend fun Container.convertToKubeContainer(): kubeContainer {
     val container = this
+    val limitedResource = ResourceUsedRecord.id(container.resourceUsedRecordId).resource
     return newContainer {
         name = container.name
         image = container.image
@@ -39,7 +37,18 @@ fun Container.convertToKubeContainer(): kubeContainer {
                 containerPort = port.port
             }
         }
+        resources = newResourceRequirements {
+            limits = limitedResource.convertToKubeResourceMap()
+        }
     }
+}
+
+suspend fun Container.releaseResource() = runCatching {
+    ResourcePool.id(this.resourcePoolId).release(this.resourceUsedRecordId)
+}
+
+suspend fun ContainerService.releaseResource() = runCatching {
+    this.containers.forEach { it.releaseResource() }
 }
 
 class ContainerServiceTask(taskData: TaskData) : Task(taskData) {
@@ -57,13 +66,17 @@ class ContainerServiceTask(taskData: TaskData) : Task(taskData) {
         val project = Project.id(containerService.projectId)
         val containerList = containerService.containers
         val selectorLabels = mapOf("app" to containerService.name)
+        val annotations = emptyMap<String, String>() +
+                containerList.associate { "resourceUsedRecord-${it.name}" to it.resourceUsedRecordId }
+        val containers = containerList.map { it.convertToKubeContainer() }
         val podTemplateSpec = newPodTemplateSpec {
             metadata {
                 name = containerService.name
                 labels = selectorLabels
+                this.annotations = annotations
             }
             spec {
-                containers = containerList.map { it.convertToKubeContainer() }
+                this.containers = containers
             }
         }
         val labels = convertToMap(containerService) + ("projectName" to project.name)
@@ -105,28 +118,27 @@ class ContainerServiceTask(taskData: TaskData) : Task(taskData) {
 
             ContainerService.Type.JOB -> {
                 client.createJobSync(podControllerCreationOption).getOrThrow()
+                // release resource
+                containerService.releaseResource().getOrThrow()
             }
         }
     }
 }
 
-object ContainerServiceRoutine : Routine {
-    private val startContainerService = Routine.alwaysDoInPool(
-        name = "start-container-service",
-        poolSize = 10000,
-        poolBufferSize = 1000000,
-    ) { pool ->
-        mysql.taskDataList
-            .filter { (it.type eq Task.Type.ContainerService) and (it.status eq Task.Status.UNDO) }
-            .toList()
-            .forEach {
-                pool.send(ContainerServiceTask(it))
-            }
+object ContainerServiceDaemon {
+
+    private val pool by lazy {
+        Task.TaskExecutorPool("create-container-service", 10000, 1000000)
+            .also { it.start() }
     }
 
-    override val routineList: List<RoutineTask>
-        get() = listOf(startContainerService)
-
+    suspend fun asyncDoOnce() {
+        mysql.taskDataList
+            .find { (it.type eq Task.Type.ContainerService) and (it.status eq Task.Status.UNDO) }
+            ?.let { taskData ->
+                pool.send(ContainerServiceTask(taskData))
+            }
+    }
 }
 
 fun ContainerService.getStatus(): ContainerService.Status {
