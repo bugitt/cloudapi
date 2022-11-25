@@ -198,6 +198,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         return mysql.projectMembers.filter { it.projectId.eq(projectID) }.toList()
     }
 
+    @Suppress("unused")
     suspend fun getAllReposForProject(projectName: String): List<GitRepo> {
         return GitClient.getRepoListOfProject(projectName).getOrThrow()
     }
@@ -473,8 +474,20 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         return resourcePool
     }
 
+    private suspend fun getResourcePoolsByUser(userID: String): List<ResourcePool> {
+        return mongo.resourcePool.find(ResourcePool::ownerId eq userID).toList()
+    }
+
     suspend fun getResourcePools(): List<ResourcePool> {
-        return mongo.resourcePool.find(ResourcePool::ownerId eq call.userId()).toList()
+        return getResourcePoolsByUser(call.userId())
+    }
+
+    suspend fun getResourcePoolsByProject(projectID: Long): List<ResourcePool> {
+        val project = Project.id(projectID)
+        call.user().assertRead(project)
+        return getProjectMembers(projectID).map { it.userId }.distinct().flatMap { userID ->
+            getResourcePoolsByUser(userID)
+        }
     }
 
     suspend fun getReposByProject(projectID: Long): List<Repository> {

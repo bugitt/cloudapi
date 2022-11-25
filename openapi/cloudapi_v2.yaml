@@ -1779,6 +1779,33 @@ paths:
         如果是管理员调用的话，则返回当前所有用户的资源池情况。
       security:
         - Authorization: [ ]
+  '/project/{projectId}/resourcePools':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    get:
+      summary: 获取当前项目可用的资源池列表
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourcePool'
+      operationId: get-project-projectId-resourcePools
+      tags:
+        - 容器服务
+        - 项目
+      description: |-
+        获取当前项目可用的资源池列表
+        即把当前项目中所有用户的所有资源池列表总和
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:

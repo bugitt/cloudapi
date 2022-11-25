@@ -162,6 +162,15 @@ fun Route.projectRoute() {
                 )
             }
         }
+
+        route("/resourcePools") {
+            get {
+                call.respond(
+                    call.project.getResourcePoolsByProject(call.getProjectID())
+                        .map { call.convertResourcePoolResponse(it) }
+                )
+            }
+        }
     }
 
     route("/resourcePools") {

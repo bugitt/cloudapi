@@ -68,7 +68,7 @@ fun User.authRead(entity: IEntity): Boolean {
 
 fun User.assertRead(entity: IEntity) {
     if (!this.authRead(entity)) {
-        throw AuthorizationException("${this.id} has no read access to $entity")
+        throw AuthorizationException("${this.id}没有权限访问$entity")
     }
 }
 
