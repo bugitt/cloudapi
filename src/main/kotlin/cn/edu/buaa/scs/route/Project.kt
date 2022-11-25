@@ -263,39 +263,40 @@ fun reConvertResource(resource: cn.edu.buaa.scs.controller.models.Resource) = Re
     memory = resource.memory,
 )
 
-fun convertResourceExchangeRecord(resourceExchangeRecord: ResourceExchangeRecord) =
+fun convertResourceExchangeRecord(record: ResourceExchangeRecord) =
     cn.edu.buaa.scs.controller.models.ResourceExchangeRecord(
-        id = resourceExchangeRecord._id.toString(),
-        sender = resourceExchangeRecord.sender,
-        receiver = resourceExchangeRecord.receiver,
-        resource = convertResource(resourceExchangeRecord.resource),
-        time = resourceExchangeRecord.time,
+        id = record._id.toString(),
+        sender = record.sender,
+        receiver = record.receiver,
+        resource = convertResource(record.resource),
+        time = record.time,
     )
 
-fun ApplicationCall.convertResourceUsedRecord(resourceUsedRecord: ResourceUsedRecord) =
+fun ApplicationCall.convertResourceUsedRecord(record: ResourceUsedRecord) =
     cn.edu.buaa.scs.controller.models.ResourceUsedRecord(
-        id = resourceUsedRecord._id.toString(),
-        resource = convertResource(resourceUsedRecord.resource),
-        project = this.convertProjectResponse(resourceUsedRecord.project),
-        containerService = convertContainerServiceResponse(resourceUsedRecord.containerService, false),
-        container = convertContainerResponse(resourceUsedRecord.container),
-        time = resourceUsedRecord.time,
+        id = record._id.toString(),
+        resource = convertResource(record.resource),
+        project = this.convertProjectResponse(record.project),
+        containerService = convertContainerServiceResponse(record.containerService, false),
+        container = convertContainerResponse(record.container),
+        time = record.time,
     )
 
-suspend fun ApplicationCall.convertResourcePoolResponse(resourcePool: ResourcePool) =
+suspend fun ApplicationCall.convertResourcePoolResponse(pool: ResourcePool) =
     cn.edu.buaa.scs.controller.models.ResourcePool(
-        id = resourcePool._id.toString(),
-        name = resourcePool.name,
-        ownerId = resourcePool.ownerId,
-        used = convertResource(resourcePool.used),
-        usedRecordList = resourcePool.usedRecordList.map {
+        id = pool._id.toString(),
+        name = pool.name,
+        ownerId = pool.ownerId,
+        used = convertResource(pool.used),
+        usedRecordList = pool.usedRecordList.map {
             convertResourceUsedRecord(
                 mongo.resourceUsedRecord.findOneById(it)!!
             )
         },
-        exchangeRecordList = resourcePool.exchangeRecordList.map {
+        exchangeRecordList = pool.exchangeRecordList.map {
             convertResourceExchangeRecord(
                 mongo.resourceExchangeRecord.findOneById(it)!!
             )
-        }
+        },
+        time = pool.time,
     )

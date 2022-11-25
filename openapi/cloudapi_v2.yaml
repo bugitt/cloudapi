@@ -3267,6 +3267,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ResourceExchangeRecord'
+        time:
+          type: integer
+          format: int64
+          description: 创建资源池时的时间戳
       required:
         - id
         - name
@@ -3274,6 +3278,7 @@ components:
         - used
         - usedRecordList
         - exchangeRecordList
+        - time
     ResourceUsedRecord:
       title: ResourceUsedRecord
       x-stoplight:

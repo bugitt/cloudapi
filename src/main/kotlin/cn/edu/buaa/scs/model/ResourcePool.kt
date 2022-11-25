@@ -22,6 +22,7 @@ data class ResourcePool(
     val used: Resource = emptyResource,
     val usedRecordList: List<Id<ResourceUsedRecord>> = emptyList(),
     val exchangeRecordList: List<Id<ResourceExchangeRecord>> = emptyList(),
+    val time: Long = System.currentTimeMillis(),
 )
 
 val CoroutineDatabase.resourcePool get() = getCollection<ResourcePool>()

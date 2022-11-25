@@ -16,6 +16,6 @@ lateinit var mongo: CoroutineDatabase
 fun Application.mongoModule() {
     val connectionString = getConfigString("db.mongo.connectionString")
     mClient = KMongo.createClient(connectionString).coroutine
-    mongo = mClient.getDatabase(getConfigString("db.mongo.cloud"))
+    mongo = mClient.getDatabase(getConfigString("db.mongo.database"))
     KMongoConfiguration.registerBsonModule(KtormModule())
 }

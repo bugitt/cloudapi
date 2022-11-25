@@ -84,29 +84,6 @@ class KmongoTest {
     }
 
     @Test
-    fun transactionTest() {
-        runBlocking {
-            data class TransactionData(
-                val _id: Id<TransactionData> = newId(),
-                val age: Int,
-            )
-
-            val col = db.getCollection<TransactionData>()
-            col.deleteMany()
-            try {
-                client.startSession().use { session ->
-                    session.startTransaction()
-                    col.insertOne(session, TransactionData(age = 7))
-                    throw Exception()
-                }
-            } catch (e: Exception) {
-                println(e.stackTraceToString())
-            }
-            assert(col.findOne(TransactionData::age eq 7) == null)
-        }
-    }
-
-    @Test
     fun ktormTest() {
         runBlocking {
             KMongoConfiguration.registerBsonModule(KtormModule())
