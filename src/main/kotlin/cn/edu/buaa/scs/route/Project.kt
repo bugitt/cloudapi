@@ -165,6 +165,14 @@ fun Route.projectRoute() {
     }
 
     route("/resourcePools") {
+        get {
+            call.respond(
+                call.project.getResourcePools().map {
+                    call.convertResourcePoolResponse(it)
+                }
+            )
+        }
+
         post {
             val req = call.receive<PostResourcePoolsRequest>()
             call.respond(

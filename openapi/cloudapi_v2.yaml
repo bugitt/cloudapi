@@ -1760,6 +1760,25 @@ paths:
                 - resource
                 - ownerId
     parameters: [ ]
+    get:
+      summary: 获取资源池列表
+      operationId: get-resourcePools
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourcePool'
+      tags:
+        - 容器服务
+      description: |-
+        用户获取自己所属的资源池列表。
+        如果是管理员调用的话，则返回当前所有用户的资源池情况。
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:

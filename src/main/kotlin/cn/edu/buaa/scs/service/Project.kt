@@ -35,6 +35,7 @@ import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.inList
 import org.ktorm.entity.*
+import org.litote.kmongo.eq
 import java.net.URL
 import java.util.*
 
@@ -464,12 +465,16 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         if (!call.user().isAdmin()) throw AuthorizationException("Permission denied")
 
         val resourcePool = ResourcePool(
-            name = "$userID-${RandomStringUtils.randomAlphanumeric(5)}",
+            name = "$userID-${RandomStringUtils.randomNumeric(5)}",
             ownerId = userID,
             capacity = resource,
         )
         mongo.resourcePool.insertOne(resourcePool)
         return resourcePool
+    }
+
+    suspend fun getResourcePools(): List<ResourcePool> {
+        return mongo.resourcePool.find(ResourcePool::ownerId eq call.userId()).toList()
     }
 
     suspend fun getReposByProject(projectID: Long): List<Repository> {
