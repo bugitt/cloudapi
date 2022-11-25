@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.client.KubernetesClient
+import io.fabric8.kubernetes.client.dsl.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -73,6 +74,14 @@ class PodControllerCreationOption(
     selectorLabels,
     timeout,
 )
+
+fun <T> Resource<T>.tryGetAndDelete(): Result<T> = runCatching {
+    val it = this.get()
+    if (it != null) {
+        this.delete()
+    }
+    it
+}
 
 suspend fun KubernetesClient.createJobSync(
     opt: PodControllerCreationOption,

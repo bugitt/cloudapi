@@ -15,7 +15,7 @@ package cn.edu.buaa.scs.controller.models
  *
  * @param id
  * @param sender
- * @param &#x60;receiver&#x60;
+ * @param `receiver`
  * @param resource
  * @param time
  */

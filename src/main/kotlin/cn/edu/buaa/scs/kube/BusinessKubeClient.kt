@@ -11,6 +11,19 @@ object BusinessKubeClient : IProjectManager {
 
     val nodeIp by lazy { application.getConfigString("kube.business.nodeIp") }
 
+    fun deleteResource(namespace: String, resourceName: String) = runCatching {
+        // try to delete service
+        client.services().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        // try to delete deployment
+        client.apps().deployments().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        // try to delete job
+        client.batch().v1().jobs().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        // try to delete statefulset
+        client.apps().statefulSets().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        // try to delete daemonset
+        client.apps().daemonSets().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+    }
+
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> {
         return Result.success(userID)
     }

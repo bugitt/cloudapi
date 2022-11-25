@@ -152,6 +152,10 @@ fun Route.projectRoute() {
                     call.project.rerunContainerService(call.getProjectID(), call.getContainerServiceId())
                     call.respond("OK")
                 }
+                delete {
+                    call.project.deleteContainerService(call.getProjectID(), call.getContainerServiceId())
+                    call.respond("OK")
+                }
             }
         }
 

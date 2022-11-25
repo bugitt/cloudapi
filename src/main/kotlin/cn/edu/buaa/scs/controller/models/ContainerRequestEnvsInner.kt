@@ -15,7 +15,7 @@ package cn.edu.buaa.scs.controller.models
 /**
  *
  * @param key
- * @param &#x60;value&#x60;
+ * @param `value`
  */
 data class ContainerRequestEnvsInner(
     val key: kotlin.String,

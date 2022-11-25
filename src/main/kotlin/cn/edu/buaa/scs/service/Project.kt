@@ -9,6 +9,7 @@ import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
+import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.kube.ContainerServiceTask
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.Project
@@ -32,6 +33,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.RandomStringUtils
 import org.ktorm.dsl.and
+import org.ktorm.dsl.delete
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.inList
 import org.ktorm.entity.*
@@ -432,6 +434,20 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                 containerService.id,
             )
             mysql.taskDataList.add(taskData)
+        }
+    }
+
+    fun deleteContainerService(projectID: Long, serviceID: Long) {
+        val project = Project.id(projectID)
+        call.user().assertWrite(project)
+        mysql.useTransaction {
+            val containerService = ContainerService.id(serviceID)
+            if (containerService.projectId != projectID) {
+                throw NotFoundException("Service not found")
+            }
+            BusinessKubeClient.deleteResource(project.name, containerService.name).getOrThrow()
+            containerService.delete()
+            mysql.delete(ContainerList) { it.serviceId eq serviceID }
         }
     }
 
