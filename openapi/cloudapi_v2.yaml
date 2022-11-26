@@ -3333,6 +3333,8 @@ components:
           type: string
         ownerId:
           type: string
+        capacity:
+          $ref: '#/components/schemas/Resource'
         used:
           $ref: '#/components/schemas/Resource'
         usedRecordList:
@@ -3351,6 +3353,7 @@ components:
         - id
         - name
         - ownerId
+        - capacity
         - used
         - usedRecordList
         - exchangeRecordList

@@ -310,6 +310,7 @@ suspend fun ApplicationCall.convertResourcePoolResponse(pool: ResourcePool) =
         id = pool._id.toString(),
         name = pool.name,
         ownerId = pool.ownerId,
+        capacity = convertResource(pool.capacity),
         used = convertResource(pool.used),
         usedRecordList = pool.usedRecordList.map { convertResourceUsedRecord(ResourceUsedRecord.id(it)) },
         exchangeRecordList = pool.exchangeRecordList.map { convertResourceExchangeRecord(ResourceExchangeRecord.id(it)) },

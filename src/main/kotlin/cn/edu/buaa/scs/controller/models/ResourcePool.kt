@@ -16,6 +16,7 @@ package cn.edu.buaa.scs.controller.models
  * @param id
  * @param name
  * @param ownerId
+ * @param capacity
  * @param used
  * @param usedRecordList
  * @param exchangeRecordList
@@ -25,6 +26,7 @@ data class ResourcePool(
     val id: kotlin.String,
     val name: kotlin.String,
     val ownerId: kotlin.String,
+    val capacity: Resource,
     val used: Resource,
     val usedRecordList: kotlin.collections.List<ResourceUsedRecord>,
     val exchangeRecordList: kotlin.collections.List<ResourceExchangeRecord>,
