@@ -11,16 +11,10 @@ fun Route.routineRoute() {
 
         route("/trigger") {
 
-            get { call.respond("OK") }
-
             route("/{action}") {
 
                 fun ApplicationCall.getAction(): String {
                     return this.parameters["action"] ?: throw BadRequestException("No action specified")
-                }
-
-                get {
-                    call.respond(call.getAction())
                 }
 
                 post {
