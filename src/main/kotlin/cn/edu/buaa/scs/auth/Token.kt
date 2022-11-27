@@ -68,7 +68,9 @@ fun fetchToken(call: ApplicationCall) {
     }
 
     if (token.isEmpty()) {
-        if (escapeApiMap[call.request.path()]?.contains(call.request.httpMethod) == true) {
+        val canEscape = call.request.httpMethod == HttpMethod.Options ||
+                (escapeApiMap[call.request.path()]?.contains(call.request.httpMethod) ?: false)
+        if (canEscape) {
             return
         }
         throw AuthenticationException()
