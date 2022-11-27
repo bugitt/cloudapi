@@ -171,7 +171,7 @@ fun Route.projectRoute() {
             get {
                 call.respond(
                     call.project.getResourcePoolsByProject(call.getProjectID())
-                        .map { call.convertResourcePoolResponse(it) }
+                        .map { convertResourcePoolResponse(it) }
                 )
             }
         }
@@ -181,7 +181,7 @@ fun Route.projectRoute() {
         get {
             call.respond(
                 call.project.getResourcePools().map {
-                    call.convertResourcePoolResponse(it)
+                    convertResourcePoolResponse(it)
                 }
             )
         }
@@ -189,7 +189,7 @@ fun Route.projectRoute() {
         post {
             val req = call.receive<PostResourcePoolsRequest>()
             call.respond(
-                call.convertResourcePoolResponse(
+                convertResourcePoolResponse(
                     call.project.createResourcePool(
                         req.ownerId,
                         reConvertResource(req.resource),
@@ -197,6 +197,21 @@ fun Route.projectRoute() {
                 )
             )
         }
+    }
+
+    route("/resourceUsedRecords") {
+        route("/{resourceUsedRecordId") {
+            fun ApplicationCall.getResourceUsedRecordID(): String {
+                return parameters["resourceUsedRecordId"]
+                    ?: throw BadRequestException("invalid resourceUsedRecordID")
+            }
+            get {
+                call.respond(
+                    convertResourceUsedRecord(ResourceUsedRecord.id(call.getResourceUsedRecordID()))
+                )
+            }
+        }
+
     }
 }
 
@@ -239,6 +254,7 @@ fun convertContainerResponse(container: Container) = ContainerResponse(
         )
     },
     resourcePoolId = container.resourcePoolId,
+    resourceUsedRecordId = container.resourceUsedRecordId,
 )
 
 fun convertContainerServiceResponse(
@@ -294,18 +310,18 @@ fun convertResourceExchangeRecord(record: ResourceExchangeRecord) =
         time = record.time,
     )
 
-fun ApplicationCall.convertResourceUsedRecord(record: ResourceUsedRecord) =
+fun convertResourceUsedRecord(record: ResourceUsedRecord) =
     cn.edu.buaa.scs.controller.models.ResourceUsedRecord(
         id = record._id.toString(),
         resource = convertResource(record.resource),
-        project = this.convertProjectResponse(record.project),
-        containerService = convertContainerServiceResponse(record.containerService, false),
-        container = convertContainerResponse(record.container),
+        projectId = record.project.id,
+        containerServiceId = record.containerService.id,
+        containerId = record.container.id,
         released = record.released,
         time = record.time,
     )
 
-suspend fun ApplicationCall.convertResourcePoolResponse(pool: ResourcePool) =
+suspend fun convertResourcePoolResponse(pool: ResourcePool) =
     cn.edu.buaa.scs.controller.models.ResourcePool(
         id = pool._id.toString(),
         name = pool.name,

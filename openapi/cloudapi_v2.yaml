@@ -1849,7 +1849,40 @@ paths:
       tags:
         - 容器服务
       security:
-        - Authorization: []
+        - Authorization: [ ]
+  '/resourceUsedRecords/{resourceUsedRecordId}':
+    parameters:
+      - schema:
+          type: string
+        name: resourceUsedRecordId
+        in: path
+        required: true
+    get:
+      summary: 获取资源使用记录
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUsedRecord'
+      operationId: get-resourceUsedRecords-resourceUsedRecordId
+      description: 获取资源使用记录
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: containerDetail
+          description: 默认为false
+        - schema:
+            type: boolean
+          in: query
+          name: projectDetail
+          description: 默认为false
 components:
   schemas:
     AssignmentResponse:
@@ -3221,11 +3254,14 @@ components:
             $ref: '#/components/schemas/ContainerServicePort'
         resourcePoolId:
           type: string
+        resourceUsedRecordId:
+          type: string
       required:
         - id
         - name
         - image
         - resourcePoolId
+        - resourceUsedRecordId
     ContainerServiceResponse:
       title: ContainerServiceResponse
       x-stoplight:
@@ -3391,12 +3427,15 @@ components:
           type: string
         resource:
           $ref: '#/components/schemas/Resource'
-        project:
-          $ref: '#/components/schemas/Project'
-        containerService:
-          $ref: '#/components/schemas/ContainerServiceResponse'
-        container:
-          $ref: '#/components/schemas/ContainerResponse'
+        projectId:
+          type: integer
+          format: int64
+        containerServiceId:
+          type: integer
+          format: int64
+        containerId:
+          type: integer
+          format: int64
         released:
           type: boolean
         time:
@@ -3405,9 +3444,9 @@ components:
       required:
         - id
         - resource
-        - project
-        - containerService
-        - container
+        - projectId
+        - containerServiceId
+        - containerId
         - released
         - time
     ResourceExchangeRecord:
