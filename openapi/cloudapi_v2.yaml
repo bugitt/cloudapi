@@ -62,7 +62,7 @@ paths:
       operationId: get-experimnet-experimentId
       description: 获取一项实验（作业）详情
       security:
-        - Authorization: [ ]
+        - Authorization: []
     put:
       summary: 修改实验/作业信息
       operationId: put-experimnet-experimentId
@@ -82,7 +82,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PutExperimentRequest'
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/experiment/{experimentId}/assignment':
     parameters:
       - schema:
@@ -97,7 +97,7 @@ paths:
         - 作业
       operationId: post-experiment-experimentId-assignment
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 第一次上传作业
       responses:
         '200':
@@ -136,7 +136,7 @@ paths:
 
         否则，仅返回当前学生的作业
       security:
-        - Authorization: [ ]
+        - Authorization: []
       tags:
         - 作业
   '/experiment/{experimentId}/assignment/{assignmentId}':
@@ -155,7 +155,7 @@ paths:
       summary: 修改作业
       operationId: patch-experiment-experimentId-assignment
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 重复上传作业，直接覆盖之前的作业
       tags:
         - 作业
@@ -175,7 +175,7 @@ paths:
       summary: 查看作业
       operationId: get-experiment-experimentId-assignment-assignmentId
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 查看某次作业的详细信息
       tags:
         - 作业
@@ -199,7 +199,7 @@ paths:
         - 文件
       operationId: get-file-fileId
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 获取文件的元信息
       responses:
         '200':
@@ -227,8 +227,8 @@ paths:
 
         该接口的response是一个二进制字节流，即为文件的内容
       security:
-        - Authorization: [ ]
-      parameters: [ ]
+        - Authorization: []
+      parameters: []
       responses:
         '200':
           description: OK
@@ -262,7 +262,7 @@ paths:
         - 文件
       description: 上传新文件，或修改旧文件。如果请求体中的fileId为空或为0，那么为创建新文件，或者为修改旧文件
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -310,11 +310,11 @@ paths:
             application/zip:
               schema:
                 type: object
-                properties: { }
+                properties: {}
       operationId: get-file-package
       description: 打包下载文件，如下载当前实验的全部作业，或下载当前课程的全部资源
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -340,7 +340,7 @@ paths:
       tags:
         - 文件
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 触发打包动作
       requestBody:
         content:
@@ -370,7 +370,7 @@ paths:
                   $ref: '#/components/schemas/CourseResourceResponse'
       operationId: get-course-courseId-resource
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 获取课程所属的所有课程资源
       parameters:
         - schema:
@@ -416,7 +416,7 @@ paths:
         - 课程资源
       description: 删除课程资源
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/course/{courseId}':
     parameters:
       - schema:
@@ -438,7 +438,7 @@ paths:
       operationId: get-course-courseId
       description: 获取课程信息
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/stat/exp/{expId}/assignments':
     parameters:
       - schema:
@@ -462,7 +462,7 @@ paths:
       operationId: get-stat-exp-expId-assignment
       description: 统计某门实验的提交作业的情况（该课程的助教或教师调用）
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/stat/course/{courseId}/experiments':
     parameters:
       - schema:
@@ -486,7 +486,7 @@ paths:
       operationId: get-stat-course-courseId-experiments
       description: 获取课程中所有实验的统计信息，本课程的助教或教师调用
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /experiments:
     get:
       summary: 获取实验信息列表
@@ -504,7 +504,7 @@ paths:
       operationId: get-experiments
       description: 学生获取属于自己的实验信息列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: integer
@@ -522,7 +522,7 @@ paths:
           in: query
           name: courseId
           description: 当为空或不合法时，获取所有符合上述条件的课程的实验列表
-    parameters: [ ]
+    parameters: []
   /experiment:
     post:
       summary: 创建实验/作业
@@ -537,7 +537,7 @@ paths:
       tags:
         - 作业
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -581,8 +581,8 @@ paths:
                   $ref: '#/components/schemas/AssignmentWithStandardScoreResponse'
       description: 获取需要作为互评标准作业的8份作业，如果没有就创建（助教或教师调用）
       security:
-        - Authorization: [ ]
-      parameters: [ ]
+        - Authorization: []
+      parameters: []
       tags:
         - 互评
     parameters:
@@ -601,8 +601,8 @@ paths:
           description: OK
       description: 为一项实验正式开启互评
       security:
-        - Authorization: [ ]
-      parameters: [ ]
+        - Authorization: []
+      parameters: []
       tags:
         - 互评
     parameters:
@@ -627,7 +627,7 @@ paths:
         - 互评
       description: 为一项作业评分
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -670,7 +670,7 @@ paths:
       operationId: get-peerTasks
       description: 学生获取属于自己的互评任务
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: integer
@@ -678,7 +678,7 @@ paths:
           in: query
           name: expId
           required: true
-    parameters: [ ]
+    parameters: []
   /peerAppeal:
     post:
       summary: 提起申诉
@@ -694,7 +694,7 @@ paths:
         - 互评
       description: 学生提起申诉
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -721,7 +721,7 @@ paths:
                 $ref: '#/components/schemas/PeerAppealResponse'
       operationId: get-peerAppeal-peerAppealId
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 查看一项互评申诉
     delete:
       summary: 删除一项互评申诉
@@ -730,7 +730,7 @@ paths:
         '200':
           description: OK
       security:
-        - Authorization: [ ]
+        - Authorization: []
       tags:
         - 互评
       description: 删除一项互评申诉（学生主动撤销）
@@ -753,7 +753,7 @@ paths:
               $ref: '#/components/schemas/PatchPeerAppealRequest'
       description: 两种应用场景：学生修改申诉的内容；教师或助教处理申诉
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /peerAppeals:
     get:
       summary: 获取互评申诉列表
@@ -771,7 +771,7 @@ paths:
       operationId: get-peerAppeals
       description: 获取互评申诉列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: integer
@@ -799,7 +799,7 @@ paths:
         - 作业
       description: 保存评阅记录记录
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -815,7 +815,7 @@ paths:
       tags:
         - 作业
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: integer
@@ -838,7 +838,7 @@ paths:
         - 作业
       description: 获取一项作业的评阅记录
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: integer
@@ -860,7 +860,7 @@ paths:
       operationId: get-authentications
       description: 校验token
       security:
-        - Authorization: [ ]
+        - Authorization: []
       tags:
         - 鉴权
   '/vm/{vmId}':
@@ -884,7 +884,7 @@ paths:
                 $ref: '#/components/schemas/VirtualMachine'
       operationId: get-vm-vmId
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 根据UUID获取虚拟机信息
   '/vm/{vmId}/power':
     parameters:
@@ -904,7 +904,7 @@ paths:
       tags:
         - 虚拟机
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -934,7 +934,7 @@ paths:
       operationId: get-vms
       description: 获取符合条件的所有虚拟机
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -962,7 +962,7 @@ paths:
       operationId: get-file-package-result
       description: 获取文件打包的结果
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -986,7 +986,7 @@ paths:
         学生、教师为自己申请虚拟机
         或教师或助教为实验课程申请虚拟机
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1010,7 +1010,7 @@ paths:
         用户查看所有与自己有关的创建虚拟机的申请
         ！！！注意，该接口返回的是一个数组！！！
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/vms/apply/{applyId}':
     get:
       summary: 查看“创建虚拟机的申请”
@@ -1028,7 +1028,7 @@ paths:
         - 虚拟机
       description: 查看“创建虚拟机的申请”
       security:
-        - Authorization: [ ]
+        - Authorization: []
     patch:
       summary: 管理员处理“创建虚拟机的申请”
       operationId: patch-vms-apply
@@ -1042,7 +1042,7 @@ paths:
       tags:
         - 虚拟机
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: boolean
@@ -1070,8 +1070,8 @@ paths:
       tags:
         - 虚拟机
       security:
-        - Authorization: [ ]
-      parameters: [ ]
+        - Authorization: []
+      parameters: []
       description: |-
         修改“虚拟机创建申请”中的虚拟机个数
         例如，可以使用此接口为已经审批通过的申请创建添加新的虚拟机，但不可删除
@@ -1099,7 +1099,7 @@ paths:
       tags:
         - 虚拟机
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1127,7 +1127,7 @@ paths:
 
         该接口已被启用，请使用 GET /vm/templates
       security:
-        - Authorization: [ ]
+        - Authorization: []
       deprecated: true
     post:
       summary: 创建虚拟机模板
@@ -1188,8 +1188,8 @@ paths:
 
         前端在使用该接口时，可以考虑在具体场景中，对获取到的列表做进一步的过滤
       security:
-        - Authorization: [ ]
-    parameters: [ ]
+        - Authorization: []
+    parameters: []
   /paasUser:
     post:
       summary: 在各个PaaS相关后端中创建用户
@@ -1201,7 +1201,7 @@ paths:
         在各个PaaS相关后端中创建用户。
         该接口是幂等的，可多次重复调用而没有副作用。
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1233,7 +1233,7 @@ paths:
         - 项目
       description: 获取项目列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: integer
@@ -1293,7 +1293,7 @@ paths:
                 - name
         description: ''
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/project/{projectId}':
     parameters:
       - schema:
@@ -1315,7 +1315,7 @@ paths:
       operationId: get-project-projectId
       description: 查看某一项目详情
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/project/{projectId}/members':
     parameters:
       - schema:
@@ -1340,7 +1340,7 @@ paths:
       operationId: get-project-projectId-members
       description: 获取项目中的所有成员
       security:
-        - Authorization: [ ]
+        - Authorization: []
     post:
       summary: 添加项目成员
       operationId: post-project-projectId-members
@@ -1357,7 +1357,7 @@ paths:
         添加项目成员
         仅支持项目管理员操作
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1386,7 +1386,7 @@ paths:
         - 项目
       description: 从项目中移除成员
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1418,7 +1418,7 @@ paths:
       tags:
         - 镜像
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1454,7 +1454,7 @@ paths:
                   description: 构建镜像时，workspace相对于上下文的相对路径。默认为.
               required:
                 - name
-            examples: { }
+            examples: {}
     get:
       summary: 获取项目中的镜像列表
       operationId: get-project-projectId-images
@@ -1468,7 +1468,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Image'
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 获取当前项目中的所有可用镜像
       tags:
         - 镜像
@@ -1487,13 +1487,13 @@ paths:
           description: OK
       description: 异步创建。不返回任何内容。
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ContainerServiceRequest'
-            examples: { }
+            examples: {}
       tags:
         - 容器服务
     get:
@@ -1509,7 +1509,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ContainerServiceResponse'
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 获取当前项目中的所有容器服务
       tags:
         - 容器服务
@@ -1533,7 +1533,7 @@ paths:
           description: OK
       description: 异步创建。不返回任何内容。
       security:
-        - Authorization: [ ]
+        - Authorization: []
       tags:
         - 容器服务
   '/project/{projectId}/imageBuildTasks':
@@ -1559,7 +1559,7 @@ paths:
       operationId: get-project-projectId-imageBuildTasks
       description: 获取当前项目下的所有镜像构建任务
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/project/{projectId}/repos':
     parameters:
       - schema:
@@ -1581,7 +1581,7 @@ paths:
       operationId: get-project-projectId-repos
       description: 获取代码仓库列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
       tags:
         - 代码仓库
   '/project/{projectId}/imageRepos':
@@ -1607,7 +1607,7 @@ paths:
       operationId: get-project-projectId-imageRepos
       description: 获取当前项目下的所有Harbor镜像仓库
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /captcha:
     get:
       summary: 获取验证码
@@ -1664,7 +1664,7 @@ paths:
                 - password
                 - captchaToken
                 - captchaText
-    parameters: [ ]
+    parameters: []
   /whoami:
     get:
       summary: whoami
@@ -1680,7 +1680,7 @@ paths:
       operationId: get-whoami
       description: whoami，通过当前token，得知当前用户的基本信息
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /buaaSSOLogin:
     post:
       summary: 统一认证登录
@@ -1720,7 +1720,7 @@ paths:
         获取学生列表。仅限管理员、教师调用。
         按照学生学号倒序排列（新注册的学生排序靠前）
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -1747,7 +1747,7 @@ paths:
       operationId: post-resourcePools
       description: 为用户创建资源池。仅供管理员调用
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1761,7 +1761,7 @@ paths:
               required:
                 - resource
                 - ownerId
-    parameters: [ ]
+    parameters: []
     get:
       summary: 获取资源池列表
       operationId: get-resourcePools
@@ -1780,7 +1780,7 @@ paths:
         用户获取自己所属的资源池列表。
         如果是管理员调用的话，则返回当前所有用户的资源池情况。
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/project/{projectId}/resourcePools':
     parameters:
       - schema:
@@ -1807,7 +1807,7 @@ paths:
         获取当前项目可用的资源池列表
         即把当前项目中所有用户的所有资源池列表总和
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/daemon/trigger/{action}':
     post:
       summary: 守护进程触发
@@ -1819,7 +1819,7 @@ paths:
       tags:
         - General
       security:
-        - Authorization: [ ]
+        - Authorization: []
     parameters:
       - schema:
           type: string
@@ -1827,6 +1827,29 @@ paths:
         in: path
         required: true
         description: 需要触发的具体动作
+  '/project/{projectId}/containers/{containerServiceId}':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: containerServiceId
+        in: path
+        required: true
+    delete:
+      summary: 删除容器服务
+      operationId: delete-project-projectId-containers-containerServiceId
+      responses:
+        '200':
+          description: OK
+      description: 删除指定的容器服务
+      tags:
+        - 容器服务
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -2102,7 +2125,7 @@ components:
     ExperimentResponse:
       description: ''
       type: object
-      x-examples: { }
+      x-examples: {}
       title: ExperimentResponse
       properties:
         id:
@@ -2164,7 +2187,7 @@ components:
     StatCourseExp:
       description: ''
       type: object
-      x-examples: { }
+      x-examples: {}
       title: ''
       properties:
         id:
@@ -2227,7 +2250,7 @@ components:
     CourseResponse:
       description: ''
       type: object
-      x-examples: { }
+      x-examples: {}
       properties:
         id:
           type: integer
@@ -3416,5 +3439,5 @@ components:
       in: header
       description: ''
       name: Authorization
-  responses: { }
-  requestBodies: { }
+  responses: {}
+  requestBodies: {}
