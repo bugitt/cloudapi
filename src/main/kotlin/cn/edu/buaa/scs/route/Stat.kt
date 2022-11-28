@@ -8,6 +8,7 @@ import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.CourseService
 import cn.edu.buaa.scs.service.course
+import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.service.stat
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -46,6 +47,17 @@ fun Route.statRoute() {
                 }
             }
         }
+
+        route("/resourcePools/{resourcePoolId}") {
+            fun ApplicationCall.getResourceId(): String {
+                return parameters["resourcePoolId"] ?: throw BadRequestException("expId is not an integer")
+            }
+
+            get("/used") {
+                call.respond(call.project.getResourcePoolUsedStat(call.getResourceId()))
+            }
+        }
+
     }
 }
 

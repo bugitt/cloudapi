@@ -17,6 +17,7 @@ import cn.edu.buaa.scs.model.Project
 import cn.edu.buaa.scs.model.ProjectMember
 import cn.edu.buaa.scs.model.Resource
 import cn.edu.buaa.scs.model.ResourcePool
+import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
@@ -465,6 +466,12 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         }
     }
 
+    fun getContainerService(projectID: Long, serviceID: Long): ContainerService {
+        val project = Project.id(projectID)
+        call.user().assertWrite(project)
+        return ContainerService.id(serviceID)
+    }
+
     fun rerunContainerService(projectID: Long, serviceID: Long) {
         val project = Project.id(projectID)
         call.user().assertWrite(project)
@@ -510,6 +517,47 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
 
     suspend fun getResourcePools(): List<ResourcePool> {
         return getResourcePoolsByUser(call.userId())
+    }
+
+    suspend fun getResourceUsedRecord(id: String): ResourceUsedRecord {
+        return ResourceUsedRecord.id(id)
+    }
+
+    suspend fun getResourcePool(id: String): ResourcePool {
+        return ResourcePool.id(id)
+    }
+
+    suspend fun getResourcePoolUsedStat(resourcePoolId: String): GetStatResourcePoolsResourcePoolIdUsed200Response {
+        val resourcePool = ResourcePool.id(resourcePoolId)
+
+        // TODO 权限控制
+
+        val usedRecordList = resourcePool.usedRecordList
+            .map { ResourceUsedRecord.id(it) }
+            .filter { !it.released }
+
+        val cpuItemList = mutableListOf<ResourceUsedStatItem>()
+        val memoryItemList = mutableListOf<ResourceUsedStatItem>()
+
+        usedRecordList.forEach {
+            val name = "${it.project.name} / ${it.containerService.name}"
+            cpuItemList.add(ResourceUsedStatItem(name, it.resource.cpu))
+            memoryItemList.add(ResourceUsedStatItem(name, it.resource.memory))
+        }
+
+        (resourcePool.capacity.cpu - cpuItemList.sumOf { it.value }).let {
+            if (it > 0) {
+                cpuItemList.add(ResourceUsedStatItem("空闲", it))
+            }
+        }
+
+        (resourcePool.capacity.memory - memoryItemList.sumOf { it.value }).let {
+            if (it > 0) {
+                memoryItemList.add(ResourceUsedStatItem("空闲", it))
+            }
+        }
+
+        return GetStatResourcePoolsResourcePoolIdUsed200Response(cpuItemList, memoryItemList)
     }
 
     suspend fun getResourcePoolsByProject(projectID: Long): List<ResourcePool> {

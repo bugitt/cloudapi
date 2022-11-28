@@ -156,6 +156,14 @@ fun Route.projectRoute() {
                     call.project.deleteContainerService(call.getProjectID(), call.getContainerServiceId())
                     call.respond("OK")
                 }
+
+                get {
+                    call.respond(
+                        convertContainerServiceResponse(
+                            call.project.getContainerService(call.getProjectID(), call.getContainerServiceId())
+                        )
+                    )
+                }
             }
         }
 
@@ -200,18 +208,37 @@ fun Route.projectRoute() {
     }
 
     route("/resourceUsedRecords") {
-        route("/{resourceUsedRecordId") {
+        route("/{resourceUsedRecordId}") {
             fun ApplicationCall.getResourceUsedRecordID(): String {
                 return parameters["resourceUsedRecordId"]
                     ?: throw BadRequestException("invalid resourceUsedRecordID")
             }
             get {
                 call.respond(
-                    convertResourceUsedRecord(ResourceUsedRecord.id(call.getResourceUsedRecordID()))
+                    convertResourceUsedRecord(
+                        call.project.getResourceUsedRecord(call.getResourceUsedRecordID())
+                    )
                 )
             }
         }
 
+    }
+
+    route("/resourcePools") {
+        route("/{resourcePoolId}") {
+            fun ApplicationCall.getResourcePoolID(): String {
+                return parameters["resourcePoolId"]
+                    ?: throw BadRequestException("invalid resourcePoolID")
+            }
+
+            get {
+                call.respond(
+                    convertResourcePoolResponse(
+                        call.project.getResourcePool(call.getResourcePoolID())
+                    )
+                )
+            }
+        }
     }
 }
 

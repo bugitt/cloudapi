@@ -1830,12 +1830,14 @@ paths:
   '/project/{projectId}/containers/{containerServiceId}':
     parameters:
       - schema:
-          type: string
+          type: integer
+          format: int64
         name: projectId
         in: path
         required: true
       - schema:
-          type: string
+          type: integer
+          format: int64
         name: containerServiceId
         in: path
         required: true
@@ -1850,6 +1852,21 @@ paths:
         - 容器服务
       security:
         - Authorization: [ ]
+    get:
+      summary: 获取容器服务
+      operationId: get-project-projectId-containers-containerServiceId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerServiceResponse'
+      security:
+        - Authorization: [ ]
+      description: 根据ID获取容器服务
+      tags:
+        - 容器服务
   '/resourceUsedRecords/{resourceUsedRecordId}':
     parameters:
       - schema:
@@ -1883,6 +1900,62 @@ paths:
           in: query
           name: projectDetail
           description: 默认为false
+  '/resourcePools/{resourcePoolId}':
+    parameters:
+      - schema:
+          type: string
+        name: resourcePoolId
+        in: path
+        required: true
+    get:
+      summary: 获取指定的资源池
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcePool'
+      operationId: get-resourcePool-resourcePoolId
+      description: 通过ID获取资源池信息
+      security:
+        - Authorization: [ ]
+  '/stat/resourcePools/{resourcePoolId}/used':
+    parameters:
+      - schema:
+          type: string
+        name: resourcePoolId
+        in: path
+        required: true
+    get:
+      summary: 统计资源池的资源使用情况
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cpu:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResourceUsedStatItem'
+                  memory:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResourceUsedStatItem'
+                required:
+                  - cpu
+                  - memory
+      operationId: get-stat-resourcePools-resourcePoolId-used
+      description: 统计资源池的资源使用情况
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:
@@ -3472,6 +3545,22 @@ components:
         - receiver
         - resource
         - time
+    ResourceUsedStatItem:
+      title: ResourceUsedStatItem
+      x-stoplight:
+        id: p9ctqsnfdx5fd
+      type: object
+      properties:
+        name:
+          type: string
+          description: |-
+            未使用的份额的name值是 "空闲"
+            否则，其格式应该为 "${project_name} / ${container_service_name}"
+        value:
+          type: integer
+      required:
+        - name
+        - value
   securitySchemes:
     Authorization:
       type: apiKey
