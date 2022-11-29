@@ -13,6 +13,7 @@ import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.kube.ContainerServiceTask
 import cn.edu.buaa.scs.kube.releaseResource
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.model.ContainerServiceTemplate
 import cn.edu.buaa.scs.model.Project
 import cn.edu.buaa.scs.model.ProjectMember
 import cn.edu.buaa.scs.model.Resource
@@ -410,8 +411,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                 this.name = req.name
                 this.creator = call.userId()
                 this.projectId = projectID
+                this.projectName = project.name
                 this.serviceType = ContainerService.Type.valueOf(req.serviceType)
                 this.createTime = System.currentTimeMillis()
+                this.templateId = null
             }
             mysql.containerServiceList.add(containerService)
             req.containers.forEach { containerReq ->
@@ -449,6 +452,14 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             )
             mysql.taskDataList.add(taskData)
         }
+    }
+
+    fun getContainerServiceList(): List<ContainerService> {
+        return mysql.projectMembers
+            .filter { it.userId.eq(call.userId()) }
+            .map { it.projectId }
+            .distinct()
+            .flatMap { projectId -> mysql.containerServiceList.filter { it.projectId eq projectId }.toList() }
     }
 
     suspend fun deleteContainerService(projectID: Long, serviceID: Long) {
@@ -492,6 +503,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
     }
 
     fun getContainerServiceListByProject(projectID: Long): List<ContainerService> {
+        if (projectID <= 0) return getContainerServiceList()
         val project = Project.id(projectID)
         call.user().assertRead(project)
         return mysql.containerServiceList
@@ -579,6 +591,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                 token = call.user().paasToken,
             )
         }
+    }
+
+    suspend fun getContainerServiceTemplateList(): List<ContainerServiceTemplate> {
+        return mongo.containerServiceTemplateList.find().toList()
     }
 
     override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)

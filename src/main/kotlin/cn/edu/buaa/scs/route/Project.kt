@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.kube.getStatus
 import cn.edu.buaa.scs.model.*
+import cn.edu.buaa.scs.model.ContainerServiceTemplate
 import cn.edu.buaa.scs.model.Resource
 import cn.edu.buaa.scs.model.ResourceExchangeRecord
 import cn.edu.buaa.scs.model.ResourcePool
@@ -240,6 +241,26 @@ fun Route.projectRoute() {
             }
         }
     }
+
+    route("/containerServices") {
+        get {
+            call.respond(
+                call.project.getContainerServiceList().map {
+                    convertContainerServiceResponse(it)
+                }
+            )
+        }
+    }
+
+    route("/containerServiceTemplates") {
+        get {
+            call.respond(
+                call.project.getContainerServiceTemplateList().map {
+                    convertContainerServiceTemplate(it)
+                }
+            )
+        }
+    }
 }
 
 fun ApplicationCall.convertProjectResponse(project: Project): ProjectResponse {
@@ -300,6 +321,8 @@ fun convertContainerServiceResponse(
         containers = containers,
         creator = containerService.creator,
         projectId = containerService.projectId,
+        projectName = containerService.projectName,
+        templateId = containerService.templateId,
     )
     if (getStatus) return resp.copy(status = containerService.getStatus().name)
     return resp
@@ -358,4 +381,25 @@ suspend fun convertResourcePoolResponse(pool: ResourcePool) =
         usedRecordList = pool.usedRecordList.map { convertResourceUsedRecord(ResourceUsedRecord.id(it)) },
         exchangeRecordList = pool.exchangeRecordList.map { convertResourceExchangeRecord(ResourceExchangeRecord.id(it)) },
         time = pool.time,
+    )
+
+fun convertContainerServiceTemplate(template: ContainerServiceTemplate) =
+    cn.edu.buaa.scs.controller.models.ContainerServiceTemplate(
+        id = template._id.toString(),
+        name = template.name,
+        description = template.description,
+        category = template.category,
+        segment = template.segment,
+        config = template.configs.map { convertContainerServiceTemplateConfigItem(it) }
+    )
+
+fun convertContainerServiceTemplateConfigItem(item: ContainerServiceTemplate.ConfigItem) =
+    ContainerServiceTemplateConfigItem(
+        name = item.name,
+        label = item.label,
+        type = item.type.toString().lowercase(),
+        required = item.required,
+        options = item.options,
+        default = item.default,
+        description = item.description,
     )

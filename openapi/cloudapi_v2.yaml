@@ -1956,6 +1956,62 @@ paths:
       description: 统计资源池的资源使用情况
       security:
         - Authorization: [ ]
+  /containerServiceTemplates:
+    get:
+      summary: 获取容器服务模板列表
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    categoryName:
+                      type: string
+                    segments:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          segmaneName:
+                            type: string
+                          templateList:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ContainerServiceTemplate'
+                        required:
+                          - segmaneName
+                          - templateList
+                  required:
+                    - categoryName
+                    - segments
+      operationId: get-containerServiceTemplates
+      description: 获取容器服务模板列表
+      security:
+        - Authorization: [ ]
+  /containerServices:
+    get:
+      summary: 获取所有容器服务列表
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContainerServiceResponse'
+      operationId: get-containerServices
+      description: 获取当前用户所归属的所有项目的所有容器服务列表的总和
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:
@@ -3351,6 +3407,10 @@ components:
         projectId:
           type: integer
           format: int64
+        projectName:
+          type: string
+        templateId:
+          type: string
         serviceType:
           type: string
           description: 'SERVICE, JOB'
@@ -3369,6 +3429,7 @@ components:
         - name
         - creator
         - projectId
+        - projectName
         - serviceType
         - containers
         - createdTime
@@ -3561,6 +3622,61 @@ components:
       required:
         - name
         - value
+    ContainerServiceTemplate:
+      title: ContainerServiceTemplate
+      x-stoplight:
+        id: 6hpsa0kqu1an1
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        segment:
+          type: string
+        config:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerServiceTemplateConfigItem'
+        description:
+          type: string
+        iconUrl:
+          type: string
+      required:
+        - id
+        - name
+        - category
+        - config
+    ContainerServiceTemplateConfigItem:
+      title: ContainerServiceTemplateConfigItem
+      x-stoplight:
+        id: 59twn7biwwztz
+      type: object
+      properties:
+        label:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          description: 'string, number, boolean'
+        required:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: string
+        default:
+          type: string
+        description:
+          type: string
+      required:
+        - label
+        - name
+        - type
+        - required
   securitySchemes:
     Authorization:
       type: apiKey

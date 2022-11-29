@@ -55,8 +55,10 @@ interface ContainerService : Entity<ContainerService>, IService {
     var name: String
     var creator: String
     var projectId: Long
+    var projectName: String
     var serviceType: Type
     var createTime: Long
+    var templateId: String?
     val containers: List<Container>
         get() = mysql.containerList.filter { it.serviceId eq this.id }.toList()
 }
@@ -81,9 +83,11 @@ object ContainerServiceList : Table<ContainerService>("container_service") {
     val name = varchar("name").bindTo { it.name }
     val creator = varchar("creator").bindTo { it.creator }
     val projectId = long("project_id").bindTo { it.projectId }
+    val projectName = varchar("project_name").bindTo { it.projectName }
     val serviceType =
         varchar("service_type").transform({ ContainerService.Type.valueOf(it) }, { it.toString() })
             .bindTo { it.serviceType }
+    val templateId = varchar("template_id").bindTo { it.templateId }
     val createTime = long("create_time").bindTo { it.createTime }
 }
 

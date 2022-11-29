@@ -17,9 +17,11 @@ package cn.edu.buaa.scs.controller.models
  * @param name
  * @param creator
  * @param projectId
+ * @param projectName
  * @param serviceType SERVICE, JOB
  * @param containers
  * @param createdTime
+ * @param templateId
  * @param status UNDO, NOT_READY, RUNNING, SUCCESS, FAIL
  */
 data class ContainerServiceResponse(
@@ -27,10 +29,12 @@ data class ContainerServiceResponse(
     val name: kotlin.String,
     val creator: kotlin.String,
     val projectId: kotlin.Long,
+    val projectName: kotlin.String,
     /* SERVICE, JOB */
     val serviceType: kotlin.String,
     val containers: kotlin.collections.List<ContainerResponse>,
     val createdTime: kotlin.Long,
+    val templateId: kotlin.String? = null,
     /* UNDO, NOT_READY, RUNNING, SUCCESS, FAIL */
     val status: kotlin.String? = null
 ) 
