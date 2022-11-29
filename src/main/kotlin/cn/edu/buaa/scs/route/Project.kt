@@ -143,6 +143,20 @@ fun Route.projectRoute() {
                 )
             }
 
+            route("/fromTemplate") {
+                post {
+                    val req = call.receive<PostProjectProjectIdContainersFromTemplateRequest>()
+                    call.project.createContainerServiceFromTemplate(
+                        call.getProjectID(),
+                        req.templateId,
+                        req.configs.associate { it.name to it.value },
+                        req.resourcePoolId,
+                        req.limitedResource
+                    )
+                    call.respond("OK")
+                }
+            }
+
             route("/{containerServiceId}") {
                 fun ApplicationCall.getContainerServiceId(): Long {
                     return parameters["containerServiceId"]?.toLong()
@@ -254,11 +268,22 @@ fun Route.projectRoute() {
 
     route("/containerServiceTemplates") {
         get {
-            call.respond(
-                call.project.getContainerServiceTemplateList().map {
-                    convertContainerServiceTemplate(it)
+            call.project
+                .getContainerServiceTemplateList()
+                .groupBy { it.category }
+                .map { (category, list) ->
+                    GetContainerServiceTemplates200ResponseInner(
+                        category,
+                        list.groupBy { it.segment }.map { (segment, list) ->
+                            GetContainerServiceTemplates200ResponseInnerSegmentsInner(
+                                segment ?: "其他",
+                                list.map { convertContainerServiceTemplate(it) }
+                            )
+                        }
+                    )
+                }.let {
+                    call.respond(it)
                 }
-            )
         }
     }
 }
@@ -291,7 +316,7 @@ fun convertContainerResponse(container: Container) = ContainerResponse(
     image = container.image,
     command = container.command,
     workingDir = container.workingDir,
-    envs = container.envs?.map { (key, value) -> ContainerRequestEnvsInner(key, value) },
+    envs = container.envs?.map { (key, value) -> KvPair(key, value) },
     ports = container.ports?.map {
         ContainerServicePort(
             name = it.name,
@@ -390,6 +415,7 @@ fun convertContainerServiceTemplate(template: ContainerServiceTemplate) =
         description = template.description,
         category = template.category,
         segment = template.segment,
+        iconUrl = template.iconUrl,
         config = template.configs.map { convertContainerServiceTemplateConfigItem(it) }
     )
 

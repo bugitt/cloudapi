@@ -34,7 +34,7 @@ enum class UserRole {
     companion object {
         fun fromLevel(level: Int): UserRole {
             return when (level) {
-                1 -> STUDENT
+                0, 1 -> STUDENT
                 2 -> TEACHER
                 4 -> SYS
                 else -> throw IllegalArgumentException("Invalid user level: $level")

@@ -13,23 +13,15 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  *
- * @param name
- * @param image
+ * @param templateId
+ * @param configs
  * @param resourcePoolId
  * @param limitedResource
- * @param command
- * @param workingDir
- * @param envs
- * @param ports
  */
-data class ContainerRequest(
-    val name: kotlin.String,
-    val image: kotlin.String,
+data class PostProjectProjectIdContainersFromTemplateRequest(
+    val templateId: kotlin.String,
+    val configs: kotlin.collections.List<KvPair>,
     val resourcePoolId: kotlin.String,
-    val limitedResource: Resource,
-    val command: kotlin.String? = null,
-    val workingDir: kotlin.String? = null,
-    val envs: kotlin.collections.List<KvPair>? = null,
-    val ports: kotlin.collections.List<ContainerServicePort>? = null
+    val limitedResource: Resource
 ) 
 

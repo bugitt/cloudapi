@@ -16,6 +16,12 @@ import io.ktor.server.routing.*
 
 fun Route.courseRoute() {
 
+    route("/courses") {
+        get {
+            call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it) })
+        }
+    }
+
     route("course/{courseId}") {
         fun ApplicationCall.getCourseIdFromPath(): Int =
             parameters["courseId"]?.toInt()
@@ -24,7 +30,7 @@ fun Route.courseRoute() {
         get {
             val courseId = call.getCourseIdFromPath()
             val course = call.course.get(courseId)
-            call.respond(convertCourseResponse(call, course))
+            call.respond(call.convertCourseResponse(course))
         }
 
         route("/resource") {
@@ -70,7 +76,7 @@ fun Route.courseRoute() {
 
 }
 
-internal fun convertCourseResponse(call: ApplicationCall, course: Course): CourseResponse {
+internal fun ApplicationCall.convertCourseResponse(course: Course): CourseResponse {
     return CourseResponse(
         id = course.id,
         name = course.name,
@@ -78,7 +84,7 @@ internal fun convertCourseResponse(call: ApplicationCall, course: Course): Cours
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = call.course.studentCnt(course.id)
+        studentCnt = this.course.studentCnt(course.id)
     )
 }
 

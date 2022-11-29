@@ -73,6 +73,10 @@ object HarborClient : IProjectManager {
         deleteProjectMember(projectName, memberID)
     }
 
+    fun deleteTag() {
+
+    }
+
     private fun existProject(projectName: String): Boolean {
         return try {
             projectClient.getProject(projectName)

@@ -31,7 +31,7 @@ data class ContainerResponse(
     val resourceUsedRecordId: kotlin.String,
     val command: kotlin.String? = null,
     val workingDir: kotlin.String? = null,
-    val envs: kotlin.collections.List<ContainerRequestEnvsInner>? = null,
+    val envs: kotlin.collections.List<KvPair>? = null,
     val ports: kotlin.collections.List<ContainerServicePort>? = null
 ) 
 

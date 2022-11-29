@@ -95,7 +95,7 @@ internal fun convertStatCourseExpsResponse(
     source: CourseService.StatCourseExps
 ): StatCourseExpsResponse {
     return StatCourseExpsResponse(
-        course = convertCourseResponse(call, source.course),
+        course = call.convertCourseResponse(source.course),
         teacher = convertUserModel(source.teacher),
         studentCnt = source.studentCnt,
         exps = source.expDetails.map { convertStatCourseExp(it) }

@@ -47,6 +47,15 @@ class CourseService(val call: ApplicationCall) : IService {
         return course
     }
 
+    fun getAllCourses(): List<Course> {
+        // just for admin by now
+
+        if (!call.user().isAdmin()) {
+            throw BusinessException("only admin can get all courses")
+        }
+        return mysql.courses.toList().sortedByDescending { it.id }
+    }
+
     fun getAllStudents(courseId: Int): List<User> {
         return mysql.courseStudents.filter { it.courseId eq courseId }.toList().map { it.student }
     }

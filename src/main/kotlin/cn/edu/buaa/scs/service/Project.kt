@@ -391,6 +391,54 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
             }
     }
 
+    suspend fun createContainerServiceFromTemplate(
+        projectID: Long,
+        templateId: String,
+        configs: Map<String, String>,
+        resourcePoolId: String,
+        limitedResource: cn.edu.buaa.scs.controller.models.Resource
+    ) {
+        val template = ContainerServiceTemplate.id(templateId)
+        var image = template.baseImage
+        val envs = mutableListOf<KvPair>()
+        template.configs.forEach {
+            when (it.target) {
+                ContainerServiceTemplate.ConfigItem.Target.TAG -> {
+                    image += ":" + (configs[it.name] ?: it.default)
+                }
+
+                ContainerServiceTemplate.ConfigItem.Target.ENV -> {
+                    val key = it.name
+                    val value = configs[it.name]
+                        ?: if (it.required) throw BadRequestException("Missing config: $key") else it.default
+                    if (value != null) {
+                        envs.add(KvPair(key, value))
+                    }
+                }
+            }
+        }
+        val containerRequest = ContainerRequest(
+            name = "container-main",
+            image = image,
+            resourcePoolId = resourcePoolId,
+            limitedResource = limitedResource,
+            envs = envs,
+            ports = template.portList.map {
+                ContainerServicePort(
+                    name = "${it.protocol}-${it.port}",
+                    port = it.port,
+                    protocol = it.protocol.name,
+                )
+            },
+        )
+        val containerServiceRequest = ContainerServiceRequest(
+            name = "${template.name}-${RandomStringUtils.randomNumeric(3)}",
+            serviceType = "SERVICE",
+            containers = listOf(containerRequest),
+        )
+        createContainerService(projectID, containerServiceRequest)
+    }
+
     suspend fun createContainerService(projectID: Long, req: ContainerServiceRequest) {
         val project = Project.id(projectID)
         call.user().assertWrite(project)
@@ -423,7 +471,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
                     this.image = containerReq.image
                     this.command = containerReq.command
                     this.workingDir = containerReq.workingDir
-                    this.envs = containerReq.envs?.associate { it.key to it.value }
+                    this.envs = containerReq.envs?.associate { it.name to it.value }
                     this.ports = containerReq.ports?.map {
                         ContainerService.Port(
                             it.name,

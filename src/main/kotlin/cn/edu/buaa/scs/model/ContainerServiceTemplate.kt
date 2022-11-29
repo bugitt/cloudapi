@@ -2,8 +2,11 @@
 
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.storage.MongoIdFinder
+import cn.edu.buaa.scs.storage.mongo
 import org.bson.codecs.pojo.annotations.BsonId
 import org.litote.kmongo.Id
+import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.newId
 
@@ -41,6 +44,11 @@ data class ContainerServiceTemplate(
         enum class Target {
             TAG, ENV
         }
+    }
+
+    companion object : MongoIdFinder<ContainerServiceTemplate> {
+        override val col: CoroutineCollection<ContainerServiceTemplate>
+            get() = mongo.containerServiceTemplateList
     }
 }
 

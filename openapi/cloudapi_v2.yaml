@@ -1996,14 +1996,14 @@ paths:
                       items:
                         type: object
                         properties:
-                          segmaneName:
+                          segmentName:
                             type: string
                           templateList:
                             type: array
                             items:
                               $ref: '#/components/schemas/ContainerServiceTemplate'
                         required:
-                          - segmaneName
+                          - segmentName
                           - templateList
                   required:
                     - categoryName
@@ -2030,6 +2030,45 @@ paths:
       description: 获取当前用户所归属的所有项目的所有容器服务列表的总和
       security:
         - Authorization: [ ]
+  '/project/{projectId}/containers/fromTemplate':
+    parameters:
+      - schema:
+          type: string
+        name: projectId
+        in: path
+        required: true
+    post:
+      summary: 从模板创建容器服务
+      operationId: post-project-projectId-containers-fromTemplate
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 容器服务
+      description: 从模板创建容器服务
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                templateId:
+                  type: string
+                configs:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/KvPair'
+                resourcePoolId:
+                  type: string
+                limitedResource:
+                  $ref: '#/components/schemas/Resource'
+              required:
+                - templateId
+                - configs
+                - resourcePoolId
+                - limitedResource
 components:
   schemas:
     AssignmentResponse:
@@ -3344,15 +3383,7 @@ components:
         envs:
           type: array
           items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
-            required:
-              - key
-              - value
+            $ref: '#/components/schemas/KvPair'
         ports:
           type: array
           items:
@@ -3386,15 +3417,7 @@ components:
         envs:
           type: array
           items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
-            required:
-              - key
-              - value
+            $ref: '#/components/schemas/KvPair'
         ports:
           type: array
           items:
@@ -3695,6 +3718,19 @@ components:
         - name
         - type
         - required
+    KvPair:
+      title: KvPair
+      x-stoplight:
+        id: k4au1tvs40nv7
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+      required:
+        - name
+        - value
   securitySchemes:
     Authorization:
       type: apiKey

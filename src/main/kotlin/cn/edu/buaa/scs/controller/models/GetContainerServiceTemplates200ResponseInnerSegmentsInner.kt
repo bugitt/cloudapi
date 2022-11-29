@@ -11,14 +11,13 @@
  */
 package cn.edu.buaa.scs.controller.models
 
-
 /**
  *
- * @param key
- * @param `value`
+ * @param segmentName
+ * @param templateList
  */
-data class ContainerRequestEnvsInner(
-    val key: kotlin.String,
-    val `value`: kotlin.String
+data class GetContainerServiceTemplates200ResponseInnerSegmentsInner(
+    val segmentName: kotlin.String,
+    val templateList: kotlin.collections.List<ContainerServiceTemplate>
 ) 
 
