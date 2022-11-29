@@ -439,6 +439,24 @@ paths:
       description: 获取课程信息
       security:
         - Authorization: []
+  '/courses':
+    get:
+      summary: 管理员获取所有课程
+      tags:
+        - 课程
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseResponse'
+      operationId: get-course-list
+      security:
+        - Authorization: [ ]
+      description: 管理员获取所有课程
   '/stat/exp/{expId}/assignments':
     parameters:
       - schema:
