@@ -23,7 +23,6 @@ import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
 import cn.edu.buaa.scs.storage.file.FileManager
-import cn.edu.buaa.scs.storage.file.LocalFileManager
 import cn.edu.buaa.scs.storage.mongo
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Task
@@ -47,7 +46,7 @@ import java.util.*
 val ApplicationCall.project
     get() = ProjectService.getSvc(this) { ProjectService(this) }
 
-class ProjectService(val call: ApplicationCall) : IService, FileService.IFileManageService {
+class ProjectService(val call: ApplicationCall) : IService, FileService.FileDecorator {
     companion object : IService.Caller<ProjectService>() {
         const val imageBuildContextLocalDir = "image-build-context"
     }
@@ -645,7 +644,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.IFileMan
         return mongo.containerServiceTemplateList.find().toList()
     }
 
-    override fun manager(): FileManager = LocalFileManager(imageBuildContextLocalDir)
+    override fun manager(): FileManager = FileManager.buildFileManager("local", imageBuildContextLocalDir)
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         return Pair(

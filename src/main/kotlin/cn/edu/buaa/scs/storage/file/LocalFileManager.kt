@@ -4,9 +4,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class LocalFileManager(basePath: String) : FileManager(basePath) {
     val filePath: (storeName: String) -> String = { "$storePath/$it" }
+
+    init {
+        Files.createDirectories(Paths.get(storePath))
+    }
 
     override suspend fun name(): String = "LOCAL"
 
@@ -16,7 +22,10 @@ class LocalFileManager(basePath: String) : FileManager(basePath) {
         contentType: String,
         size: Long
     ): FileResp = withContext(Dispatchers.IO) {
-        val javaFile = java.io.File(filePath(storeName))
+        val path = Paths.get(filePath(storeName)).also {
+            Files.createDirectories(it.parent)
+        }
+        val javaFile = path.toFile()
         javaFile.createNewFile()
         javaFile.outputStream().use {
             inputStream.copyTo(it)
@@ -30,7 +39,7 @@ class LocalFileManager(basePath: String) : FileManager(basePath) {
     }
 
     override suspend fun deleteFile(filename: String) = withContext(Dispatchers.IO) {
-        java.nio.file.Files.delete(java.nio.file.Paths.get(filePath(filename)))
+        Files.delete(Paths.get(filePath(filename)))
     }
 
     override suspend fun getFile(filename: String): InputStream {
@@ -38,9 +47,9 @@ class LocalFileManager(basePath: String) : FileManager(basePath) {
     }
 
     override suspend fun downloadFile(filename: String, targetFileName: String) = withContext(Dispatchers.IO) {
-        java.nio.file.Files.copy(
-            java.nio.file.Paths.get(filePath(filename)),
-            java.nio.file.Paths.get(targetFileName),
+        Files.copy(
+            Paths.get(filePath(filename)),
+            Paths.get(targetFileName),
         )
         Unit
     }

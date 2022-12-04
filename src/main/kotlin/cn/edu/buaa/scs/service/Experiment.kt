@@ -7,7 +7,7 @@ import cn.edu.buaa.scs.controller.models.PutExperimentRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
-import cn.edu.buaa.scs.storage.file.S3
+import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import io.ktor.server.application.*
@@ -17,7 +17,7 @@ import java.util.*
 
 val ApplicationCall.experiment get() = ExperimentService.getSvc(this) { ExperimentService(this) }
 
-class ExperimentService(val call: ApplicationCall) : IService, FileService.IFileManageService {
+class ExperimentService(val call: ApplicationCall) : IService, FileService.FileDecorator {
 
     fun create(req: CreateExperimentRequest): Experiment {
         val course = Course.id(req.courseId)
@@ -213,11 +213,11 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.IFile
 
     companion object : IService.Caller<ExperimentService>() {
         private const val bucket = "exp-resource"
-        private val s3 by lazy { S3(bucket) }
+        private val fileManager by lazy { FileManager.buildFileManager("local", bucket) }
     }
 
-    override fun manager(): S3 {
-        return s3
+    override fun manager(): FileManager {
+        return fileManager
     }
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {

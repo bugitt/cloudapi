@@ -8,7 +8,7 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
-import cn.edu.buaa.scs.storage.file.S3
+import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.getFileExtension
@@ -25,13 +25,13 @@ import java.util.*
 val ApplicationCall.assignment: AssignmentService
     get() = AssignmentService.getSvc(this) { AssignmentService(this) }
 
-class AssignmentService(val call: ApplicationCall) : IService, FileService.IFileManageService {
+class AssignmentService(val call: ApplicationCall) : IService, FileService.FileDecorator {
 
     companion object : IService.Caller<AssignmentService>() {
         private const val bucketName = "scs-assignment"
     }
 
-    private val s3: S3 by lazy { S3(bucketName) }
+    private val fileManager: FileManager by lazy { FileManager.buildFileManager("local", bucketName) }
 
     fun create(expId: Int, owner: String): Assignment {
         if (mysql.assignments.exists { (it.studentId eq owner) and (it.expId eq expId) }) {
@@ -102,7 +102,7 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
         return assignment
     }
 
-    override fun manager(): S3 = s3
+    override fun manager(): FileManager = fileManager
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
         val owner = User.id(ownerId)
@@ -187,7 +187,7 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.IFile
 val ApplicationCall.assignmentReview: AssignmentReviewService
     get() = AssignmentReviewService.getSvc(this) { AssignmentReviewService(this) }
 
-class AssignmentReviewService(val call: ApplicationCall) : IService, FileService.IFileManageService {
+class AssignmentReviewService(val call: ApplicationCall) : IService, FileService.FileDecorator {
 
     companion object : IService.Caller<AssignmentReviewService>() {
         private const val bucketName = "scs-reviewed-assignments"
@@ -231,10 +231,10 @@ class AssignmentReviewService(val call: ApplicationCall) : IService, FileService
         return mysql.assignmentReviews.filter { it.assignmentId eq assignmentId }.toList()
     }
 
-    private val s3 = S3(bucketName)
+    private val fileManager = FileManager.buildFileManager("local", bucketName)
 
-    override fun manager(): S3 {
-        return s3
+    override fun manager(): FileManager {
+        return fileManager
     }
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {

@@ -2,7 +2,9 @@
 
 package cn.edu.buaa.scs.model
 
+import cn.edu.buaa.scs.service.*
 import cn.edu.buaa.scs.utils.IntOrString
+import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
@@ -14,6 +16,9 @@ import org.ktorm.schema.varchar
 
 sealed interface FileType {
     val name: String
+    fun getInvolvedEntity(involvedId: Int): IEntity
+
+    fun manageService(call: ApplicationCall): FileService.FileDecorator
 
     companion object {
         fun valueOf(name: String): FileType {
@@ -31,6 +36,14 @@ sealed interface FileType {
     object Assignment : FileType {
         override val name: String
             get() = "Assignment"
+
+        override fun getInvolvedEntity(involvedId: Int): IEntity {
+            return cn.edu.buaa.scs.model.Assignment.id(involvedId)
+        }
+
+        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+            return call.assignment
+        }
     }
 
     sealed interface Resource : FileType {
@@ -48,21 +61,53 @@ sealed interface FileType {
     object CourseResource : Resource {
         override val name: String
             get() = "CourseResource"
+
+        override fun getInvolvedEntity(involvedId: Int): IEntity {
+            return Course.id(involvedId)
+        }
+
+        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+            return call.courseResource
+        }
     }
 
     object ExperimentResource : Resource {
         override val name: String
             get() = "ExperimentResource"
+
+        override fun getInvolvedEntity(involvedId: Int): IEntity {
+            return Experiment.id(involvedId)
+        }
+
+        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+            return call.experiment
+        }
     }
 
     object AssignmentReview : FileType {
         override val name: String
             get() = "AssignmentReview"
+
+        override fun getInvolvedEntity(involvedId: Int): IEntity {
+            return cn.edu.buaa.scs.model.Assignment.id(involvedId)
+        }
+
+        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+            return call.assignmentReview
+        }
     }
 
     object ImageBuildContextTar : FileType {
         override val name: String
             get() = "ImageBuildContextTar"
+
+        override fun getInvolvedEntity(involvedId: Int): IEntity {
+            return Project.id(involvedId.toLong())
+        }
+
+        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+            return call.project
+        }
     }
 }
 

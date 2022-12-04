@@ -79,7 +79,7 @@ class FileService(val call: ApplicationCall) : IService {
         return "https://scs.buaa.edu.cn/scsos/public/$fileName"
     }
 
-    sealed interface IFileManageService {
+    sealed interface FileDecorator {
 
         fun manager(): FileManager
 
@@ -118,7 +118,7 @@ class FileService(val call: ApplicationCall) : IService {
             throw BadRequestException("上传作业时，仅允许上传单个文件")
         }
 
-        val service: IFileManageService = fileType.manageService(call)
+        val service: FileDecorator = fileType.manageService(call)
         // check owner
         if (!service.checkPermission(owner, involvedId)) {
             throw BadRequestException("owner mismatch")
@@ -276,9 +276,7 @@ class FileService(val call: ApplicationCall) : IService {
 
     suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
-        val service = file.fileType.manageService(call)
-        val inputStream = service.manager().getFile(file.storeName)
-        return { inputStream.use { it.copyTo(this) } }
+        return { file.inputStream().use { it.copyTo(this) } }
     }
 
     fun getPackageResult(packageId: String): Boolean {
@@ -318,7 +316,7 @@ class FileService(val call: ApplicationCall) : IService {
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
                 files.forEach { file ->
                     zipOut.putNextEntry(ZipEntry(file.name))
-                    service.manager().getFile(file.storeName).use { input ->
+                    file.inputStream().use { input ->
                         input.copyTo(zipOut)
                     }
                 }
@@ -329,25 +327,15 @@ class FileService(val call: ApplicationCall) : IService {
             packageResult[packageId] = true
         }
     }
-
-    private fun FileType.getInvolvedEntity(involvedId: Int): IEntity =
-        when (this) {
-            FileType.Assignment -> Assignment.id(involvedId)
-            FileType.CourseResource -> Course.id(involvedId)
-            FileType.ExperimentResource -> Experiment.id(involvedId)
-            FileType.AssignmentReview -> Assignment.id(involvedId)
-            FileType.ImageBuildContextTar -> Project.id(involvedId.toLong())
-        }
 }
 
-fun FileType.manageService(call: ApplicationCall): FileService.IFileManageService =
-    when (this) {
-        FileType.Assignment -> call.assignment
-        FileType.CourseResource -> call.courseResource
-        FileType.ExperimentResource -> call.experiment
-        FileType.AssignmentReview -> call.assignmentReview
-        FileType.ImageBuildContextTar -> call.project
-    }
+private fun File.getManager(): FileManager {
+    return FileManager.buildFileManager(this.storeType, this.storePath)
+}
+
+suspend fun File.inputStream(): InputStream {
+    return this.getManager().getFile(this.storeName)
+}
 
 fun File.Companion.id(id: Int): File {
     return mysql.files.find { it.id eq id }

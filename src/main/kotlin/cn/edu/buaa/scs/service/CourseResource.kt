@@ -4,7 +4,7 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
-import cn.edu.buaa.scs.storage.file.S3
+import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.warn
@@ -19,7 +19,7 @@ val ApplicationCall.courseResource: CourseResourceService
     get() =
         CourseResourceService.getSvc(this) { CourseResourceService(this) }
 
-class CourseResourceService(private val call: ApplicationCall) : IService, FileService.IFileManageService {
+class CourseResourceService(private val call: ApplicationCall) : IService, FileService.FileDecorator {
     companion object : IService.Caller<CourseResourceService>() {
         const val bucketName = "scs-course-resource"
     }
@@ -93,10 +93,10 @@ class CourseResourceService(private val call: ApplicationCall) : IService, FileS
 
     }
 
-    private val s3 = S3(bucketName)
+    private val fileManager = FileManager.buildFileManager("local", bucketName)
 
-    override fun manager(): S3 {
-        return s3
+    override fun manager(): FileManager {
+        return fileManager
     }
 
     override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
@@ -141,7 +141,7 @@ class CourseResourceService(private val call: ApplicationCall) : IService, FileS
                 .filter { (it.courseId eq involvedId) and (it.fileId.isNotNull() and (it.fileId notEq 0)) }
                 .toList()
                 .map { it.file }
-        if (fileIdList != null && fileIdList.isNotEmpty()) {
+        if (!fileIdList.isNullOrEmpty()) {
             files = files.filter { fileIdList.contains(it.id) }
         }
         val readme = """

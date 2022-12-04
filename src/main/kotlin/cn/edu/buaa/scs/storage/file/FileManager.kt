@@ -12,7 +12,6 @@ data class FileResp(
 abstract class FileManager(protected val storePath: String) {
 
     companion object {
-        @Suppress("unused")
         fun buildFileManager(type: String, storePath: String): FileManager {
             return when (type.lowercase()) {
                 "local" -> LocalFileManager(storePath)
