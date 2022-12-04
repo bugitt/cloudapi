@@ -42,7 +42,11 @@ class LocalFileManager(basePath: String) : FileManager(basePath) {
         Files.delete(Paths.get(filePath(filename)))
     }
 
-    override suspend fun getFile(filename: String): InputStream {
+    override suspend fun inputStreamSuspend(filename: String): InputStream = withContext(Dispatchers.IO) {
+        java.io.File(filePath(filename)).inputStream()
+    }
+
+    override fun inputStream(filename: String): InputStream {
         return java.io.File(filePath(filename)).inputStream()
     }
 

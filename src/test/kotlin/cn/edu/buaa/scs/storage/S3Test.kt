@@ -48,7 +48,7 @@ class S3TEst {
                     assert(fileInfo.size == 5L)
 
                     // get
-                    assert(String(s3Uploader.getFile(filename).readBytes()) == content)
+                    assert(String(s3Uploader.inputStreamSuspend(filename).readBytes()) == content)
 
                     // download
                     val newFilepath = "${getBaseFilePath()}/$filename-2"

@@ -63,8 +63,12 @@ class S3(storePath: String) : FileManager(storePath) {
             .let { minioClient.removeObject(it) }
     }
 
-    override suspend fun getFile(filename: String): InputStream = withContext(dispatcher) {
-        GetObjectArgs
+    override suspend fun inputStreamSuspend(filename: String): InputStream = withContext(dispatcher) {
+        inputStream(filename)
+    }
+
+    override fun inputStream(filename: String): InputStream {
+        return GetObjectArgs
             .builder()
             .bucket(storePath)
             .`object`(filename)

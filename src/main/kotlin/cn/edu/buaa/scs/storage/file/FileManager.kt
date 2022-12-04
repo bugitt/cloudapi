@@ -32,7 +32,9 @@ abstract class FileManager(protected val storePath: String) {
 
     abstract suspend fun deleteFile(filename: String)
 
-    abstract suspend fun getFile(filename: String): InputStream
+    abstract suspend fun inputStreamSuspend(filename: String): InputStream
+
+    abstract fun inputStream(filename: String): InputStream
 
     abstract suspend fun downloadFile(filename: String, targetFileName: String)
 }

@@ -15,6 +15,7 @@ import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.utils.value
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -22,7 +23,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator
+import org.apache.commons.compress.archivers.zip.UnixStat
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.apache.tika.Tika
+import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.add
 import org.ktorm.entity.find
@@ -31,8 +37,7 @@ import java.io.*
 import java.net.URLEncoder
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
+import java.util.concurrent.Executors
 
 val ApplicationCall.file: FileService
     get() = FileService.getSvc(this) { FileService(this) }
@@ -77,6 +82,20 @@ class FileService(val call: ApplicationCall) : IService {
         }
         // TODO 落库
         return "https://scs.buaa.edu.cn/scsos/public/$fileName"
+    }
+
+    suspend fun convertS3ToLocal() {
+        if (!call.user().isAdmin()) return
+        val fileId = call.request.queryParameters["fileId"]?.toInt() ?: throw BadRequestException("No file id found")
+        mysql.files.find { it.id.eq(fileId).and(it.storeType.eq("S3")) }?.let { f ->
+            val inputStream = f.inputStreamSuspend()
+            inputStream.use {
+                val fileManager = FileManager.buildFileManager("local", f.storePath)
+                fileManager.uploadFile(f.storeName, it, f.contentType, f.size)
+            }
+            f.storeType = "LOCAL"
+            f.flushChanges()
+        } ?: throw NotFoundException("File not found")
     }
 
     sealed interface FileDecorator {
@@ -276,7 +295,7 @@ class FileService(val call: ApplicationCall) : IService {
 
     suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
         call.user().assertRead(file)
-        return { file.inputStream().use { it.copyTo(this) } }
+        return { file.inputStreamSuspend().use { it.copyTo(this) } }
     }
 
     fun getPackageResult(packageId: String): Boolean {
@@ -313,17 +332,35 @@ class FileService(val call: ApplicationCall) : IService {
         withContext(Dispatchers.IO) {
             val zipFile = java.io.File(packageId)
             zipFile.createNewFile()
-            ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
-                files.forEach { file ->
-                    zipOut.putNextEntry(ZipEntry(file.name))
-                    file.inputStream().use { input ->
-                        input.copyTo(zipOut)
-                    }
-                }
+//            ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
+//                files.forEach { file ->
+//                    zipOut.putNextEntry(ZipEntry(file.name))
+//                    file.inputStream().use { input ->
+//                        input.copyTo(zipOut)
+//                    }
+//                }
+//
+//                zipOut.putNextEntry(ZipEntry("README"))
+//                zipOut.write(readme.toByteArray())
+//            }
 
-                zipOut.putNextEntry(ZipEntry("README"))
-                zipOut.write(readme.toByteArray())
+            val threadFactory = ThreadFactoryBuilder().setNameFormat("package-%d").build()
+            val executor = Executors.newFixedThreadPool(6, threadFactory)
+            val parallelScatterZipCreator = ParallelScatterZipCreator(executor)
+            val addEntry: (String, Long, () -> InputStream) -> Unit = { filename, size, inputStreamProvider ->
+                val entry = ZipArchiveEntry(filename)
+                entry.method = ZipArchiveEntry.DEFLATED
+                entry.size = size
+                entry.unixMode = UnixStat.FILE_FLAG or 436
+                parallelScatterZipCreator.addArchiveEntry(entry, inputStreamProvider)
             }
+            ZipArchiveOutputStream(FileOutputStream(zipFile)).use { zipOut ->
+                zipOut.encoding = "UTF-8"
+                files.forEach { addEntry(it.name, it.size) { it.inputStream() } }
+                addEntry("README", readme.length.toLong()) { readme.byteInputStream() }
+                parallelScatterZipCreator.writeTo(zipOut)
+            }
+            executor.shutdownNow()
             packageResult[packageId] = true
         }
     }
@@ -333,8 +370,12 @@ private fun File.getManager(): FileManager {
     return FileManager.buildFileManager(this.storeType, this.storePath)
 }
 
-suspend fun File.inputStream(): InputStream {
-    return this.getManager().getFile(this.storeName)
+fun File.inputStream(): InputStream {
+    return this.getManager().inputStream(this.storeName)
+}
+
+suspend fun File.inputStreamSuspend(): InputStream {
+    return this.getManager().inputStreamSuspend(this.storeName)
 }
 
 fun File.Companion.id(id: Int): File {
