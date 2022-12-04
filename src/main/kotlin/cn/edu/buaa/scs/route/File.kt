@@ -29,6 +29,10 @@ fun Route.fileRoute() {
     }
 
     route("/file") {
+        post("convert") {
+            call.file.convertS3ToLocal()
+            call.respond("OK")
+        }
         post {
             call.file.createOrUpdate().let {
                 call.respond(UploadFileResponse(it.map { file -> convertFileResponse(file) }))

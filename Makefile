@@ -1,7 +1,7 @@
 JAVA_HOME ?= ${JAVA_HOME}
 
 VERSION = ${shell git describe --tags}
-IMAGE = scs.buaa.edu.cn:8081/iobs/cloudapi:$(VERSION)
+IMAGE = scs.buaa.edu.cn:8081/iobs/cloudapi:v2.0.1-enhance-2
 
 .PHONY: all build image push
 

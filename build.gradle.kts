@@ -82,6 +82,8 @@ dependencies {
     implementation("com.google.guava:guava:31.0.1-jre")
     implementation("io.netty:netty-all:4.1.78.Final")
     implementation("io.github.yufeixuan:easy-captcha:1.5.2")
+    implementation("org.apache.commons:commons-compress:1.22")
+
 
     // kubernetes
     val kubernetes_client_version = "6.0.0"
