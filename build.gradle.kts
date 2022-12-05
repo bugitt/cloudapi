@@ -21,8 +21,7 @@ repositories {
 }
 
 dependencies {
-    // ktor
-    val ktor_version = "2.1.2"
+    val ktor_version = "2.1.3"
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     implementation("io.ktor:ktor-server-call-id:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
@@ -39,6 +38,8 @@ dependencies {
     implementation("io.ktor:ktor-client-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-cio-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:$ktor_version")
 
     // coroutine
     val coroutine_version = "1.6.4"
@@ -98,8 +99,6 @@ dependencies {
     implementation("com.hierynomus:sshj:0.33.0")
 
     // test
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
-    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
 }
 

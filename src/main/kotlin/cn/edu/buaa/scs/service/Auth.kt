@@ -13,7 +13,7 @@ import cn.edu.buaa.scs.utils.encrypt.RSAEncrypt
 import com.yufeixuan.captcha.Captcha
 import com.yufeixuan.captcha.SpecCaptcha
 import io.ktor.client.*
-import io.ktor.client.call.*
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.server.application.*

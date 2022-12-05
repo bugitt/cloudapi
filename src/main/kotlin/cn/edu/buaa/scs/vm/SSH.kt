@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.vm
 
 import cn.edu.buaa.scs.model.VirtualMachine
+import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
