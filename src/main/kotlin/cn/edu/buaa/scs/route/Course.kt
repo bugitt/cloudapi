@@ -18,7 +18,8 @@ fun Route.courseRoute() {
 
     route("/courses") {
         get {
-            call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it) })
+//            call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it) })
+            call.respond(call.course.getAllCourses())
         }
     }
 
