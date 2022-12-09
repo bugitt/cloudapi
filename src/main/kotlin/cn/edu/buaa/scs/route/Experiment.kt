@@ -161,7 +161,7 @@ internal fun convertExperimentResponse(call: ApplicationCall, experiment: Experi
         peerAssessmentRules = experiment.peerAssessmentRules,
         peerAssessmentStart = experiment.peerAssessmentStart,
         sentEmail = experiment.sentEmail,
-        course = call.convertCourseResponse(experiment.course),
+        course = call.convertCourseResponse(experiment.course, true),
         vm = experiment.getVmApply()?.let { convertExpVmInfo(it) },
     )
 

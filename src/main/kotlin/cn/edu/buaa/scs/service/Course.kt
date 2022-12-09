@@ -49,31 +49,13 @@ class CourseService(val call: ApplicationCall) : IService {
         return course
     }
 
-    fun getAllCourses(): List<CourseResponse> {
+    fun getAllCourses(): List<Course> {
         // just for admin by now
 
         if (!call.user().isAdmin()) {
             throw BusinessException("only admin can get all courses")
         }
-
-        return mysql.from(Terms)
-            .innerJoin(Courses, on = Terms.id eq Courses.termId)
-            .innerJoin(Users, on = Courses.teacherId eq Users.id)
-            .innerJoin(CourseStudents, on = Courses.id eq CourseStudents.courseId)
-            .select(Courses.id, Courses.name, Users.name, Terms.id, Terms.name, Courses.createTime,
-                Courses.departmentId, count(CourseStudents.studentId))
-            .groupBy(Courses.id, Users.name)
-            .map {
-                    row -> CourseResponse(
-                        id = row[Courses.id] ?: -1,
-                        name = row[Courses.name] ?: "",
-                        teacher = row[Users.name] ?: "",
-                        term = TermModel(row.getInt(4), row.getString(5)),
-                        createTime = row[Courses.createTime] ?: "",
-                        departmentId = row[Courses.departmentId] ?: "21",
-                        studentCnt = row.getInt(8)
-                    )
-            }
+        return mysql.courses.toList().sortedByDescending { it.id }
     }
 
     fun getAllStudents(courseId: Int): List<User> {
