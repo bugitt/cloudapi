@@ -49,7 +49,7 @@ kubeconfig.yml
 
 benchmark
 
-dev.application.conf
+conf/
 prod.application.conf
 
 .fleet
