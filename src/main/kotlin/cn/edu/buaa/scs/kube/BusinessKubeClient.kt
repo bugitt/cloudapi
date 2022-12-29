@@ -1,15 +1,32 @@
 package cn.edu.buaa.scs.kube
 
 import cn.edu.buaa.scs.application
+import cn.edu.buaa.scs.kube.crd.v1alpha1.Builder
+import cn.edu.buaa.scs.kube.crd.v1alpha1.BuilderList
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.utils.getConfigString
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
+import io.fabric8.kubernetes.client.dsl.MixedOperation
+import io.fabric8.kubernetes.client.dsl.Resource
+import io.ktor.server.plugins.*
 
 object BusinessKubeClient : IProjectManager {
     val client by lazy(businessKubeClientBuilder)
 
+    private val builderClient by lazy {
+        client.resources(
+            Builder::class.java,
+            BuilderList::class.java
+        ) as MixedOperation<Builder, BuilderList, Resource<Builder>>
+    }
+
     val nodeIp by lazy { application.getConfigString("kube.business.nodeIp") }
+
+    fun getBuilder(name: String, namespace: String): Result<Builder> = runCatching {
+        builderClient.inNamespace(namespace).withName(name).get()
+            ?: throw NotFoundException("Builder $name not found")
+    }
 
     fun deleteResource(namespace: String, resourceName: String) = runCatching {
         // try to delete service
