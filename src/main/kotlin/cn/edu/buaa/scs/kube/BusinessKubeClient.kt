@@ -1,10 +1,7 @@
 package cn.edu.buaa.scs.kube
 
 import cn.edu.buaa.scs.application
-import cn.edu.buaa.scs.kube.crd.v1alpha1.Builder
-import cn.edu.buaa.scs.kube.crd.v1alpha1.BuilderList
-import cn.edu.buaa.scs.kube.crd.v1alpha1.Deployer
-import cn.edu.buaa.scs.kube.crd.v1alpha1.DeployerList
+import cn.edu.buaa.scs.kube.crd.v1alpha1.*
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.utils.getConfigString
 import com.fkorotkov.kubernetes.metadata
@@ -19,15 +16,22 @@ object BusinessKubeClient : IProjectManager {
     private val builderClient by lazy {
         client.resources(
             Builder::class.java,
-            BuilderList::class.java
+            BuilderList::class.java,
         ) as MixedOperation<Builder, BuilderList, Resource<Builder>>
     }
 
     private val deployerClient by lazy {
         client.resources(
             Deployer::class.java,
-            DeployerList::class.java
+            DeployerList::class.java,
         ) as MixedOperation<Deployer, DeployerList, Resource<Deployer>>
+    }
+
+    private val workflowClient by lazy {
+        client.resources(
+            Workflow::class.java,
+            WorkflowList::class.java,
+        ) as MixedOperation<Workflow, WorkflowList, Resource<Workflow>>
     }
 
     val nodeIp by lazy { application.getConfigString("kube.business.nodeIp") }
@@ -40,6 +44,11 @@ object BusinessKubeClient : IProjectManager {
     fun getDeployer(name: String, namespace: String): Result<Deployer> = runCatching {
         deployerClient.inNamespace(namespace).withName(name).get()
             ?: throw NotFoundException("Deployer $name not found")
+    }
+
+    fun getWorkflow(name: String, namespace: String): Result<Workflow> = runCatching {
+        workflowClient.inNamespace(namespace).withName(name).get()
+            ?: throw NotFoundException("Workflow $name not found")
     }
 
     fun deleteResource(namespace: String, resourceName: String) = runCatching {
