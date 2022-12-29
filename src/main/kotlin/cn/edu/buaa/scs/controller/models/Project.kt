@@ -34,5 +34,5 @@ data class Project(
     val displayName: kotlin.String? = null,
     val description: kotlin.String? = null,
     val expId: kotlin.Int? = null
-) 
+)
 

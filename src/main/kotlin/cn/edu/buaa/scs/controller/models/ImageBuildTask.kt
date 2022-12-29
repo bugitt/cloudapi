@@ -31,5 +31,5 @@ data class ImageBuildTask(
     val status: kotlin.String,
     val createdTime: kotlin.Long,
     val endTime: kotlin.Long
-) 
+)
 

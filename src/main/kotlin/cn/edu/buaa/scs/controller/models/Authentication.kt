@@ -21,5 +21,5 @@ data class Authentication(
     /* 用户的学工号，小写 */
     val id: kotlin.String,
     val token: kotlin.String
-) 
+)
 

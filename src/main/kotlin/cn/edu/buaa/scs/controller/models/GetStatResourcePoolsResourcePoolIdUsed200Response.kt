@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.ResourceUsedStatItem
+
 /**
  *
  * @param cpu
@@ -19,5 +21,5 @@ package cn.edu.buaa.scs.controller.models
 data class GetStatResourcePoolsResourcePoolIdUsed200Response(
     val cpu: kotlin.collections.List<ResourceUsedStatItem>,
     val memory: kotlin.collections.List<ResourceUsedStatItem>
-) 
+)
 

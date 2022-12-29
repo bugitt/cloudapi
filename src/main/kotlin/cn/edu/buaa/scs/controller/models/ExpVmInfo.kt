@@ -25,5 +25,5 @@ data class ExpVmInfo(
     val actualNum: kotlin.Int,
     /* 虚拟机申请状态 */
     val status: kotlin.Int
-) 
+)
 

@@ -32,5 +32,5 @@ data class Image(
     val pullCommand: kotlin.String,
     val pushTime: kotlin.Long? = null,
     val pullTime: kotlin.Long? = null
-) 
+)
 

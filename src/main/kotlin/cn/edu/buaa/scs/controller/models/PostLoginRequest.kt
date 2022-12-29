@@ -24,5 +24,5 @@ data class PostLoginRequest(
     val password: kotlin.String,
     val captchaToken: kotlin.String,
     val captchaText: kotlin.String
-) 
+)
 

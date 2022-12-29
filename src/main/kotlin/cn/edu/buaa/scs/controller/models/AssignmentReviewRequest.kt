@@ -20,5 +20,5 @@ package cn.edu.buaa.scs.controller.models
 data class AssignmentReviewRequest(
     val assignmentId: kotlin.Int,
     val fileId: kotlin.Int
-) 
+)
 

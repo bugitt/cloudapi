@@ -11,6 +11,9 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.AssignmentReviewResponse
+import cn.edu.buaa.scs.controller.models.FileResponse
+
 /**
  *
  * @param id
@@ -37,5 +40,5 @@ data class AssignmentResponse(
     val peerScore: kotlin.Double? = null,
     val finalScore: kotlin.Double? = null,
     val assignmentReview: AssignmentReviewResponse? = null
-) 
+)
 

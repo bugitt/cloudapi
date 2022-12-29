@@ -45,5 +45,5 @@ data class CreateVmApplyRequest(
     val experimentId: kotlin.Int? = null,
     /* 表示具体为哪些学生分配虚拟机。需要与experimentId字段结合使用 */
     val studentIdList: kotlin.collections.List<kotlin.String>? = null
-) 
+)
 

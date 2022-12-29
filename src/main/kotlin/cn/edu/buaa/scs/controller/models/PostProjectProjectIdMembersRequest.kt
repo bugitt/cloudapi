@@ -21,5 +21,5 @@ data class PostProjectProjectIdMembersRequest(
     val userId: kotlin.String,
     /* 枚举值，OWNER，ADMIN，MEMBER */
     val role: kotlin.String
-) 
+)
 

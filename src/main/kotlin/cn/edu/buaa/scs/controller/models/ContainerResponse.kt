@@ -11,6 +11,9 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.ContainerServicePort
+import cn.edu.buaa.scs.controller.models.KvPair
+
 /**
  *
  * @param id
@@ -33,5 +36,5 @@ data class ContainerResponse(
     val workingDir: kotlin.String? = null,
     val envs: kotlin.collections.List<KvPair>? = null,
     val ports: kotlin.collections.List<ContainerServicePort>? = null
-) 
+)
 

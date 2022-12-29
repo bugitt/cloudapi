@@ -28,5 +28,5 @@ data class LoginUserResponse(
     val isAssistant: kotlin.Boolean,
     val token: kotlin.String,
     val paasToken: kotlin.String
-) 
+)
 

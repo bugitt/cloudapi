@@ -11,6 +11,10 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.ContainerServicePort
+import cn.edu.buaa.scs.controller.models.KvPair
+import cn.edu.buaa.scs.controller.models.Resource
+
 /**
  *
  * @param name
@@ -31,5 +35,5 @@ data class ContainerRequest(
     val workingDir: kotlin.String? = null,
     val envs: kotlin.collections.List<KvPair>? = null,
     val ports: kotlin.collections.List<ContainerServicePort>? = null
-) 
+)
 

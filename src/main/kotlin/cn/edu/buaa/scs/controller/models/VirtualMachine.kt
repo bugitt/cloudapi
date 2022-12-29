@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.VmNetInfo
+
 /**
  *
  * @param uuid
@@ -57,5 +59,5 @@ data class VirtualMachine(
     /* gray, green, yellow, red */
     val overallStatus: kotlin.String,
     val netInfos: kotlin.collections.List<VmNetInfo>
-) 
+)
 

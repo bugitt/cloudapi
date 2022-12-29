@@ -18,7 +18,7 @@ sealed interface FileType {
     val name: String
     fun getInvolvedEntity(involvedId: Int): IEntity
 
-    fun manageService(call: ApplicationCall): FileService.FileDecorator
+    fun decorator(call: ApplicationCall): FileService.FileDecorator
 
     companion object {
         fun valueOf(name: String): FileType {
@@ -41,7 +41,7 @@ sealed interface FileType {
             return cn.edu.buaa.scs.model.Assignment.id(involvedId)
         }
 
-        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+        override fun decorator(call: ApplicationCall): FileService.FileDecorator {
             return call.assignment
         }
     }
@@ -66,7 +66,7 @@ sealed interface FileType {
             return Course.id(involvedId)
         }
 
-        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+        override fun decorator(call: ApplicationCall): FileService.FileDecorator {
             return call.courseResource
         }
     }
@@ -79,7 +79,7 @@ sealed interface FileType {
             return Experiment.id(involvedId)
         }
 
-        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+        override fun decorator(call: ApplicationCall): FileService.FileDecorator {
             return call.experiment
         }
     }
@@ -92,7 +92,7 @@ sealed interface FileType {
             return cn.edu.buaa.scs.model.Assignment.id(involvedId)
         }
 
-        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+        override fun decorator(call: ApplicationCall): FileService.FileDecorator {
             return call.assignmentReview
         }
     }
@@ -105,7 +105,7 @@ sealed interface FileType {
             return Project.id(involvedId.toLong())
         }
 
-        override fun manageService(call: ApplicationCall): FileService.FileDecorator {
+        override fun decorator(call: ApplicationCall): FileService.FileDecorator {
             return call.project
         }
     }

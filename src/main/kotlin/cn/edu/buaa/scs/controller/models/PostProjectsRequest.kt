@@ -28,5 +28,5 @@ data class PostProjectsRequest(
     val description: kotlin.String? = null,
     /* 表示是否是个人项目，默认为false */
     val isPersonal: kotlin.Boolean? = null
-) 
+)
 

@@ -27,5 +27,5 @@ data class ContainerServicePort(
     val protocol: kotlin.String,
     val exportIP: kotlin.String? = null,
     val exportPort: kotlin.Int? = null
-) 
+)
 

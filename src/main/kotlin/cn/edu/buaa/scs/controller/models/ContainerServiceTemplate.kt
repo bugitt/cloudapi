@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.ContainerServiceTemplateConfigItem
+
 /**
  *
  * @param id
@@ -29,5 +31,5 @@ data class ContainerServiceTemplate(
     val segment: kotlin.String? = null,
     val description: kotlin.String? = null,
     val iconUrl: kotlin.String? = null
-) 
+)
 

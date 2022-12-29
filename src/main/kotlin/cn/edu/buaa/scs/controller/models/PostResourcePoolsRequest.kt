@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.Resource
+
 /**
  *
  * @param resource
@@ -19,5 +21,5 @@ package cn.edu.buaa.scs.controller.models
 data class PostResourcePoolsRequest(
     val resource: Resource,
     val ownerId: kotlin.String
-) 
+)
 

@@ -20,5 +20,5 @@ package cn.edu.buaa.scs.controller.models
 data class KvPair(
     val name: kotlin.String,
     val `value`: kotlin.String
-) 
+)
 

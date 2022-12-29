@@ -27,5 +27,5 @@ data class ProjectMember(
     val username: kotlin.String,
     /* 枚举值，OWNER，ADMIN, MEMBER */
     val role: kotlin.String
-) 
+)
 

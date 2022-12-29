@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.ContainerResponse
+
 /**
  *
  * @param id
@@ -37,5 +39,5 @@ data class ContainerServiceResponse(
     val templateId: kotlin.String? = null,
     /* UNDO, NOT_READY, RUNNING, SUCCESS, FAIL */
     val status: kotlin.String? = null
-) 
+)
 

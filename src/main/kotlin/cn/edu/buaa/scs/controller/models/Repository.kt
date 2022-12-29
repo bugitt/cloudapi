@@ -26,5 +26,5 @@ data class Repository(
     val url: kotlin.String,
     val username: kotlin.String,
     val token: kotlin.String
-) 
+)
 

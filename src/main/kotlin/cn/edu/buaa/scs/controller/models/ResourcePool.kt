@@ -11,6 +11,10 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.Resource
+import cn.edu.buaa.scs.controller.models.ResourceExchangeRecord
+import cn.edu.buaa.scs.controller.models.ResourceUsedRecord
+
 /**
  *
  * @param id
@@ -32,5 +36,5 @@ data class ResourcePool(
     val exchangeRecordList: kotlin.collections.List<ResourceExchangeRecord>,
     /* 创建资源池时的时间戳 */
     val time: kotlin.Long
-) 
+)
 

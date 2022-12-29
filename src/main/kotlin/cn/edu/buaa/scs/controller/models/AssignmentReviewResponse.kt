@@ -28,5 +28,5 @@ data class AssignmentReviewResponse(
     val reviewedAt: kotlin.Long,
     val reviewerId: kotlin.String,
     val reviewerName: kotlin.String
-) 
+)
 

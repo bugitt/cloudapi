@@ -24,5 +24,5 @@ data class PostProjectsRequest1(
     val expId: kotlin.Int? = null,
     /* 是否是个人项目。个人项目不允许添加其他成员。默认为false */
     val isPersonal: kotlin.Boolean? = null
-) 
+)
 

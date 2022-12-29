@@ -49,5 +49,5 @@ data class VirtualMachineTemplate(
     val diskSize: kotlin.Long,
     /* gray, green, yellow, red */
     val overallStatus: kotlin.String
-) 
+)
 

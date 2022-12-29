@@ -42,5 +42,5 @@ data class PostProjectProjectIdImagesRequest(
     val dockerfileContent: kotlin.String? = null,
     /* 构建镜像时，workspace相对于上下文的相对路径。默认为. */
     val workspacePath: kotlin.String? = null
-) 
+)
 

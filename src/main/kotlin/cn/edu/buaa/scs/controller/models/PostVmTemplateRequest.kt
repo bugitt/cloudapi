@@ -22,5 +22,5 @@ data class PostVmTemplateRequest(
     val uuid: kotlin.String,
     /* 转换出来的模板的名称 */
     val name: kotlin.String
-) 
+)
 

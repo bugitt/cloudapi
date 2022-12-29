@@ -11,6 +11,10 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.CourseResponse
+import cn.edu.buaa.scs.controller.models.ExpVmInfo
+import cn.edu.buaa.scs.controller.models.FileResponse
+
 /**
  *
  * @param id
@@ -49,5 +53,5 @@ data class ExperimentResponse(
     val course: CourseResponse,
     val resourceFile: FileResponse? = null,
     val vm: ExpVmInfo? = null
-) 
+)
 

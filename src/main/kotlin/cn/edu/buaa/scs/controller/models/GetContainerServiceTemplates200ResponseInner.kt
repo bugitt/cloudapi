@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.GetContainerServiceTemplates200ResponseInnerSegmentsInner
+
 /**
  *
  * @param categoryName
@@ -19,5 +21,5 @@ package cn.edu.buaa.scs.controller.models
 data class GetContainerServiceTemplates200ResponseInner(
     val categoryName: kotlin.String,
     val segments: kotlin.collections.List<GetContainerServiceTemplates200ResponseInnerSegmentsInner>
-) 
+)
 

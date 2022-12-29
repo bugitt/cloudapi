@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.Resource
+
 /**
  *
  * @param id
@@ -25,5 +27,5 @@ data class ResourceExchangeRecord(
     val `receiver`: kotlin.String,
     val resource: Resource,
     val time: kotlin.Long
-) 
+)
 

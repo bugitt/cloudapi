@@ -19,5 +19,5 @@ package cn.edu.buaa.scs.controller.models
 data class PatchVmApplyVms(
     /* 需要为实验中的学生新增虚拟机时，使用该字段 */
     val studentIdList: kotlin.collections.List<kotlin.String>? = null
-) 
+)
 

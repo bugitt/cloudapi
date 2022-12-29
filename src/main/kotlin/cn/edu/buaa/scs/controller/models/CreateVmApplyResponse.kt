@@ -58,5 +58,5 @@ data class CreateVmApplyResponse(
     val actualNum: kotlin.Int,
     /* 最终生成的虚拟机的名称的前缀 */
     val namePrefix: kotlin.String
-) 
+)
 

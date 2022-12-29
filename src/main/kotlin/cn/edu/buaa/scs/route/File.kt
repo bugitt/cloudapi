@@ -1,11 +1,10 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.FilePackageRequest
-import cn.edu.buaa.scs.controller.models.FileResponse
-import cn.edu.buaa.scs.controller.models.UploadFileResponse
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.model.FileType
+import cn.edu.buaa.scs.service.S3Uploader
 import cn.edu.buaa.scs.service.file
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.utils.BASE_URL
@@ -29,10 +28,12 @@ fun Route.fileRoute() {
     }
 
     route("/file") {
+
         post("convert") {
             call.file.convertS3ToLocal()
             call.respond("OK")
         }
+
         post {
             call.file.createOrUpdate().let {
                 call.respond(UploadFileResponse(it.map { file -> convertFileResponse(file) }))
@@ -121,6 +122,16 @@ fun Route.fileRoute() {
                 }
             }
         }
+
+        route("/s3") {
+            route("/uploader") {
+                post {
+                    call.respond(
+                        convertS3User(call.file.createS3Uploader())
+                    )
+                }
+            }
+        }
     }
 
 
@@ -143,3 +154,16 @@ internal fun convertFileResponse(file: File): FileResponse {
         involveId = file.involvedId
     )
 }
+
+internal fun convertS3User(s3Uploader: S3Uploader): S3Config {
+    return S3Config(
+        accessKey = s3Uploader.accessKey,
+        secretKey = s3Uploader.secretKey,
+        endpoint = s3Uploader.endpoint,
+        scheme = s3Uploader.scheme,
+        bucket = s3Uploader.bucket,
+        key = s3Uploader.key,
+        region = s3Uploader.region,
+    )
+}
+

@@ -282,7 +282,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             req.contextFileId != null && req.contextFileId > 0 -> prepareLocalContextTarFile {
                 val file = File.id(req.contextFileId)
                 call.user().assertRead(file)
-                file.fileType.manageService(call).manager()
+                file.fileType.decorator(call).manager()
                     .downloadFile(file.storeName, "$imageBuildContextLocalDir/$it")
             }
 

@@ -20,5 +20,5 @@ package cn.edu.buaa.scs.controller.models
 data class VmNetInfo(
     val macAddress: kotlin.String,
     val ipList: kotlin.collections.List<kotlin.String>
-) 
+)
 

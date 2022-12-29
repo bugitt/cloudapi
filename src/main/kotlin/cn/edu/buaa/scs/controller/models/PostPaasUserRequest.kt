@@ -19,5 +19,5 @@ package cn.edu.buaa.scs.controller.models
 data class PostPaasUserRequest(
     /* 学工号 */
     val userId: kotlin.String
-) 
+)
 

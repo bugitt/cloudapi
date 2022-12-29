@@ -2,11 +2,13 @@ package cn.edu.buaa.scs.storage.file
 
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
+import cn.edu.buaa.scs.utils.runCommand
 import io.ktor.server.application.*
 import io.minio.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.lang3.RandomStringUtils
 import java.io.InputStream
 
 
@@ -17,6 +19,15 @@ class S3(storePath: String) : FileManager(storePath) {
 
     companion object {
         private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+
+        suspend fun getUserForGroup(alias: String, userGroup: String): Pair<String, String> {
+            val accessKey = RandomStringUtils.randomAlphanumeric(20)
+            val secretKey = RandomStringUtils.randomAlphanumeric(40)
+            "mc admin user add $alias $accessKey $secretKey".runCommand()
+            "mc admin user enable $alias $accessKey".runCommand()
+            "mc admin group add $alias $userGroup $accessKey".runCommand()
+            return Pair(accessKey, secretKey)
+        }
     }
 
     override suspend fun name(): String = "S3"

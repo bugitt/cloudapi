@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.Image
+
 /**
  *
  * @param name
@@ -25,5 +27,5 @@ data class ImageRepo(
     val downloadCount: kotlin.Long,
     val updateTime: kotlin.Long? = null,
     val images: kotlin.collections.List<Image>? = null
-) 
+)
 

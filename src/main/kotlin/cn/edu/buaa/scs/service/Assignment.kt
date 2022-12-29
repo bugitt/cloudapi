@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.auth.authAdmin
@@ -9,11 +10,9 @@ import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.file.FileManager
+import cn.edu.buaa.scs.storage.file.S3
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.exists
-import cn.edu.buaa.scs.utils.getFileExtension
-import cn.edu.buaa.scs.utils.toTimestamp
-import cn.edu.buaa.scs.utils.user
+import cn.edu.buaa.scs.utils.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -128,6 +127,22 @@ class AssignmentService(val call: ApplicationCall) : IService, FileService.FileD
         if (System.currentTimeMillis() > Experiment.id(assignment.experimentId).deadline.toTimestamp()) {
             throw BadRequestException("已过作业提交截止时间")
         }
+    }
+
+    override suspend fun s3UploaderAliasAndUserGroup(key: String): S3Uploader {
+        val (accessKey, secretKey) = S3.getUserForGroup(
+            application.getConfigString("s3.assignment.alias"),
+            application.getConfigString("s3.assignment.userGroup")
+        )
+        return S3Uploader(
+            accessKey = accessKey,
+            secretKey = secretKey,
+            bucket = bucketName,
+            region = FileService.s3Region,
+            endpoint = FileService.s3Endpoint,
+            scheme = FileService.s3Scheme,
+            key = key,
+        )
     }
 
     /**

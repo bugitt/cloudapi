@@ -21,5 +21,5 @@ data class GetCaptcha200Response(
     val token: kotlin.String,
     /* base64编码后的png图片 */
     val image: kotlin.String
-) 
+)
 

@@ -25,5 +25,5 @@ data class DeleteVmApplyVms(
     val studentId: kotlin.String? = null,
     /* 需要删除批量申请的多个虚拟机时设置此字段 */
     val studentIdList: kotlin.collections.List<kotlin.String>? = null
-) 
+)
 

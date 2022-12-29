@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.auth.assertAdmin
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
@@ -11,6 +12,7 @@ import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.file.S3
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
@@ -39,6 +41,16 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
+data class S3Uploader(
+    val endpoint: String,
+    val scheme: String,
+    val accessKey: String,
+    val secretKey: String,
+    val region: String,
+    val bucket: String,
+    val key: String,
+)
+
 val ApplicationCall.file: FileService
     get() = FileService.getSvc(this) { FileService(this) }
 
@@ -47,6 +59,18 @@ class FileService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<FileService>() {
         val scsosS3 = S3("scsos")
         val packageResult = ConcurrentHashMap<String, Boolean>()
+
+        val s3Endpoint by lazy {
+            application.getConfigString("s3.common.endpoint")
+        }
+
+        val s3Region by lazy {
+            application.getConfigString("s3.common.region")
+        }
+
+        val s3Scheme by lazy {
+            application.getConfigString("s3.common.scheme")
+        }
     }
 
     /**
@@ -119,6 +143,10 @@ class FileService(val call: ApplicationCall) : IService {
         suspend fun packageFiles(involvedId: Int, fileIdList: List<Int>?): PackageResult {
             throw NotImplementedError()
         }
+
+        suspend fun s3UploaderAliasAndUserGroup(key: String): S3Uploader {
+            throw NotImplementedError()
+        }
     }
 
     data class PackageResult(
@@ -128,20 +156,8 @@ class FileService(val call: ApplicationCall) : IService {
     )
 
     suspend fun createOrUpdate(): List<File> {
-        val (fileParts, owner, fileType, involvedId, fileId) = parseFormData()
-        // 校验参数
-        if (fileId != null && fileParts.size != 1) {
-            throw BadRequestException("当fileId不为空或0时, 仅允许上传单个文件")
-        }
-        if (fileType == FileType.Assignment && fileParts.size != 1) {
-            throw BadRequestException("上传作业时，仅允许上传单个文件")
-        }
+        val (fileParts, _, owner, fileType, involvedId, fileId, decorator) = parseFormData()
 
-        val service: FileDecorator = fileType.manageService(call)
-        // check owner
-        if (!service.checkPermission(owner, involvedId)) {
-            throw BadRequestException("owner mismatch")
-        }
         val involvedEntity = fileType.getInvolvedEntity(involvedId)
 
         data class HandleFileCreateOrUpdate(
@@ -150,20 +166,20 @@ class FileService(val call: ApplicationCall) : IService {
         )
 
         val handleFile: suspend (FilePart) -> HandleFileCreateOrUpdate = { filePart ->
-            service.beforeUploadFile(involvedEntity, filePart)
+            decorator.beforeUploadFile(involvedEntity, filePart)
 
-            val (name, storeName) = service.fixName(filePart.originalName, owner, involvedId)
+            val (name, storeName) = decorator.fixName(filePart.originalName, owner, involvedId)
 
             // upload
             val uploadResp = filePart.input().use {
-                service.manager().uploadFile(storeName, it, filePart.contentType, filePart.tmpFile?.length() ?: -1L)
+                decorator.manager().uploadFile(storeName, it, filePart.contentType, filePart.tmpFile?.length() ?: -1L)
             }
 
             val file = File {
                 this.name = name
-                this.storeType = service.manager().name()
+                this.storeType = decorator.manager().name()
                 this.storeName = storeName
-                this.storePath = service.storePath()
+                this.storePath = decorator.storePath()
                 this.uploadTime = uploadResp.uploadTime
                 this.fileType = fileType
                 this.involvedId = involvedId
@@ -176,7 +192,7 @@ class FileService(val call: ApplicationCall) : IService {
             call.user().assertAdmin(file)
 
             HandleFileCreateOrUpdate(file) { innerFile ->
-                service.beforeCreateOrUpdate(involvedEntity, innerFile)
+                decorator.beforeCreateOrUpdate(involvedEntity, innerFile)
                 fileId?.let {
                     innerFile.id = it
                     innerFile.updatedAt = System.currentTimeMillis()
@@ -186,7 +202,7 @@ class FileService(val call: ApplicationCall) : IService {
                     innerFile.updatedAt = System.currentTimeMillis()
                     mysql.files.add(innerFile)
                 }
-                service.afterCreateOrUpdate(involvedEntity, innerFile)
+                decorator.afterCreateOrUpdate(involvedEntity, innerFile)
                 // 清理 tempFile
                 filePart.tmpFile?.delete()
             }
@@ -209,11 +225,17 @@ class FileService(val call: ApplicationCall) : IService {
 
     private data class ParseFormDataResult(
         val fileParts: List<FilePart>,
+        val originalName: String,
         val owner: String,
         val fileType: FileType,
         val involvedId: Int,
-        val fileId: Int?
-    )
+        val fileId: Int?,
+        val decorator: FileDecorator,
+    ) {
+        fun fixName(): Pair<String, String> {
+            return decorator.fixName(originalName, owner, involvedId)
+        }
+    }
 
     private suspend fun parseFormData(): ParseFormDataResult {
 
@@ -237,6 +259,7 @@ class FileService(val call: ApplicationCall) : IService {
         }
 
         val fileParts = mutableListOf<FilePart>()
+        var originalName: String? = null
         var owner: String? = null
         var fileType: FileType? = null
         var involvedId: Int? = null
@@ -248,6 +271,7 @@ class FileService(val call: ApplicationCall) : IService {
                     is PartData.FileItem -> {
                         assert(part.originalFileName != null)
                         fileParts.add(parseFilePart(part))
+                        originalName = part.originalFileName
                     }
 
                     is PartData.FormItem ->
@@ -266,15 +290,33 @@ class FileService(val call: ApplicationCall) : IService {
             if (involvedId == null) involvedId = call.request.queryParameters["involvedId"]?.toInt()
             if (fileId == null)
                 fileId = call.request.queryParameters["fileId"]?.toInt()?.let { if (it == 0) null else it }
+            if (originalName == null) originalName = call.request.queryParameters["originalName"]
+
+            if (fileId != null && fileParts.size != 1) {
+                throw BadRequestException("当fileId不为空或0时, 仅允许上传单个文件")
+            }
+            if (fileType == FileType.Assignment && fileParts.size != 1) {
+                throw BadRequestException("上传作业时，仅允许上传单个文件")
+            }
+
+            val service: FileDecorator = fileType!!.decorator(call)
+            // check owner
+            if (!service.checkPermission(owner!!, involvedId!!)) {
+                throw BadRequestException("无上传权限")
+            }
+
             return ParseFormDataResult(
                 fileParts,
+                originalName!!,
                 owner!!,
                 fileType!!,
                 involvedId!!,
-                fileId
+                fileId,
+                service,
             )
+
         } catch (e: Exception) {
-            throw BadRequestException("please check your form-data request", e)
+            throw BadRequestException("文件上传参数错误，请修改后重试", e)
         }
     }
 
@@ -290,7 +332,7 @@ class FileService(val call: ApplicationCall) : IService {
      * 本方法不包含鉴权操作
      */
     internal suspend fun deleteFileFromStorage(file: File) {
-        file.fileType.manageService(call).manager().deleteFile(file.storeName)
+        file.fileType.decorator(call).manager().deleteFile(file.storeName)
     }
 
     suspend fun fetchProducer(file: File): suspend OutputStream.() -> Unit {
@@ -324,7 +366,7 @@ class FileService(val call: ApplicationCall) : IService {
                 call.user().assertWrite(Project.id(involvedId.toLong()))
         }
         // get files
-        val service = fileType.manageService(call)
+        val service = fileType.decorator(call)
         val (files, readme, zipFilename) = service.packageFiles(involvedId, fileIdList)
         val packageId = "${UUID.randomUUID()}.package.tmp"
         packageResult[packageId] = false
@@ -332,17 +374,6 @@ class FileService(val call: ApplicationCall) : IService {
         withContext(Dispatchers.IO) {
             val zipFile = java.io.File(packageId)
             zipFile.createNewFile()
-//            ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zipOut ->
-//                files.forEach { file ->
-//                    zipOut.putNextEntry(ZipEntry(file.name))
-//                    file.inputStream().use { input ->
-//                        input.copyTo(zipOut)
-//                    }
-//                }
-//
-//                zipOut.putNextEntry(ZipEntry("README"))
-//                zipOut.write(readme.toByteArray())
-//            }
 
             val threadFactory = ThreadFactoryBuilder().setNameFormat("package-%d").build()
             val executor = Executors.newFixedThreadPool(6, threadFactory)
@@ -363,6 +394,12 @@ class FileService(val call: ApplicationCall) : IService {
             executor.shutdownNow()
             packageResult[packageId] = true
         }
+    }
+
+    suspend fun createS3Uploader(): S3Uploader {
+        val parseFormDataResult = parseFormData()
+        val (_, storedName) = parseFormDataResult.fixName()
+        return parseFormDataResult.decorator.s3UploaderAliasAndUserGroup(storedName)
     }
 }
 

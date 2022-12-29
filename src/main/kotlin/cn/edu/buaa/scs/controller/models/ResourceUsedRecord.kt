@@ -11,6 +11,8 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.Resource
+
 /**
  *
  * @param id
@@ -29,5 +31,5 @@ data class ResourceUsedRecord(
     val containerId: kotlin.Long,
     val released: kotlin.Boolean,
     val time: kotlin.Long
-) 
+)
 

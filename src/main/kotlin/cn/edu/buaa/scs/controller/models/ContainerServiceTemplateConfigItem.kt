@@ -31,5 +31,5 @@ data class ContainerServiceTemplateConfigItem(
     val options: kotlin.collections.List<kotlin.String>? = null,
     val default: kotlin.String? = null,
     val description: kotlin.String? = null
-) 
+)
 

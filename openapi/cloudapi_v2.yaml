@@ -439,7 +439,7 @@ paths:
       description: 获取课程信息
       security:
         - Authorization: []
-  '/courses':
+  /courses:
     get:
       summary: 管理员获取所有课程
       tags:
@@ -2069,6 +2069,50 @@ paths:
                 - configs
                 - resourcePoolId
                 - limitedResource
+  /file/s3/uploader:
+    post:
+      summary: 创建一个用于上传文件到S3的配置
+      operationId: post-file-s3-uploader
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/S3Config'
+      tags:
+        - 文件
+      security:
+        - Authorization: [ ]
+      description: |-
+        创建一个上传该文件的s3用户
+        并返回上传到s3所需要的所有配置
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: fileType
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: owner
+          required: true
+        - schema:
+            type: integer
+          in: query
+          name: involvedId
+          required: true
+        - schema:
+            type: integer
+          in: query
+          name: fileId
+        - schema:
+            type: string
+          in: query
+          name: originalName
+          required: true
+          description: 要上传的文件的原始文件名
 components:
   schemas:
     AssignmentResponse:
@@ -3731,6 +3775,42 @@ components:
       required:
         - name
         - value
+    S3Config:
+      title: S3Config
+      x-stoplight:
+        id: 73d056bcec026
+      type: object
+      x-examples:
+        Example 1:
+          accessKey: some-access-key-id
+          secretKey: some-secret-key
+          endpoint: example.com
+          scheme: htttps
+          bucket: the-bucket
+          key: path/to/object
+      properties:
+        accessKey:
+          type: string
+        secretKey:
+          type: string
+        endpoint:
+          type: string
+        scheme:
+          type: string
+        bucket:
+          type: string
+        key:
+          type: string
+        region:
+          type: string
+      required:
+        - accessKey
+        - secretKey
+        - endpoint
+        - scheme
+        - bucket
+        - key
+        - region
   securitySchemes:
     Authorization:
       type: apiKey

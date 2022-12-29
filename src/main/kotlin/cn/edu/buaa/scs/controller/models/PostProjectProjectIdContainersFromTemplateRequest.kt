@@ -11,6 +11,9 @@
  */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.KvPair
+import cn.edu.buaa.scs.controller.models.Resource
+
 /**
  *
  * @param templateId
@@ -23,5 +26,5 @@ data class PostProjectProjectIdContainersFromTemplateRequest(
     val configs: kotlin.collections.List<KvPair>,
     val resourcePoolId: kotlin.String,
     val limitedResource: Resource
-) 
+)
 

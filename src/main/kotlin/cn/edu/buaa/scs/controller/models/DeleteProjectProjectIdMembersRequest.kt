@@ -18,5 +18,5 @@ package cn.edu.buaa.scs.controller.models
  */
 data class DeleteProjectProjectIdMembersRequest(
     val userId: kotlin.String
-) 
+)
 

@@ -22,5 +22,5 @@ data class Resource(
     val cpu: kotlin.Int,
     /* MB */
     val memory: kotlin.Int
-) 
+)
 
