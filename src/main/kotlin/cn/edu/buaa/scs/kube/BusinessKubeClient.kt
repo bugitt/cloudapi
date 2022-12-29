@@ -3,6 +3,8 @@ package cn.edu.buaa.scs.kube
 import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.kube.crd.v1alpha1.Builder
 import cn.edu.buaa.scs.kube.crd.v1alpha1.BuilderList
+import cn.edu.buaa.scs.kube.crd.v1alpha1.Deployer
+import cn.edu.buaa.scs.kube.crd.v1alpha1.DeployerList
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.utils.getConfigString
 import com.fkorotkov.kubernetes.metadata
@@ -21,11 +23,23 @@ object BusinessKubeClient : IProjectManager {
         ) as MixedOperation<Builder, BuilderList, Resource<Builder>>
     }
 
+    private val deployerClient by lazy {
+        client.resources(
+            Deployer::class.java,
+            DeployerList::class.java
+        ) as MixedOperation<Deployer, DeployerList, Resource<Deployer>>
+    }
+
     val nodeIp by lazy { application.getConfigString("kube.business.nodeIp") }
 
     fun getBuilder(name: String, namespace: String): Result<Builder> = runCatching {
         builderClient.inNamespace(namespace).withName(name).get()
             ?: throw NotFoundException("Builder $name not found")
+    }
+
+    fun getDeployer(name: String, namespace: String): Result<Deployer> = runCatching {
+        deployerClient.inNamespace(namespace).withName(name).get()
+            ?: throw NotFoundException("Deployer $name not found")
     }
 
     fun deleteResource(namespace: String, resourceName: String) = runCatching {
