@@ -87,7 +87,7 @@ dependencies {
 
 
     // kubernetes
-    val kubernetes_client_version = "6.0.0"
+    val kubernetes_client_version = "6.3.1"
     implementation("io.fabric8:kubernetes-model:$kubernetes_client_version")
     implementation("io.fabric8:kubernetes-client:$kubernetes_client_version")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.2.0")
