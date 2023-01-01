@@ -14,17 +14,14 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  *
- * @param name 字符串格式为 RFC1035
- * @param expId
  * @param displayName
+ * @param expId
  * @param description
  * @param isPersonal 表示是否是个人项目，默认为false
  */
 data class PostProjectsRequest(
-    /* 字符串格式为 RFC1035 */
-    val name: kotlin.String,
+    val displayName: kotlin.String,
     val expId: kotlin.Int? = null,
-    val displayName: kotlin.String? = null,
     val description: kotlin.String? = null,
     /* 表示是否是个人项目，默认为false */
     val isPersonal: kotlin.Boolean? = null

@@ -129,12 +129,21 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
     }
 
     suspend fun createProjectForCurrentUser(
-        name: String,
+        name: String? = null,
         expID: Int? = null,
         displayName: String = "",
         description: String = "",
         isPersonal: Boolean = false,
-    ) = createProjectForUser(call.user(), name, expID, displayName, description, isPersonal)
+    ) = createProjectForUser(
+        call.user(),
+        if (name.isNullOrBlank()) "p-${call.userId()}-${
+            RandomStringUtils.randomAlphanumeric(10).lowercase()
+        }" else name,
+        expID,
+        displayName,
+        description,
+        isPersonal
+    )
 
     fun getProject(projectID: Long): Project {
         val project = Project.id(projectID)

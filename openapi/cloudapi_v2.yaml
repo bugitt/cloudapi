@@ -1277,9 +1277,6 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  type: string
-                  description: 字符串格式为 RFC1035
                 expId:
                   type: integer
                 displayName:
@@ -1290,7 +1287,7 @@ paths:
                   type: boolean
                   description: 表示是否是个人项目，默认为false
               required:
-                - name
+                - displayName
           application/xml:
             schema:
               type: object

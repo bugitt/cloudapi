@@ -44,11 +44,10 @@ fun Route.projectRoute() {
             call.respond(
                 call.convertProjectResponse(
                     call.project.createProjectForCurrentUser(
-                        req.name,
-                        req.expId,
-                        req.displayName ?: "",
-                        req.description ?: "",
-                        req.isPersonal ?: false,
+                        expID = req.expId,
+                        displayName = req.displayName,
+                        description = req.description ?: "",
+                        isPersonal = req.isPersonal ?: false,
                     )
                 )
             )
