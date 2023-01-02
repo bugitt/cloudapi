@@ -348,6 +348,12 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         pullCommand = "docker pull ${ImageMeta.hostPrefix}/${repoName}@${this.digest}",
     )
 
+
+    fun deleteImage(projectID: Long, repositoryName: String,reference: String ){
+        val project = Project.id(projectID)
+        HarborClient.deleteImage(project.name,repositoryName,reference)
+    }
+
     fun getImagesByProject(projectID: Long): List<Image> {
         val project = Project.id(projectID)
         call.user().assertRead(project)
@@ -372,6 +378,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
                     images = artifactList.map { it.toImage(repo.name) }
                 )
             }
+    }
+    fun deleteImageRepo(projectID: Long, repositoryName: String){
+        val project = Project.id(projectID)
+         HarborClient.deleteImageRepo(project.name,repositoryName)
     }
 
     fun getImageBuildTasksByProject(projectID: Long): List<Pair<ImageMeta, TaskData>> {
