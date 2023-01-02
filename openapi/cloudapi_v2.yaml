@@ -3268,6 +3268,7 @@ components:
         - name
         - owner
         - token
+        - displayName
         - createdTime
     ProjectMember:
       title: ProjectMember

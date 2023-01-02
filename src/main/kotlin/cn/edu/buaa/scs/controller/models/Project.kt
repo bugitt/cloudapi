@@ -18,8 +18,8 @@ package cn.edu.buaa.scs.controller.models
  * @param name
  * @param owner
  * @param token 当前该用户访问该Project中的资源，例如clone代码仓库、push和pull镜像等，所需要使用的token，即密码
- * @param createdTime
  * @param displayName 区别于name之外的一个格式随便的，便于记忆和展示的名字
+ * @param createdTime
  * @param description
  * @param expId
  */
@@ -29,9 +29,9 @@ data class Project(
     val owner: kotlin.String,
     /* 当前该用户访问该Project中的资源，例如clone代码仓库、push和pull镜像等，所需要使用的token，即密码 */
     val token: kotlin.String,
-    val createdTime: kotlin.Long,
     /* 区别于name之外的一个格式随便的，便于记忆和展示的名字 */
-    val displayName: kotlin.String? = null,
+    val displayName: kotlin.String,
+    val createdTime: kotlin.Long,
     val description: kotlin.String? = null,
     val expId: kotlin.Int? = null
 )

@@ -29,7 +29,7 @@ interface Project : Entity<Project>, IEntity {
     var id: Long
     var name: String
     var owner: String
-    var displayName: String?
+    var displayName: String
     var description: String?
     var courseID: Int?
     var expID: Int?
