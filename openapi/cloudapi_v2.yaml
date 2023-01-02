@@ -455,7 +455,7 @@ paths:
                   $ref: '#/components/schemas/CourseResponse'
       operationId: get-course-list
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 管理员获取所有课程
   '/stat/exp/{expId}/assignments':
     parameters:
@@ -1490,6 +1490,29 @@ paths:
       description: 获取当前项目中的所有可用镜像
       tags:
         - 镜像
+    delete:
+      summary: 删除镜像
+      operationId: delete-project-projectId-images
+      responses:
+        '200':
+          description: OK
+      description: ' 删除镜像。'
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo:
+                  type: string
+                tag:
+                  type: string
+              required:
+                - repo
+                - tag
+        description: ''
   '/project/{projectId}/containers':
     parameters:
       - schema:
@@ -1624,6 +1647,25 @@ paths:
                   $ref: '#/components/schemas/ImageRepo'
       operationId: get-project-projectId-imageRepos
       description: 获取当前项目下的所有Harbor镜像仓库
+      security:
+        - Authorization: []
+    delete:
+      summary: 删除镜像仓库
+      operationId: delete-project-projectId-imageRepos
+      responses:
+        '200':
+          description: OK
+      description: 删除镜像仓库
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo:
+                  type: string
+              required:
+                - repo
       security:
         - Authorization: []
   /captcha:
@@ -1869,7 +1911,7 @@ paths:
       tags:
         - 容器服务
       security:
-        - Authorization: [ ]
+        - Authorization: []
     get:
       summary: 获取容器服务
       operationId: get-project-projectId-containers-containerServiceId
@@ -1881,7 +1923,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ContainerServiceResponse'
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 根据ID获取容器服务
       tags:
         - 容器服务
@@ -1906,7 +1948,7 @@ paths:
       operationId: get-resourceUsedRecords-resourceUsedRecordId
       description: 获取资源使用记录
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: boolean
@@ -1939,7 +1981,7 @@ paths:
       operationId: get-resourcePool-resourcePoolId
       description: 通过ID获取资源池信息
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/stat/resourcePools/{resourcePoolId}/used':
     parameters:
       - schema:
@@ -1973,7 +2015,7 @@ paths:
       operationId: get-stat-resourcePools-resourcePoolId-used
       description: 统计资源池的资源使用情况
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /containerServiceTemplates:
     get:
       summary: 获取容器服务模板列表
@@ -2011,7 +2053,7 @@ paths:
       operationId: get-containerServiceTemplates
       description: 获取容器服务模板列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /containerServices:
     get:
       summary: 获取所有容器服务列表
@@ -2029,7 +2071,7 @@ paths:
       operationId: get-containerServices
       description: 获取当前用户所归属的所有项目的所有容器服务列表的总和
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/project/{projectId}/containers/fromTemplate':
     parameters:
       - schema:
@@ -2047,7 +2089,7 @@ paths:
         - 容器服务
       description: 从模板创建容器服务
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:

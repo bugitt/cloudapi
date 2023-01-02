@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.sdk.harbor.infrastructure.ClientException
 import cn.edu.buaa.scs.sdk.harbor.models.*
 import io.ktor.http.*
 
+
 object HarborClient : IProjectManager {
 
     private val projectClient by lazy { ProjectApi() }
@@ -27,7 +28,19 @@ object HarborClient : IProjectManager {
             ).filter { artifact -> artifact.type?.lowercase() == "image" }
         }
     }
-
+    fun deleteImageRepo(projectName:String,repositoryName: String): Result<Unit> = runCatching {
+        repoClient.deleteRepository(
+            projectName = projectName,
+            repositoryName = repositoryName
+        )
+    }
+    fun deleteImage(projectName: String, repositoryName: String,reference: String ): Result<Unit> = runCatching  {
+       artifactClient.deleteArtifact(
+            projectName = projectName,
+            repositoryName = repositoryName,
+            reference = reference
+        )
+    }
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> =
         runCatching {
             if (userClient.searchUsers(userID).isNotEmpty()) return Result.success(userID)
@@ -73,9 +86,7 @@ object HarborClient : IProjectManager {
         deleteProjectMember(projectName, memberID)
     }
 
-    fun deleteTag() {
 
-    }
 
     private fun existProject(projectName: String): Boolean {
         return try {

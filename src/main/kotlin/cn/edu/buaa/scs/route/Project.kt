@@ -13,6 +13,7 @@ import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
+import com.fkorotkov.openshift.newAWSResourceTag
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -112,6 +113,12 @@ fun Route.projectRoute() {
                     convertImageBuildTaskResponse(imageMeta, taskData)
                 )
             }
+            delete{
+                val projectID = call.getProjectID()
+                val req =call.receive<DeleteProjectProjectIdImagesRequest>()
+                call.project.deleteImage(projectID, req.repo, req.tag)
+                call.respond("OK")
+            }
         }
 
         route("/imageBuildTasks") {
@@ -127,6 +134,12 @@ fun Route.projectRoute() {
                 call.respond(
                     call.project.getImageReposByProject(call.getProjectID())
                 )
+            }
+            delete{
+                val projectID = call.getProjectID()
+                val req = call.receive<DeleteProjectProjectIdImageReposRequest>();
+                call.project.deleteImageRepo(projectID,req.repo)
+                call.respond("OK")
             }
         }
 
