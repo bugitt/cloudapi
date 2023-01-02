@@ -109,6 +109,12 @@ interface User : Entity<User>, IEntity {
                         .and(it.role.eq(ProjectRole.ADMIN) or it.role.eq(ProjectRole.OWNER))
                 } ||
                 isAdmin()
+    fun isProjectMember(projectID: Long): Boolean = isProjectMember(Project.id(projectID))
+
+    fun isProjectMember(project: Project): Boolean =
+        isProjectAdmin(project)||mysql.projectMembers.exists {
+            it.projectId.eq(project.id) and it.userId.eq(this.id)
+         }
 
     fun personalProjectName() = "personal-${this.id.lowercase()}"
 

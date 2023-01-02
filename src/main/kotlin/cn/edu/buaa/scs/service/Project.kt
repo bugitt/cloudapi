@@ -351,6 +351,9 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
 
     fun deleteImage(projectID: Long, repositoryName: String,reference: String ){
         val project = Project.id(projectID)
+        if(!call.user().isProjectMember(project)){
+            throw AuthorizationException("You are not the project member")
+        }
         HarborClient.deleteImage(project.name,repositoryName,reference)
     }
 
@@ -381,6 +384,9 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
     }
     fun deleteImageRepo(projectID: Long, repositoryName: String){
         val project = Project.id(projectID)
+        if(!call.user().isProjectMember(project)){
+            throw AuthorizationException("You are not the project member")
+        }
          HarborClient.deleteImageRepo(project.name,repositoryName)
     }
 
