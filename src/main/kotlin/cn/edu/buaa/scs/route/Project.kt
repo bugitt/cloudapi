@@ -285,6 +285,11 @@ fun Route.projectRoute() {
                 }
         }
     }
+
+    get("/repos/name/exist") {
+        val name = call.parameters["name"] ?: throw BadRequestException("请提供要查询的名称")
+        call.respond(call.project.checkGitRepoNameExist(name))
+    }
 }
 
 fun ApplicationCall.convertProjectResponse(project: Project): ProjectResponse {

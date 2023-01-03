@@ -2110,6 +2110,26 @@ paths:
           name: originalName
           required: true
           description: 要上传的文件的原始文件名
+  /repos/name/exist:
+    get:
+      summary: 检查git仓库名称是否重复
+      tags:
+        - 项目
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: boolean
+      operationId: get-repos-name-exist
+      description: 检查git仓库名称是否重复
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: name
+          required: true
 components:
   schemas:
     AssignmentResponse:

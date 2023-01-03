@@ -22,6 +22,7 @@ import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
+import cn.edu.buaa.scs.storage.bugitDB
 import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.mongo
 import cn.edu.buaa.scs.storage.mysql
@@ -647,6 +648,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
                 token = call.user().paasToken,
             )
         }
+    }
+
+    fun checkGitRepoNameExist(name: String): Boolean {
+        return bugitDB.gitRepoList.exists { it.lowerName eq name.lowercase() }
     }
 
     suspend fun getContainerServiceTemplateList(): List<ContainerServiceTemplate> {
