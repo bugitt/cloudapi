@@ -53,3 +53,4 @@ conf/
 prod.application.conf
 
 .fleet
+.stoplight
