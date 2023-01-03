@@ -19,6 +19,16 @@ data class CreateOrgRequest(
     val location: String
 )
 
+data class CreateRepoRequest(
+    val name: String,
+    val description: String,
+    val private: Boolean,
+    @JsonProperty("auto_init") val autoInit: Boolean,
+    val gitignores: String,
+    val license: String,
+    val readme: String = "Default",
+)
+
 data class GitProject(
     val id: Long,
     val username: String,

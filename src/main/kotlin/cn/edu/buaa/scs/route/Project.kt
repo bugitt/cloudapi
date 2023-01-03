@@ -187,6 +187,12 @@ fun Route.projectRoute() {
                     call.project.getReposByProject(call.getProjectID())
                 )
             }
+
+            post {
+                val req = call.receive<PostProjectProjectIdReposRequest>()
+                val repo = call.project.createGitRepo(call.getProjectID(), req)
+                call.respond(repo)
+            }
         }
 
         route("/resourcePools") {

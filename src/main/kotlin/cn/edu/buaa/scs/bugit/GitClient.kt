@@ -148,4 +148,7 @@ object GitClient : IProjectManager {
         return get("orgs/$projectName/repos")
     }
 
+    suspend fun createRepo(projectName: String, req: CreateRepoRequest): Result<GitRepo> {
+        return post("org/$projectName/repos", req)
+    }
 }

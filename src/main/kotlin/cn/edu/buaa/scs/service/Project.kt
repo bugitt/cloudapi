@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
+import cn.edu.buaa.scs.bugit.CreateRepoRequest
 import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.bugit.GitRepo
 import cn.edu.buaa.scs.controller.models.*
@@ -652,6 +653,27 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
 
     fun checkGitRepoNameExist(name: String): Boolean {
         return bugitDB.gitRepoList.exists { it.lowerName eq name.lowercase() }
+    }
+
+    suspend fun createGitRepo(projectID: Long, req: PostProjectProjectIdReposRequest): Repository {
+        val project = Project.id(projectID)
+        call.user().assertWrite(project)
+        val gitRepo = GitClient.createRepo(
+            project.name, CreateRepoRequest(
+                name = req.name,
+                description = req.description ?: "",
+                private = req.private,
+                autoInit = true,
+                gitignores = req.gitignores ?: "",
+                license = req.license ?: "",
+            )
+        ).getOrThrow()
+        return Repository(
+            name = "${project.name}/${gitRepo.name}",
+            url = "${GitClient.gitRepoUrlPrefix}/${project.name}/${gitRepo.name}",
+            username = call.userId(),
+            token = call.user().paasToken,
+        )
     }
 
     suspend fun getContainerServiceTemplateList(): List<ContainerServiceTemplate> {

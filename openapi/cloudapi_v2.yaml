@@ -1596,9 +1596,48 @@ paths:
       operationId: get-project-projectId-repos
       description: 获取代码仓库列表
       security:
-        - Authorization: []
+        - Authorization: [ ]
       tags:
         - 代码仓库
+    post:
+      summary: 创建代码仓库
+      operationId: post-project-projectId-repos
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 项目
+      description: 在指定项目中创建代码仓库
+      security:
+        - Authorization: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                  maxLength: 254
+                private:
+                  type: boolean
+                gitignores:
+                  type: string
+                license:
+                  type: string
+              required:
+                - name
+                - private
+            examples:
+              Example 1:
+                value:
+                  name: string
+                  description: string
+                  private: true
+                  gitignores: string
+                  license: string
   '/project/{projectId}/imageRepos':
     parameters:
       - schema:
