@@ -9,6 +9,7 @@ import org.ktorm.database.Database
 import org.ktorm.logging.Logger
 
 lateinit var mysql: Database
+lateinit var bugitDB: Database
 
 @Suppress("unused")
 fun Application.mysqlModule() {
@@ -28,6 +29,18 @@ fun Application.mysqlModule() {
         logger = DBLogger(logger("mainDB")().underlyingLogger)
     )
     logger("mainDB")().info { "main database connected" }
+
+    bugitDB = Database.connect(
+        dataSource = HikariDataSource(HikariConfig()).apply {
+            jdbcUrl = getConfigString("db.bugit.connectionString")
+            username = getConfigString("db.bugit.username")
+            password = getConfigString("db.bugit.password")
+            addDataSourceProperty("useUnicode", "true")
+            addDataSourceProperty("characterEncoding", "utf8")
+        },
+        logger = DBLogger(logger("bugitDB")().underlyingLogger)
+    )
+    logger("bugitDB")().info { "bugit database connected" }
 }
 
 internal class DBLogger(private val logger: org.slf4j.Logger) : Logger {
