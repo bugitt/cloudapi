@@ -1605,6 +1605,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
       tags:
         - 项目
       description: 在指定项目中创建代码仓库
@@ -3283,6 +3287,11 @@ components:
         name:
           type: string
           description: 'example: owner_name/repo_name'
+        repoName:
+          type: string
+        owner:
+          type: string
+          description: 所有者的名称
         url:
           type: string
           description: 代码仓库的URL
@@ -3292,6 +3301,8 @@ components:
           type: string
       required:
         - name
+        - repoName
+        - owner
         - url
         - username
         - token

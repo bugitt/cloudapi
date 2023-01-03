@@ -644,6 +644,8 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         return GitClient.getRepoListOfProject(project.name).getOrThrow().map { gitRepo ->
             Repository(
                 name = "${project.name}/${gitRepo.name}",
+                repoName = gitRepo.name,
+                owner = project.name,
                 url = "${GitClient.gitRepoUrlPrefix}/${project.name}/${gitRepo.name}",
                 username = call.userId(),
                 token = call.user().paasToken,
@@ -670,6 +672,8 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         ).getOrThrow()
         return Repository(
             name = "${project.name}/${gitRepo.name}",
+            repoName = gitRepo.name,
+            owner = project.name,
             url = "${GitClient.gitRepoUrlPrefix}/${project.name}/${gitRepo.name}",
             username = call.userId(),
             token = call.user().paasToken,
