@@ -20,6 +20,7 @@ package cn.edu.buaa.scs.controller.models
  * @param isAssistant
  * @param token
  * @param paasToken
+ * @param projects
  */
 data class LoginUserResponse(
     val userId: kotlin.String,
@@ -27,6 +28,7 @@ data class LoginUserResponse(
     val role: kotlin.String,
     val isAssistant: kotlin.Boolean,
     val token: kotlin.String,
-    val paasToken: kotlin.String
+    val paasToken: kotlin.String,
+    val projects: kotlin.collections.List<kotlin.String>? = null
 )
 

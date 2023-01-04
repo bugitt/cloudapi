@@ -4,9 +4,7 @@ import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.auth.generateRSAToken
 import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.controller.models.LoginUserResponse
-import cn.edu.buaa.scs.model.User
-import cn.edu.buaa.scs.model.assistants
-import cn.edu.buaa.scs.model.users
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.encrypt.RSAEncrypt
@@ -20,7 +18,10 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
+import org.ktorm.dsl.inList
+import org.ktorm.entity.filter
 import org.ktorm.entity.find
+import org.ktorm.entity.map
 import java.io.ByteArrayOutputStream
 import java.util.*
 
@@ -76,9 +77,26 @@ class AuthService(val call: ApplicationCall) : IService {
         return afterLogin(token, user)
     }
 
-    suspend fun whoami(): LoginUserResponse {
+    suspend fun whoami(listProjects: Boolean): LoginUserResponse {
         val user = User.id(call.userId())
-        return afterLogin(call.token(), user)
+        val resp = afterLogin(call.token(), user)
+        if (listProjects) {
+            val projectList =
+                mysql
+                    .projectMembers
+                    .filter { it.userId eq user.id }
+                    .map { it.projectId }
+                    .distinct()
+                    .let { idList ->
+                        if (idList.isNotEmpty()) {
+                            mysql.projects.filter { it.id inList idList }.map { it.name }
+                        } else {
+                            listOf()
+                        }
+                    }
+            return resp.copy(projects = projectList)
+        }
+        return resp
     }
 
     suspend fun buaaSSOLogin(ssoToken: String): LoginUserResponse {

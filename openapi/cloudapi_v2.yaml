@@ -1751,7 +1751,12 @@ paths:
       operationId: get-whoami
       description: whoami，通过当前token，得知当前用户的基本信息
       security:
-        - Authorization: []
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: listProjects
   /buaaSSOLogin:
     post:
       summary: 统一认证登录
@@ -3757,6 +3762,10 @@ components:
           type: string
         paasToken:
           type: string
+        projects:
+          type: array
+          items:
+            type: string
       required:
         - userId
         - username

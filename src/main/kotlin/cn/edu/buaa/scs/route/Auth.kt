@@ -48,7 +48,7 @@ fun Route.authRoute() {
 
     route("/whoami") {
         get {
-            call.respond(call.auth.whoami())
+            call.respond(call.auth.whoami(call.parameters["listProjects"].toBoolean()))
         }
     }
 }
