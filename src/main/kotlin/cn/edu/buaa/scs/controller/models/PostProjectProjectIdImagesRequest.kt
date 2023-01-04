@@ -20,7 +20,7 @@ package cn.edu.buaa.scs.controller.models
  * @param gitUsername
  * @param gitPassword
  * @param gitRef
- * @param contextFileId 构建上下文压缩包在云平台数据库中对应的文件ID
+ * @param contextS3ObjectKey 构建上下文压缩包在云平台数据库中对应的文件ID
  * @param contextFileLink 构建上下文压缩包的网络路径
  * @param dockerfilePath
  * @param dockerfileContent
@@ -35,7 +35,7 @@ data class PostProjectProjectIdImagesRequest(
     val gitPassword: kotlin.String? = null,
     val gitRef: kotlin.String? = null,
     /* 构建上下文压缩包在云平台数据库中对应的文件ID */
-    val contextFileId: kotlin.Int? = null,
+    val contextS3ObjectKey: kotlin.String? = null,
     /* 构建上下文压缩包的网络路径 */
     val contextFileLink: kotlin.String? = null,
     val dockerfilePath: kotlin.String? = null,

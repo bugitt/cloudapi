@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.kube.crd.v1alpha1.Builder
 import cn.edu.buaa.scs.kube.getStatus
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.ContainerServiceTemplate
@@ -12,7 +13,9 @@ import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.storage.mysql
+import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.user
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -106,18 +109,21 @@ fun Route.projectRoute() {
             }
 
             post {
-                val (imageMeta, taskData) = call.project.createImageBuildTask(call.getProjectID())
+                val builder = call.project.createImageBuilder(call.getProjectID())
                 call.respond(
-                    convertImageBuildTaskResponse(imageMeta, taskData)
+                    convertImageBuilder(builder)
                 )
             }
         }
 
         route("/imageBuildTasks") {
             get {
+                // TODO
                 call.respond(
-                    call.project.getImageBuildTasksByProject(call.getProjectID())
-                        .map { convertImageBuildTaskResponse(it) })
+                    ""
+//                    call.project.getImageBuildTasksByProject(call.getProjectID())
+//                        .map { convertImageBuilder(it) }
+                )
             }
         }
 
@@ -363,18 +369,27 @@ fun convertContainerServiceResponse(
     return resp
 }
 
-fun convertImageBuildTaskResponse(imageMeta: ImageMeta, taskData: TaskData) = ImageBuildTask(
-    hostPrefix = ImageMeta.hostPrefix,
-    owner = imageMeta.owner,
-    repo = imageMeta.repo,
-    tag = imageMeta.tag,
-    status = taskData.status.toString(),
-    createdTime = taskData.createTime,
-    endTime = taskData.endTime,
-)
-
-fun convertImageBuildTaskResponse(imageWithTaskData: Pair<ImageMeta, TaskData>) =
-    convertImageBuildTaskResponse(imageWithTaskData.first, imageWithTaskData.second)
+fun convertImageBuilder(builder: Builder): ImageBuilder {
+    val specJsonStr = jsonMapper.writeValueAsString(builder.spec)
+    val imageBuilderSpec = jsonMapper.readValue<ImageBuilderSpec>(specJsonStr)
+    return ImageBuilder(
+        apiVersion = builder.apiVersion,
+        kind = builder.kind,
+        metadata = ImageBuilderMetadata(
+            name = builder.metadata.name,
+            namespace = builder.metadata.namespace
+        ),
+        spec = imageBuilderSpec,
+        status = ImageBuilderStatus(
+            base = ImageBuilderStatusBase(
+                currentRound = builder.status.base?.currentRound ?: 0,
+                status = builder.status.base?.status ?: "",
+                historyList = builder.status.base?.historyList,
+                message = builder.status.base?.message,
+            )
+        )
+    )
+}
 
 fun convertResource(resource: Resource) = cn.edu.buaa.scs.controller.models.Resource(
     cpu = resource.cpu,

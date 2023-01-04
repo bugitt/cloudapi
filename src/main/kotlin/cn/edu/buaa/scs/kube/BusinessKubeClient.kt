@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.utils.getConfigString
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
+import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.client.dsl.MixedOperation
 import io.fabric8.kubernetes.client.dsl.Resource
 import io.ktor.server.plugins.*
@@ -41,6 +42,10 @@ object BusinessKubeClient : IProjectManager {
             ?: throw NotFoundException("Builder $name not found")
     }
 
+    fun createBuilder(builder: Builder): Result<Builder> = runCatching {
+        builderClient.inNamespace(builder.metadata.namespace).resource(builder).createOrReplace()
+    }
+
     fun getDeployer(name: String, namespace: String): Result<Deployer> = runCatching {
         deployerClient.inNamespace(namespace).withName(name).get()
             ?: throw NotFoundException("Deployer $name not found")
@@ -49,6 +54,10 @@ object BusinessKubeClient : IProjectManager {
     fun getWorkflow(name: String, namespace: String): Result<Workflow> = runCatching {
         workflowClient.inNamespace(namespace).withName(name).get()
             ?: throw NotFoundException("Workflow $name not found")
+    }
+
+    fun createOrUpdateSecret(secret: Secret): Result<Secret> = runCatching {
+        client.secrets().inNamespace(secret.metadata.namespace).resource(secret).createOrReplace()
     }
 
     fun deleteResource(namespace: String, resourceName: String) = runCatching {

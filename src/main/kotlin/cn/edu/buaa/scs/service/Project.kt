@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.bugit.CreateRepoRequest
@@ -12,6 +13,8 @@ import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.kube.ContainerServiceTask
+import cn.edu.buaa.scs.kube.businessKubeClientBuilder
+import cn.edu.buaa.scs.kube.crd.v1alpha1.*
 import cn.edu.buaa.scs.kube.releaseResource
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.ContainerServiceTemplate
@@ -30,6 +33,10 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.*
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.fkorotkov.kubernetes.newObjectMeta
+import com.fkorotkov.kubernetes.newSecret
+import io.fabric8.kubernetes.api.model.ObjectMeta
+import io.fabric8.kubernetes.api.model.Secret
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -51,6 +58,32 @@ val ApplicationCall.project
 class ProjectService(val call: ApplicationCall) : IService, FileService.FileDecorator {
     companion object : IService.Caller<ProjectService>() {
         const val imageBuildContextLocalDir = "image-build-context"
+        const val imagePushSecretName = "push-secret"
+        val dockerConfigJsonBase64String by lazy {
+            application.getConfigString("image.dockerConfigJsonBase64String")
+        }
+
+        object BuilderS3 {
+            val endpoint by lazy {
+                application.getConfigString("s3.builder.endpoint")
+            }
+            val scheme by lazy {
+                application.getConfigString("s3.builder.scheme")
+            }
+            val bucket by lazy {
+                application.getConfigString("s3.builder.bucket")
+            }
+            val accessKeyID by lazy {
+                application.getConfigString("s3.builder.accessKeyID")
+            }
+            val accessSecretKey by lazy {
+                application.getConfigString("s3.builder.accessSecretKey")
+            }
+            val region by lazy {
+                application.getConfigString("s3.builder.region")
+            }
+        }
+
     }
 
     suspend fun createUser(userID: String) {
@@ -263,89 +296,81 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         return finalGitUrl
     }
 
-    suspend fun createImageBuildTask(projectID: Long): Pair<ImageMeta, TaskData> {
-
+    suspend fun createImageBuilder(projectID: Long): Builder {
         val project = Project.id(projectID)
-
         val req = call.receive<PostProjectProjectIdImagesRequest>()
-
+        val builderName = "b-$projectID-${RandomStringUtils.randomAlphanumeric(10).lowercase()}"
         val imageMeta = ImageMeta(project.name, req.name, req.tag ?: "latest")
 
-        // handle context
-
-        var contextFileName: String? = null
-        var gitUrl: String? = null
-        var buildType: ImageBuildTask.BuildType? = null
-
-        val prepareLocalContextTarFile: suspend (suspend (contextTarFilename: String) -> Unit) -> Unit = { prepare ->
-            val contextTarFilename = UUID.randomUUID().toString()
-            prepare(contextTarFilename)
-            contextFileName = contextTarFilename
-            buildType = ImageBuildTask.BuildType.LOCAL
+        // ensure the docker push secret exist
+        val secret = newSecret {
+            metadata = newObjectMeta {
+                name = imagePushSecretName
+                namespace = project.name
+            }
+            type = "kubernetes.io/dockerconfigjson"
+            data = mapOf(
+                ".dockerconfigjson" to dockerConfigJsonBase64String
+            )
         }
+        BusinessKubeClient.createOrUpdateSecret(secret).getOrThrow()
+
+        val builder = Builder()
+        builder.metadata = newObjectMeta {
+            name = builderName
+            namespace = project.name
+            labels = mapOf(
+                "project" to project.name,
+                "image.owner" to imageMeta.owner,
+                "image.repo" to imageMeta.repo,
+                "image.tag" to imageMeta.tag,
+                "image.uri" to imageMeta.uri(),
+            )
+        }
+
+        val builderSpec = BuilderSpec().also {
+            it.destination = imageMeta.uri()
+            it.dockerfilePath = req.dockerfilePath ?: "./Dockerfile"
+            it.pushSecretName = imagePushSecretName
+            it.round = -1
+        }
+        val context = BuilderContext()
 
         when {
             !req.gitUrl.isNullOrBlank() -> {
-                gitUrl = req.fetchGitUrl()
-                buildType = ImageBuildTask.BuildType.GIT
-            }
-
-            req.contextFileId != null && req.contextFileId > 0 -> prepareLocalContextTarFile {
-                val file = File.id(req.contextFileId)
-                call.user().assertRead(file)
-                file.fileType.decorator(call).manager()
-                    .downloadFile(file.storeName, "$imageBuildContextLocalDir/$it")
-            }
-
-            !req.contextFileLink.isNullOrBlank() -> prepareLocalContextTarFile {
-                withContext(Dispatchers.IO) {
-                    URL(req.contextFileLink).openStream().use { input ->
-                        val targetFile = java.io.File("$imageBuildContextLocalDir/$it")
-                        targetFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
-                    }
+                // use the git context
+                val gitContext = GitContext().also {
+                    it.endpoint = req.gitUrl
+                    it.ref = req.gitRef
+                    it.scheme = if (req.gitUrl.startsWith("https")) GitContext.Scheme.HTTPS else GitContext.Scheme.HTTP
+                    it.userPassword = req.gitPassword
+                    it.username = req.gitUsername
                 }
+                context.git = gitContext
+            }
+
+            !req.contextS3ObjectKey.isNullOrBlank() -> {
+                val s3Context = S3Context().also {
+                    it.accessKeyID = BuilderS3.accessKeyID
+                    it.accessSecretKey = BuilderS3.accessSecretKey
+                    it.bucket = BuilderS3.bucket
+                    it.endpoint = BuilderS3.endpoint
+                    it.region = BuilderS3.region
+                    it.objectKey = req.contextS3ObjectKey
+                }
+                context.s3 = s3Context
             }
 
             !req.dockerfileContent.isNullOrBlank() -> {
-                buildType = ImageBuildTask.BuildType.RawDockerfile
+                context.raw = req.dockerfileContent
             }
+
+            else -> throw BadRequestException("No context provided")
         }
 
-        if (buildType == null) {
-            throw BadRequestException("No context provided")
-        }
+        builderSpec.context = context
 
-        // handle dockerfile
-        val dockerfileConfigmapName = req.dockerfileContent?.let {
-            ImageBuildTask.createDockerfileConfigmap(it).getOrThrow()
-        }
-
-        val taskContent = ImageBuildTask.Content(
-            buildType!!,
-            imageMeta,
-            contextFileName,
-            gitUrl,
-            req.gitRef,
-            req.dockerfilePath ?: "Dockerfile",
-            dockerfileConfigmapName,
-            req.workspacePath,
-        )
-
-        return mysql.useTransaction {
-            val imageBuildTaskIndex = ImageBuildTaskIndex.buildFromImageMeta(projectID, taskContent.imageMeta)
-            mysql.imageBuildTaskIndexList.add(imageBuildTaskIndex)
-            val taskData = TaskData.create(
-                Task.Type.ImageBuild,
-                jsonMapper.writeValueAsString(taskContent),
-                imageBuildTaskIndex.id,
-            )
-            mysql.taskDataList.add(taskData)
-            imageBuildTaskIndex.taskDataId = taskData.id
-            mysql.imageBuildTaskIndexList.update(imageBuildTaskIndex)
-            Pair(taskContent.imageMeta, taskData)
-        }
+        return BusinessKubeClient.createBuilder(builder).getOrThrow()
     }
 
     private fun Artifact.toImage(repoName: String?) = Image(

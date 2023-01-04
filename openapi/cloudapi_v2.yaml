@@ -1428,7 +1428,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImageBuildTask'
+                $ref: '#/components/schemas/ImageBuilder'
       description: 构建镜像。该接口异步返回。
       tags:
         - 镜像
@@ -1453,8 +1453,8 @@ paths:
                   type: string
                 gitRef:
                   type: string
-                contextFileId:
-                  type: integer
+                contextS3ObjectKey:
+                  type: string
                   description: 构建上下文压缩包在云平台数据库中对应的文件ID
                   format: int32
                 contextFileLink:
@@ -1469,7 +1469,20 @@ paths:
                   description: 构建镜像时，workspace相对于上下文的相对路径。默认为.
               required:
                 - name
-            examples: {}
+            examples:
+              Example 1:
+                value:
+                  name: string
+                  tag: string
+                  gitUrl: string
+                  gitUsername: string
+                  gitPassword: string
+                  gitRef: string
+                  contextS3ObjectKey: string
+                  contextFileLink: string
+                  dockerfilePath: string
+                  dockerfileContent: string
+                  workspacePath: string
     get:
       summary: 获取项目中的镜像列表
       operationId: get-project-projectId-images
@@ -1551,7 +1564,7 @@ paths:
         - Authorization: []
       tags:
         - 容器服务
-  '/project/{projectId}/imageBuildTasks':
+  '/project/{projectId}/imageBuilders':
     parameters:
       - schema:
           type: string
@@ -1570,11 +1583,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ImageBuildTask'
-      operationId: get-project-projectId-imageBuildTasks
+                  $ref: '#/components/schemas/ImageBuilder'
+      operationId: get-project-projectId-imageBuilders
       description: 获取当前项目下的所有镜像构建任务
       security:
-        - Authorization: []
+        - Authorization: [ ]
   '/project/{projectId}/repos':
     parameters:
       - schema:
@@ -3401,37 +3414,136 @@ components:
         - tags
         - imageSize
         - pullCommand
-    ImageBuildTask:
-      title: ImageBuildTask
-      x-stoplight:
-        id: 8abw1fyk126vz
+    ImageBuilder:
+      description: Image builder CRD
       type: object
       properties:
-        hostPrefix:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
-        owner:
+        kind:
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
-        repo:
-          type: string
-        tag:
-          type: string
+        metadata:
+          type: object
+          required:
+            - name
+            - namespace
+          properties:
+            name:
+              type: string
+            namespace:
+              type: string
+        spec:
+          description: BuilderSpec defines the desired state of Builder
+          type: object
+          required:
+            - context
+            - destination
+          properties:
+            context:
+              type: object
+              properties:
+                git:
+                  type: object
+                  properties:
+                    endpoint:
+                      type: string
+                    ref:
+                      type: string
+                    scheme:
+                      default: https
+                      enum:
+                        - http
+                        - https
+                      type: string
+                    userPassword:
+                      type: string
+                    username:
+                      type: string
+                  required:
+                    - endpoint
+                raw:
+                  type: string
+                s3:
+                  type: object
+                  properties:
+                    accessKeyID:
+                      type: string
+                    accessSecretKey:
+                      type: string
+                    bucket:
+                      type: string
+                    endpoint:
+                      default: s3.amazonaws.com
+                      type: string
+                    fileType:
+                      enum:
+                        - tar
+                        - tar.gz
+                        - zip
+                        - rar
+                        - dir
+                      type: string
+                    objectKey:
+                      type: string
+                    region:
+                      type: string
+                    scheme:
+                      enum:
+                        - http
+                        - https
+                      type: string
+                  required:
+                    - accessKeyID
+                    - accessSecretKey
+                    - bucket
+                    - objectKey
+                    - region
+            destination:
+              type: string
+            dockerfilePath:
+              type: string
+            pushSecretName:
+              default: push-secret
+              type: string
+            round:
+              default: -1
+              type: integer
+            workspacePath:
+              default: Dockerfile
+              type: string
         status:
-          type: string
-          description: 'UNDO, DOING, SUCCESS, FAIL'
-        createdTime:
-          type: integer
-          format: int64
-        endTime:
-          type: integer
-          format: int64
+          description: BuilderStatus defines the observed state of Builder
+          type: object
+          properties:
+            base:
+              type: object
+              properties:
+                currentRound:
+                  type: integer
+                historyList:
+                  description: HistoryList is used to store the history of the CRD.
+                  type: array
+                  items:
+                    type: string
+                message:
+                  description: Message is mainly used to store the error message when the CRD is failed.
+                  type: string
+                status:
+                  type: string
+              required:
+                - currentRound
+                - status
       required:
-        - hostPrefix
-        - owner
-        - repo
-        - tag
-        - status
-        - createdTime
-        - endTime
+        - apiVersion
+        - kind
+        - metadata
+        - spec
+      title: ImageBuilder
+      x-stoplight:
+        id: 5e7705fec62a5
+      x-examples: { }
     ImageRepo:
       title: ImageRepo
       x-stoplight:
