@@ -40,12 +40,18 @@ fun generateRSAToken(userId: String): String {
     return RSAEncrypt.encrypt(jsonMapper.writeValueAsString(tokenInfo))
 }
 
+internal val possibleTokenKey =
+    listOf("scs-token", "token", "Token", "authorization", "Authorization", "authentication", "Authentication")
+
 /**
  * 尝试各种方法fetch token
  * 并给出身份识别
  * 兼容旧平台
  */
 fun fetchToken(call: ApplicationCall) {
+    println(call.request.queryParameters.names())
+    println(call.request.headers.names())
+    println(call.request.cookies.rawCookies)
     val token: String = when {
         call.isWS() -> {
             call.request.path().split("/").last()
@@ -53,11 +59,21 @@ fun fetchToken(call: ApplicationCall) {
 
         else -> {
             // TODO 后续兼容JWT校验
-            call.request.queryParameters.let { params ->
-                params["token"] ?: params["authentication"] ?: params["Authentication"]
-            } ?: call.request.headers.let { headers ->
-                headers["authorization"] ?: headers["Authorization"]
-            }?.let { auth -> auth.split(" ").let { if (it.size > 1 && it[0] == "Bearer") it[1] else auth } } ?: ""
+
+            // 1. try to get token from cookies
+            possibleTokenKey.firstNotNullOfOrNull { call.request.cookies[it] } ?:
+
+            // 2. try to get token from headers
+            possibleTokenKey.firstNotNullOfOrNull {
+                call.request.headers[it]?.let { auth ->
+                    if (auth.startsWith("Bearer")) auth.split(" ")[1] else auth
+                }
+            } ?:
+
+            // 3. try to get token from query parameters
+            possibleTokenKey.firstNotNullOfOrNull { call.request.queryParameters[it] }
+
+            ?: ""
         }
     }
 
