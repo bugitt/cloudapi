@@ -49,9 +49,6 @@ internal val possibleTokenKey =
  * 兼容旧平台
  */
 fun fetchToken(call: ApplicationCall) {
-    println(call.request.queryParameters.names())
-    println(call.request.headers.names())
-    println(call.request.cookies.rawCookies)
     val token: String = when {
         call.isWS() -> {
             call.request.path().split("/").last()
