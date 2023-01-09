@@ -1500,70 +1500,6 @@ paths:
       description: 获取当前项目中的所有可用镜像
       tags:
         - 镜像
-  '/project/{projectId}/containers':
-    parameters:
-      - schema:
-          type: string
-        name: projectId
-        in: path
-        required: true
-    post:
-      summary: 创建容器服务
-      operationId: post-project-projectId-containers
-      responses:
-        '200':
-          description: OK
-      description: 异步创建。不返回任何内容。
-      security:
-        - Authorization: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContainerServiceRequest'
-            examples: {}
-      tags:
-        - 容器服务
-    get:
-      summary: 获取项目中的容器服务列表
-      operationId: get-project-projectId-containers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ContainerServiceResponse'
-      security:
-        - Authorization: []
-      description: 获取当前项目中的所有容器服务
-      tags:
-        - 容器服务
-  '/project/{projectId}/containers/{containerServiceId}/rerun':
-    parameters:
-      - schema:
-          type: string
-        name: projectId
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: containerServiceId
-        in: path
-        required: true
-    post:
-      summary: 重新部署容器服务
-      operationId: post-project-projectId-containers-rerun
-      responses:
-        '200':
-          description: OK
-      description: 异步创建。不返回任何内容。
-      security:
-        - Authorization: []
-      tags:
-        - 容器服务
   '/project/{projectId}/imageBuilders':
     parameters:
       - schema:
@@ -1809,34 +1745,6 @@ paths:
           name: limit
           description: '-1表示无限制。默认为10'
   /resourcePools:
-    post:
-      summary: 创建资源池
-      tags:
-        - 容器服务
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourcePool'
-      operationId: post-resourcePools
-      description: 为用户创建资源池。仅供管理员调用
-      security:
-        - Authorization: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                resource:
-                  $ref: '#/components/schemas/Resource'
-                ownerId:
-                  type: string
-              required:
-                - resource
-                - ownerId
     parameters: []
     get:
       summary: 获取资源池列表
@@ -1849,7 +1757,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ResourcePool'
+                  type: string
       tags:
         - 容器服务
       description: |-
@@ -1874,7 +1782,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ResourcePool'
+                  type: string
       operationId: get-project-projectId-resourcePools
       tags:
         - 容器服务
@@ -1903,46 +1811,6 @@ paths:
         in: path
         required: true
         description: 需要触发的具体动作
-  '/project/{projectId}/containers/{containerServiceId}':
-    parameters:
-      - schema:
-          type: integer
-          format: int64
-        name: projectId
-        in: path
-        required: true
-      - schema:
-          type: integer
-          format: int64
-        name: containerServiceId
-        in: path
-        required: true
-    delete:
-      summary: 删除容器服务
-      operationId: delete-project-projectId-containers-containerServiceId
-      responses:
-        '200':
-          description: OK
-      description: 删除指定的容器服务
-      tags:
-        - 容器服务
-      security:
-        - Authorization: [ ]
-    get:
-      summary: 获取容器服务
-      operationId: get-project-projectId-containers-containerServiceId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContainerServiceResponse'
-      security:
-        - Authorization: [ ]
-      description: 根据ID获取容器服务
-      tags:
-        - 容器服务
   '/resourceUsedRecords/{resourceUsedRecordId}':
     parameters:
       - schema:
@@ -1950,32 +1818,6 @@ paths:
         name: resourceUsedRecordId
         in: path
         required: true
-    get:
-      summary: 获取资源使用记录
-      tags:
-        - 容器服务
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceUsedRecord'
-      operationId: get-resourceUsedRecords-resourceUsedRecordId
-      description: 获取资源使用记录
-      security:
-        - Authorization: [ ]
-      parameters:
-        - schema:
-            type: boolean
-          in: query
-          name: containerDetail
-          description: 默认为false
-        - schema:
-            type: boolean
-          in: query
-          name: projectDetail
-          description: 默认为false
   '/resourcePools/{resourcePoolId}':
     parameters:
       - schema:
@@ -1983,55 +1825,6 @@ paths:
         name: resourcePoolId
         in: path
         required: true
-    get:
-      summary: 获取指定的资源池
-      tags:
-        - 容器服务
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourcePool'
-      operationId: get-resourcePool-resourcePoolId
-      description: 通过ID获取资源池信息
-      security:
-        - Authorization: [ ]
-  '/stat/resourcePools/{resourcePoolId}/used':
-    parameters:
-      - schema:
-          type: string
-        name: resourcePoolId
-        in: path
-        required: true
-    get:
-      summary: 统计资源池的资源使用情况
-      tags:
-        - 容器服务
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  cpu:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ResourceUsedStatItem'
-                  memory:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ResourceUsedStatItem'
-                required:
-                  - cpu
-                  - memory
-      operationId: get-stat-resourcePools-resourcePoolId-used
-      description: 统计资源池的资源使用情况
-      security:
-        - Authorization: [ ]
   /containerServiceTemplates:
     get:
       summary: 获取容器服务模板列表
@@ -2088,45 +1881,6 @@ paths:
       description: 获取当前用户所归属的所有项目的所有容器服务列表的总和
       security:
         - Authorization: [ ]
-  '/project/{projectId}/containers/fromTemplate':
-    parameters:
-      - schema:
-          type: string
-        name: projectId
-        in: path
-        required: true
-    post:
-      summary: 从模板创建容器服务
-      operationId: post-project-projectId-containers-fromTemplate
-      responses:
-        '200':
-          description: OK
-      tags:
-        - 容器服务
-      description: 从模板创建容器服务
-      security:
-        - Authorization: [ ]
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                templateId:
-                  type: string
-                configs:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/KvPair'
-                resourcePoolId:
-                  type: string
-                limitedResource:
-                  $ref: '#/components/schemas/Resource'
-              required:
-                - templateId
-                - configs
-                - resourcePoolId
-                - limitedResource
   /file/s3/uploader:
     post:
       summary: 创建一个用于上传文件到S3的配置
@@ -3596,37 +3350,6 @@ components:
         - name
         - port
         - protocol
-    ContainerRequest:
-      title: ContainerRequest
-      x-stoplight:
-        id: x9luc5bc0qyu9
-      type: object
-      properties:
-        name:
-          type: string
-        image:
-          type: string
-        command:
-          type: string
-        workingDir:
-          type: string
-        envs:
-          type: array
-          items:
-            $ref: '#/components/schemas/KvPair'
-        ports:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContainerServicePort'
-        resourcePoolId:
-          type: string
-        limitedResource:
-          $ref: '#/components/schemas/Resource'
-      required:
-        - name
-        - image
-        - resourcePoolId
-        - limitedResource
     ContainerResponse:
       title: ContainerResponse
       x-stoplight:
@@ -3704,45 +3427,6 @@ components:
         - serviceType
         - containers
         - createdTime
-    ContainerServiceRequest:
-      title: ContainerServiceRequest
-      x-stoplight:
-        id: 9owvee8mbbtn2
-      type: object
-      x-examples:
-        example-1:
-          name: string
-          creator: string
-          projectId: -9223372036854776000
-          serviceType: string
-          containers:
-            - name: string
-              image: string
-              command: string
-              workingDir: string
-              envs:
-                - key: string
-                  value: string
-              ports:
-                - name: string
-                  port: 0
-                  protocol: string
-                  exportIP: string
-                  exportPort: 0
-      properties:
-        name:
-          type: string
-        serviceType:
-          type: string
-          description: 'SERVICE, JOB'
-        containers:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContainerRequest'
-      required:
-        - name
-        - serviceType
-        - containers
     LoginUserResponse:
       title: LoginUserResponse
       x-stoplight:
@@ -3772,131 +3456,6 @@ components:
         - isAssistant
         - token
         - paasToken
-    Resource:
-      title: Resource
-      x-stoplight:
-        id: ox84hfbudazvi
-      type: object
-      properties:
-        cpu:
-          type: integer
-          format: int32
-          description: 'm, 1000m = 1core'
-        memory:
-          type: integer
-          format: int32
-          description: MB
-      required:
-        - cpu
-        - memory
-    ResourcePool:
-      title: ResourcePool
-      x-stoplight:
-        id: 4l2ezks4ru2a9
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        ownerId:
-          type: string
-        capacity:
-          $ref: '#/components/schemas/Resource'
-        used:
-          $ref: '#/components/schemas/Resource'
-        usedRecordList:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResourceUsedRecord'
-        exchangeRecordList:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResourceExchangeRecord'
-        time:
-          type: integer
-          format: int64
-          description: 创建资源池时的时间戳
-      required:
-        - id
-        - name
-        - ownerId
-        - capacity
-        - used
-        - usedRecordList
-        - exchangeRecordList
-        - time
-    ResourceUsedRecord:
-      title: ResourceUsedRecord
-      x-stoplight:
-        id: tzurduyhikw2z
-      type: object
-      properties:
-        id:
-          type: string
-        resource:
-          $ref: '#/components/schemas/Resource'
-        projectId:
-          type: integer
-          format: int64
-        containerServiceId:
-          type: integer
-          format: int64
-        containerId:
-          type: integer
-          format: int64
-        released:
-          type: boolean
-        time:
-          type: integer
-          format: int64
-      required:
-        - id
-        - resource
-        - projectId
-        - containerServiceId
-        - containerId
-        - released
-        - time
-    ResourceExchangeRecord:
-      title: ResourceExchangeRecord
-      x-stoplight:
-        id: g5aqfkbtk1bur
-      type: object
-      properties:
-        id:
-          type: string
-        sender:
-          type: string
-        receiver:
-          type: string
-        resource:
-          $ref: '#/components/schemas/Resource'
-        time:
-          type: integer
-          format: int64
-      required:
-        - id
-        - sender
-        - receiver
-        - resource
-        - time
-    ResourceUsedStatItem:
-      title: ResourceUsedStatItem
-      x-stoplight:
-        id: p9ctqsnfdx5fd
-      type: object
-      properties:
-        name:
-          type: string
-          description: |-
-            未使用的份额的name值是 "空闲"
-            否则，其格式应该为 "${project_name} / ${container_service_name}"
-        value:
-          type: integer
-      required:
-        - name
-        - value
     ContainerServiceTemplate:
       title: ContainerServiceTemplate
       x-stoplight:

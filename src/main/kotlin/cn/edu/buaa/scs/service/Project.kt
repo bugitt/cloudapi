@@ -15,14 +15,10 @@ import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.kube.ContainerServiceTask
 import cn.edu.buaa.scs.kube.businessKubeClientBuilder
 import cn.edu.buaa.scs.kube.crd.v1alpha1.*
-import cn.edu.buaa.scs.kube.releaseResource
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.ContainerServiceTemplate
 import cn.edu.buaa.scs.model.Project
 import cn.edu.buaa.scs.model.ProjectMember
-import cn.edu.buaa.scs.model.Resource
-import cn.edu.buaa.scs.model.ResourcePool
-import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.project.managerList
 import cn.edu.buaa.scs.sdk.harbor.models.Artifact
@@ -426,117 +422,6 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             }
     }
 
-    suspend fun createContainerServiceFromTemplate(
-        projectID: Long,
-        templateId: String,
-        configs: Map<String, String>,
-        resourcePoolId: String,
-        limitedResource: cn.edu.buaa.scs.controller.models.Resource
-    ) {
-        val template = ContainerServiceTemplate.id(templateId)
-        var image = template.baseImage
-        val envs = mutableListOf<KvPair>()
-        template.configs.forEach {
-            when (it.target) {
-                ContainerServiceTemplate.ConfigItem.Target.TAG -> {
-                    image += ":" + (configs[it.name] ?: it.default)
-                }
-
-                ContainerServiceTemplate.ConfigItem.Target.ENV -> {
-                    val key = it.name
-                    val value = configs[it.name]
-                        ?: if (it.required) throw BadRequestException("Missing config: $key") else it.default
-                    if (value != null) {
-                        envs.add(KvPair(key, value))
-                    }
-                }
-            }
-        }
-        val containerRequest = ContainerRequest(
-            name = "container-main",
-            image = image,
-            resourcePoolId = resourcePoolId,
-            limitedResource = limitedResource,
-            envs = envs,
-            ports = template.portList.map {
-                ContainerServicePort(
-                    name = "${it.protocol}-${it.port}",
-                    port = it.port,
-                    protocol = it.protocol.name,
-                )
-            },
-        )
-        val containerServiceRequest = ContainerServiceRequest(
-            name = "${template.name}-${RandomStringUtils.randomNumeric(3)}",
-            serviceType = "SERVICE",
-            containers = listOf(containerRequest),
-        )
-        createContainerService(projectID, containerServiceRequest)
-    }
-
-    suspend fun createContainerService(projectID: Long, req: ContainerServiceRequest) {
-        val project = Project.id(projectID)
-        call.user().assertWrite(project)
-        // check name valid
-        if (!req.name.isValidProjectName()) {
-            throw BadRequestException("Service name invalid")
-        }
-        // check name conflict
-        if (mysql.containerServiceList.exists { it.projectId.eq(projectID).and(it.name.eq(req.name)) }) {
-            throw BadRequestException("Service name conflict")
-        }
-        // check permission to use the resourcePool
-        req.containers.forEach { container ->
-            call.user().assertWrite(ResourcePool.id(container.resourcePoolId))
-        }
-        mysql.useTransaction {
-            val containerService = ContainerService {
-                this.name = req.name
-                this.creator = call.userId()
-                this.projectId = projectID
-                this.projectName = project.name
-                this.serviceType = ContainerService.Type.valueOf(req.serviceType)
-                this.createTime = System.currentTimeMillis()
-                this.templateId = null
-            }
-            mysql.containerServiceList.add(containerService)
-            req.containers.forEach { containerReq ->
-                val container = Container {
-                    this.name = containerReq.name
-                    this.image = containerReq.image
-                    this.command = containerReq.command
-                    this.workingDir = containerReq.workingDir
-                    this.envs = containerReq.envs?.associate { it.name to it.value }
-                    this.ports = containerReq.ports?.map {
-                        ContainerService.Port(
-                            it.name,
-                            it.port,
-                            IPProtocol.valueOf(it.protocol)
-                        )
-                    }
-                    this.serviceId = containerService.id
-                    this.resourcePoolId = containerReq.resourcePoolId
-                    this.resourceUsedRecordId = ""
-                }
-                mysql.containerList.add(container)
-                val reqResource = containerReq.limitedResource
-                val (_, resourceUsedRecord) =
-                    ResourcePool.id(container.resourcePoolId)
-                        .use(Resource(reqResource.cpu, reqResource.memory), project, container, containerService)
-                container.resourceUsedRecordId = resourceUsedRecord._id.toString()
-                mysql.containerList.update(container)
-            }
-            val taskData = TaskData.create(
-                Task.Type.ContainerService,
-                ContainerServiceTask.Content(
-                    rerun = false,
-                ),
-                containerService.id,
-            )
-            mysql.taskDataList.add(taskData)
-        }
-    }
-
     fun getContainerServiceList(): List<ContainerService> {
         return mysql.projectMembers
             .filter { it.userId.eq(call.userId()) }
@@ -545,121 +430,15 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             .flatMap { projectId -> mysql.containerServiceList.filter { it.projectId eq projectId }.toList() }
     }
 
-    suspend fun deleteContainerService(projectID: Long, serviceID: Long) {
-        val project = Project.id(projectID)
-        call.user().assertWrite(project)
-        mysql.useTransaction {
-            val containerService = ContainerService.id(serviceID)
-            if (containerService.projectId != projectID) {
-                throw NotFoundException("Service not found")
-            }
-            BusinessKubeClient.deleteResource(project.name, containerService.name).getOrThrow()
-            containerService.releaseResource().getOrThrow()
-            containerService.delete()
-            mysql.delete(ContainerList) { it.serviceId eq serviceID }
-        }
+    fun getResourcePools(): List<String> {
+        return mysql.resourcePools.filter { it.ownerId eq call.userId() }.map { it.name }.toList()
     }
 
-    fun getContainerService(projectID: Long, serviceID: Long): ContainerService {
-        val project = Project.id(projectID)
-        call.user().assertWrite(project)
-        return ContainerService.id(serviceID)
-    }
-
-    fun rerunContainerService(projectID: Long, serviceID: Long) {
-        val project = Project.id(projectID)
-        call.user().assertWrite(project)
-        val containerService = ContainerService.id(serviceID)
-        if (containerService.projectId != projectID) {
-            throw NotFoundException("Service not found")
-        }
-        mysql.useTransaction {
-            val taskData = TaskData.create(
-                Task.Type.ContainerService,
-                ContainerServiceTask.Content(rerun = true),
-                containerService.id,
-            )
-            mysql.taskDataList.add(taskData)
-            containerService.createTime = System.currentTimeMillis()
-            mysql.containerServiceList.update(containerService)
-        }
-    }
-
-    fun getContainerServiceListByProject(projectID: Long): List<ContainerService> {
-        if (projectID <= 0) return getContainerServiceList()
-        val project = Project.id(projectID)
-        call.user().assertRead(project)
-        return mysql.containerServiceList
-            .filter { it.projectId eq projectID }
-            .toList()
-    }
-
-    suspend fun createResourcePool(userID: String, resource: Resource): ResourcePool {
-        if (!call.user().isAdmin()) throw AuthorizationException("Permission denied")
-
-        val resourcePool = ResourcePool(
-            name = "$userID-${RandomStringUtils.randomNumeric(5)}",
-            ownerId = userID,
-            capacity = resource,
-        )
-        mongo.resourcePool.insertOne(resourcePool)
-        return resourcePool
-    }
-
-    private suspend fun getResourcePoolsByUser(userID: String): List<ResourcePool> {
-        return mongo.resourcePool.find(ResourcePool::ownerId eq userID).toList()
-    }
-
-    suspend fun getResourcePools(): List<ResourcePool> {
-        return getResourcePoolsByUser(call.userId())
-    }
-
-    suspend fun getResourceUsedRecord(id: String): ResourceUsedRecord {
-        return ResourceUsedRecord.id(id)
-    }
-
-    suspend fun getResourcePool(id: String): ResourcePool {
-        return ResourcePool.id(id)
-    }
-
-    suspend fun getResourcePoolUsedStat(resourcePoolId: String): GetStatResourcePoolsResourcePoolIdUsed200Response {
-        val resourcePool = ResourcePool.id(resourcePoolId)
-
-        // TODO 权限控制
-
-        val usedRecordList = resourcePool.usedRecordList
-            .map { ResourceUsedRecord.id(it) }
-            .filter { !it.released }
-
-        val cpuItemList = mutableListOf<ResourceUsedStatItem>()
-        val memoryItemList = mutableListOf<ResourceUsedStatItem>()
-
-        usedRecordList.forEach {
-            val name = "${it.project.name} / ${it.containerService.name}"
-            cpuItemList.add(ResourceUsedStatItem(name, it.resource.cpu))
-            memoryItemList.add(ResourceUsedStatItem(name, it.resource.memory))
-        }
-
-        (resourcePool.capacity.cpu - cpuItemList.sumOf { it.value }).let {
-            if (it > 0) {
-                cpuItemList.add(ResourceUsedStatItem("空闲", it))
-            }
-        }
-
-        (resourcePool.capacity.memory - memoryItemList.sumOf { it.value }).let {
-            if (it > 0) {
-                memoryItemList.add(ResourceUsedStatItem("空闲", it))
-            }
-        }
-
-        return GetStatResourcePoolsResourcePoolIdUsed200Response(cpuItemList, memoryItemList)
-    }
-
-    suspend fun getResourcePoolsByProject(projectID: Long): List<ResourcePool> {
+    fun getResourcePoolsByProject(projectID: Long): List<String> {
         val project = Project.id(projectID)
         call.user().assertRead(project)
         return getProjectMembers(projectID).map { it.userId }.distinct().flatMap { userID ->
-            getResourcePoolsByUser(userID)
+            mysql.resourcePools.filter { it.ownerId eq userID }.map { it.name }.toList()
         }
     }
 

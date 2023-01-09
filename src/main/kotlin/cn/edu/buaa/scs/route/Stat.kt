@@ -48,16 +48,6 @@ fun Route.statRoute() {
             }
         }
 
-        route("/resourcePools/{resourcePoolId}") {
-            fun ApplicationCall.getResourceId(): String {
-                return parameters["resourcePoolId"] ?: throw BadRequestException("expId is not an integer")
-            }
-
-            get("/used") {
-                call.respond(call.project.getResourcePoolUsedStat(call.getResourceId()))
-            }
-        }
-
     }
 }
 

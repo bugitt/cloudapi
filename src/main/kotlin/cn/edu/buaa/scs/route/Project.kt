@@ -6,10 +6,6 @@ import cn.edu.buaa.scs.kube.crd.v1alpha1.Builder
 import cn.edu.buaa.scs.kube.getStatus
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.ContainerServiceTemplate
-import cn.edu.buaa.scs.model.Resource
-import cn.edu.buaa.scs.model.ResourceExchangeRecord
-import cn.edu.buaa.scs.model.ResourcePool
-import cn.edu.buaa.scs.model.ResourceUsedRecord
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.storage.mysql
@@ -135,58 +131,6 @@ fun Route.projectRoute() {
             }
         }
 
-        route("/containers") {
-            post {
-                call.project.createContainerService(call.getProjectID(), call.receive())
-                call.respond("OK")
-            }
-
-            get {
-                call.respond(
-                    call.project.getContainerServiceListByProject(call.getProjectID())
-                        .map { convertContainerServiceResponse(it) }
-                )
-            }
-
-            route("/fromTemplate") {
-                post {
-                    val req = call.receive<PostProjectProjectIdContainersFromTemplateRequest>()
-                    call.project.createContainerServiceFromTemplate(
-                        call.getProjectID(),
-                        req.templateId,
-                        req.configs.associate { it.name to it.value },
-                        req.resourcePoolId,
-                        req.limitedResource
-                    )
-                    call.respond("OK")
-                }
-            }
-
-            route("/{containerServiceId}") {
-                fun ApplicationCall.getContainerServiceId(): Long {
-                    return parameters["containerServiceId"]?.toLong()
-                        ?: throw BadRequestException("invalid containerServiceId")
-                }
-                post("/rerun") {
-                    call.project.rerunContainerService(call.getProjectID(), call.getContainerServiceId())
-                    call.respond("OK")
-                }
-
-                delete {
-                    call.project.deleteContainerService(call.getProjectID(), call.getContainerServiceId())
-                    call.respond("OK")
-                }
-
-                get {
-                    call.respond(
-                        convertContainerServiceResponse(
-                            call.project.getContainerService(call.getProjectID(), call.getContainerServiceId())
-                        )
-                    )
-                }
-            }
-        }
-
         route("/repos") {
             get {
                 call.respond(
@@ -205,7 +149,6 @@ fun Route.projectRoute() {
             get {
                 call.respond(
                     call.project.getResourcePoolsByProject(call.getProjectID())
-                        .map { convertResourcePoolResponse(it) }
                 )
             }
         }
@@ -214,56 +157,8 @@ fun Route.projectRoute() {
     route("/resourcePools") {
         get {
             call.respond(
-                call.project.getResourcePools().map {
-                    convertResourcePoolResponse(it)
-                }
+                call.project.getResourcePools()
             )
-        }
-
-        post {
-            val req = call.receive<PostResourcePoolsRequest>()
-            call.respond(
-                convertResourcePoolResponse(
-                    call.project.createResourcePool(
-                        req.ownerId,
-                        reConvertResource(req.resource),
-                    )
-                )
-            )
-        }
-    }
-
-    route("/resourceUsedRecords") {
-        route("/{resourceUsedRecordId}") {
-            fun ApplicationCall.getResourceUsedRecordID(): String {
-                return parameters["resourceUsedRecordId"]
-                    ?: throw BadRequestException("invalid resourceUsedRecordID")
-            }
-            get {
-                call.respond(
-                    convertResourceUsedRecord(
-                        call.project.getResourceUsedRecord(call.getResourceUsedRecordID())
-                    )
-                )
-            }
-        }
-
-    }
-
-    route("/resourcePools") {
-        route("/{resourcePoolId}") {
-            fun ApplicationCall.getResourcePoolID(): String {
-                return parameters["resourcePoolId"]
-                    ?: throw BadRequestException("invalid resourcePoolID")
-            }
-
-            get {
-                call.respond(
-                    convertResourcePoolResponse(
-                        call.project.getResourcePool(call.getResourcePoolID())
-                    )
-                )
-            }
         }
     }
 
@@ -390,48 +285,6 @@ fun convertImageBuilder(builder: Builder): ImageBuilder {
         )
     )
 }
-
-fun convertResource(resource: Resource) = cn.edu.buaa.scs.controller.models.Resource(
-    cpu = resource.cpu,
-    memory = resource.memory,
-)
-
-fun reConvertResource(resource: cn.edu.buaa.scs.controller.models.Resource) = Resource(
-    cpu = resource.cpu,
-    memory = resource.memory,
-)
-
-fun convertResourceExchangeRecord(record: ResourceExchangeRecord) =
-    cn.edu.buaa.scs.controller.models.ResourceExchangeRecord(
-        id = record._id.toString(),
-        sender = record.sender,
-        receiver = record.receiver,
-        resource = convertResource(record.resource),
-        time = record.time,
-    )
-
-fun convertResourceUsedRecord(record: ResourceUsedRecord) =
-    cn.edu.buaa.scs.controller.models.ResourceUsedRecord(
-        id = record._id.toString(),
-        resource = convertResource(record.resource),
-        projectId = record.project.id,
-        containerServiceId = record.containerService.id,
-        containerId = record.container.id,
-        released = record.released,
-        time = record.time,
-    )
-
-suspend fun convertResourcePoolResponse(pool: ResourcePool) =
-    cn.edu.buaa.scs.controller.models.ResourcePool(
-        id = pool._id.toString(),
-        name = pool.name,
-        ownerId = pool.ownerId,
-        capacity = convertResource(pool.capacity),
-        used = convertResource(pool.used),
-        usedRecordList = pool.usedRecordList.map { convertResourceUsedRecord(ResourceUsedRecord.id(it)) },
-        exchangeRecordList = pool.exchangeRecordList.map { convertResourceExchangeRecord(ResourceExchangeRecord.id(it)) },
-        time = pool.time,
-    )
 
 fun convertContainerServiceTemplate(template: ContainerServiceTemplate) =
     cn.edu.buaa.scs.controller.models.ContainerServiceTemplate(
