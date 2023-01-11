@@ -30,7 +30,7 @@ fun Route.courseRoute() {
         get {
             val courseId = call.getCourseIdFromPath()
             val course = call.course.get(courseId)
-            call.respond(call.convertCourseResponse(course))
+            call.respond(call.convertCourseResponse(course, true))
         }
 
         route("/resource") {
@@ -76,7 +76,7 @@ fun Route.courseRoute() {
 
 }
 
-internal fun ApplicationCall.convertCourseResponse(course: Course): CourseResponse {
+internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boolean = false): CourseResponse {
     return CourseResponse(
         id = course.id,
         name = course.name,
@@ -84,10 +84,9 @@ internal fun ApplicationCall.convertCourseResponse(course: Course): CourseRespon
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = this.course.studentCnt(course.id)
+        studentCnt = if(hasCount) this.course.studentCnt(course.id) else null
     )
 }
-
 internal fun convertCourseResource(courseResource: CourseResource): CourseResourceResponse {
     return CourseResourceResponse(
         id = courseResource.id,
