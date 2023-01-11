@@ -18,7 +18,7 @@ fun Route.courseRoute() {
 
     route("/courses") {
         get {
-            call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it, false) })
+            call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it) })
         }
     }
 
@@ -76,7 +76,7 @@ fun Route.courseRoute() {
 
 }
 
-internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boolean): CourseResponse {
+internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boolean = false): CourseResponse {
     return CourseResponse(
         id = course.id,
         name = course.name,
@@ -84,7 +84,7 @@ internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boo
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = if(hasCount) this.course.studentCnt(course.id) else 0
+        studentCnt = if(hasCount) this.course.studentCnt(course.id) else null
     )
 }
 

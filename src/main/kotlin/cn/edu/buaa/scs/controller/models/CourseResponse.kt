@@ -32,6 +32,6 @@ data class CourseResponse(
     val createTime: kotlin.String,
     val departmentId: kotlin.String,
     /* 本门课的学生人数 */
-    val studentCnt: kotlin.Int
+    val studentCnt: kotlin.Int? = null
 ) 
 
