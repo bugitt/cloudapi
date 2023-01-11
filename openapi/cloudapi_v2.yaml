@@ -2621,7 +2621,6 @@ components:
         - term
         - createTime
         - departmentId
-        - studentCnt
     AssignmentListResponse:
       title: AssignmentListResponse
       type: object
