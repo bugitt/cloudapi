@@ -11,18 +11,14 @@
 */
 package cn.edu.buaa.scs.controller.models
 
-import cn.edu.buaa.scs.controller.models.ContainerRequest
 
 /**
  * 
+ * @param id 
  * @param name 
- * @param serviceType SERVICE, JOB
- * @param containers 
  */
-data class ContainerServiceRequest(
-    val name: kotlin.String,
-    /* SERVICE, JOB */
-    val serviceType: kotlin.String,
-    val containers: kotlin.collections.List<ContainerRequest>
+data class SimpleCourse(
+    val id: kotlin.Int,
+    val name: kotlin.String
 ) 
 

@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.auth.generateRSAToken
 import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.controller.models.LoginUserResponse
+import cn.edu.buaa.scs.controller.models.SimpleCourse
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
@@ -119,6 +120,7 @@ class AuthService(val call: ApplicationCall) : IService {
             role = if (user.isStudent()) "student" else if (user.isTeacher()) "teacher" else "superAdmin",
             paasToken = user.paasToken,
             isAssistant = mysql.assistants.exists { it.studentId.eq(user.id) },
+            adminCourses = user.getAdminCourses().map { SimpleCourse(it.first, it.second) }
         )
     }
 

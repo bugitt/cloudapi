@@ -3449,6 +3449,10 @@ components:
           type: array
           items:
             type: string
+        adminCourses:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleCourse'
       required:
         - userId
         - username
@@ -3456,6 +3460,7 @@ components:
         - isAssistant
         - token
         - paasToken
+        - adminCourses
     ContainerServiceTemplate:
       title: ContainerServiceTemplate
       x-stoplight:
@@ -3560,6 +3565,20 @@ components:
         - bucket
         - key
         - region
+    SimpleCourse:
+      title: SimpleCourse
+      x-stoplight:
+        id: 6d3ivgkgbf3rv
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+      required:
+        - id
+        - name
   securitySchemes:
     Authorization:
       type: apiKey

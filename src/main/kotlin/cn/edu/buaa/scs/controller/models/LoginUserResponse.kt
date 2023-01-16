@@ -11,6 +11,7 @@
 */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.SimpleCourse
 
 /**
  * 
@@ -20,6 +21,7 @@ package cn.edu.buaa.scs.controller.models
  * @param isAssistant 
  * @param token 
  * @param paasToken 
+ * @param adminCourses 
  * @param projects 
  */
 data class LoginUserResponse(
@@ -29,6 +31,7 @@ data class LoginUserResponse(
     val isAssistant: kotlin.Boolean,
     val token: kotlin.String,
     val paasToken: kotlin.String,
+    val adminCourses: kotlin.collections.List<SimpleCourse>,
     val projects: kotlin.collections.List<kotlin.String>? = null
 ) 
 

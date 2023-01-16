@@ -91,6 +91,26 @@ interface User : Entity<User>, IEntity {
         return mysql.assistants.exists { (it.studentId eq this.id).and(it.courseId.inList(courseIdList)) }
     }
 
+    fun getAdminCourses(): List<Pair<Int, String>> {
+        return when (this.role) {
+            UserRole.STUDENT -> {
+                mysql.assistants
+                    .filter { it.studentId.eq(this.id) }.map { it.courseId }
+                    .toList()
+                    .map { it.toInt() }
+                    .let { courseIdList ->
+                        if (courseIdList.isEmpty()) emptyList()
+                        else mysql.courses.filter { it.id.inList(courseIdList) }.map { it.id to it.name }.toList()
+                    }
+            }
+
+            UserRole.SYS -> emptyList()
+            UserRole.TEACHER -> {
+                mysql.courses.filter { it.teacherId.eq(this.id) }.map { it.id to it.name }.toList()
+            }
+        }
+    }
+
     fun getAssistantCourseIdList(): List<Int> =
         mysql.assistants.filter { it.studentId eq this.id }.map { it.courseId.tryToInt() }.filterNotNull().distinct()
 
