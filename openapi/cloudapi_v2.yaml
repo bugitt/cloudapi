@@ -41,7 +41,7 @@ tags:
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
-  '/experimnet/{experimentId}':
+  '/experiment/{experimentId}':
     parameters:
       - schema:
           type: integer
@@ -59,7 +59,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExperimentResponse'
-      operationId: get-experimnet-experimentId
+      operationId: get-experiment-experimentId
       description: 获取一项实验（作业）详情
       security:
         - Authorization: []
@@ -455,7 +455,7 @@ paths:
                   $ref: '#/components/schemas/CourseResponse'
       operationId: get-course-list
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: 管理员获取所有课程
   '/stat/exp/{expId}/assignments':
     parameters:
@@ -1523,7 +1523,7 @@ paths:
       operationId: get-project-projectId-imageBuilders
       description: 获取当前项目下的所有镜像构建任务
       security:
-        - Authorization: [ ]
+        - Authorization: []
   '/project/{projectId}/repos':
     parameters:
       - schema:
@@ -1545,7 +1545,7 @@ paths:
       operationId: get-project-projectId-repos
       description: 获取代码仓库列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
       tags:
         - 代码仓库
     post:
@@ -1562,7 +1562,7 @@ paths:
         - 项目
       description: 在指定项目中创建代码仓库
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -1687,7 +1687,7 @@ paths:
       operationId: get-whoami
       description: whoami，通过当前token，得知当前用户的基本信息
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: boolean
@@ -1862,7 +1862,7 @@ paths:
       operationId: get-containerServiceTemplates
       description: 获取容器服务模板列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /containerServices:
     get:
       summary: 获取所有容器服务列表
@@ -1880,7 +1880,7 @@ paths:
       operationId: get-containerServices
       description: 获取当前用户所归属的所有项目的所有容器服务列表的总和
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /file/s3/uploader:
     post:
       summary: 创建一个用于上传文件到S3的配置
@@ -1895,7 +1895,7 @@ paths:
       tags:
         - 文件
       security:
-        - Authorization: [ ]
+        - Authorization: []
       description: |-
         创建一个上传该文件的s3用户
         并返回上传到s3所需要的所有配置
@@ -1946,7 +1946,7 @@ paths:
           name: name
           required: true
       security:
-        - Authorization: [ ]
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -3301,7 +3301,7 @@ components:
       title: ImageBuilder
       x-stoplight:
         id: 5e7705fec62a5
-      x-examples: { }
+      x-examples: {}
     ImageRepo:
       title: ImageRepo
       x-stoplight:
