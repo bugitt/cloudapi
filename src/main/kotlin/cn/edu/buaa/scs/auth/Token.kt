@@ -49,6 +49,12 @@ internal val possibleTokenKey =
  * 兼容旧平台
  */
 fun fetchToken(call: ApplicationCall) {
+    val canEscape = call.request.httpMethod == HttpMethod.Options ||
+            (escapeApiMap[call.request.path()]?.contains(call.request.httpMethod) ?: false)
+    if (canEscape) {
+        return
+    }
+
     val token: String = when {
         call.isWS() -> {
             call.request.path().split("/").last()
@@ -81,11 +87,6 @@ fun fetchToken(call: ApplicationCall) {
     }
 
     if (token.isEmpty()) {
-        val canEscape = call.request.httpMethod == HttpMethod.Options ||
-                (escapeApiMap[call.request.path()]?.contains(call.request.httpMethod) ?: false)
-        if (canEscape) {
-            return
-        }
         throw AuthenticationException()
     }
 
