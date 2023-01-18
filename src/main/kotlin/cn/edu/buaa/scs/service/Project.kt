@@ -12,8 +12,6 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.kube.BusinessKubeClient
-import cn.edu.buaa.scs.kube.ContainerServiceTask
-import cn.edu.buaa.scs.kube.businessKubeClientBuilder
 import cn.edu.buaa.scs.kube.crd.v1alpha1.*
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.model.ContainerServiceTemplate
@@ -31,21 +29,14 @@ import cn.edu.buaa.scs.utils.*
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newSecret
-import io.fabric8.kubernetes.api.model.ObjectMeta
-import io.fabric8.kubernetes.api.model.Secret
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.RandomStringUtils
 import org.ktorm.dsl.and
-import org.ktorm.dsl.delete
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.inList
 import org.ktorm.entity.*
-import org.litote.kmongo.eq
-import java.net.URL
 import java.util.*
 
 val ApplicationCall.project
@@ -105,7 +96,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         user.flushChanges()
     }
 
-    private suspend fun createProjectForUser(
+    internal suspend fun createProjectForUser(
         user: User,
         name: String,
         expID: Int? = null,
@@ -113,6 +104,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         description: String = "",
         isPersonal: Boolean = false,
     ): Project {
+        if (mysql.projects.exists { it.name.eq(name) }) {
+            return mysql.projects.find { it.name eq name }!!
+        }
+
         val experiment = if (expID != null) {
             val experiment = Experiment.id(expID)
             user.assertRead(experiment)
@@ -127,9 +122,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         if (!name.isValidProjectName()) {
             throw BadRequestException("Project name is invalid")
         }
-        if (mysql.projects.exists { it.name.eq(name) }) {
-            throw BadRequestException("Project name is duplicated, please use another one")
-        }
+
         return transactionWork(
             { this.createProjectForUser(user.id, name, displayName, description) },
             { this.deleteProject(name) },

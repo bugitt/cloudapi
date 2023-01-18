@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Assignment
 import cn.edu.buaa.scs.model.AssignmentReview
 import cn.edu.buaa.scs.model.Experiment
+import cn.edu.buaa.scs.model.ExperimentWorkflowConfiguration
 import cn.edu.buaa.scs.service.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -116,6 +117,26 @@ fun Route.experimentRoute() {
                     call.respond("OK")
                 }
             }
+
+            route("/workflowConfiguration") {
+                get {
+                    call.experiment.getWorkflowConfiguration(call.getExpIdFromPath()).let {
+                        call.respond(convertExperimentWorkflowConfigurationResponse(it))
+                    }
+                }
+                post {
+                    val req = call.receive<ExperimentWorkflowConfigurationRequest>()
+                    call.respond(
+                        convertExperimentWorkflowConfigurationResponse(
+                            call.experiment.createOrUpdateWorkflowConfiguration(
+                                call.getExpIdFromPath(),
+                                req.resource,
+                                req.configuration
+                            )
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -191,4 +212,12 @@ internal fun convertAssignmentReview(assignmentReview: AssignmentReview): Assign
         reviewedAt = assignmentReview.reviewedAt,
         reviewerId = assignmentReview.reviewerId,
         reviewerName = assignmentReview.reviewerName,
+    )
+
+internal fun convertExperimentWorkflowConfigurationResponse(configuration: ExperimentWorkflowConfiguration): ExperimentWorkflowConfigurationResponse =
+    ExperimentWorkflowConfigurationResponse(
+        id = configuration.id,
+        expId = configuration.expId,
+        resourcePool = configuration.resourcePool,
+        configuration = configuration.configuration,
     )

@@ -4,13 +4,17 @@ import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
 import cn.edu.buaa.scs.controller.models.PutExperimentRequest
+import cn.edu.buaa.scs.controller.models.ResourceModel
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
+import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
+import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.util.*
@@ -209,6 +213,66 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         // TODO: 统计虚拟机数量
         val vmCnt = 0
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
+    }
+
+    fun getWorkflowConfiguration(expId: Int): ExperimentWorkflowConfiguration {
+        val experiment = Experiment.id(expId)
+        call.user().assertRead(experiment)
+        return mysql.experimentWorkflowConfigurations.find { it.expId.eq(expId) } ?: throw NotFoundException()
+    }
+
+    suspend fun createOrUpdateWorkflowConfiguration(
+        expId: Int,
+        resource: ResourceModel,
+        configuration: String,
+    ): ExperimentWorkflowConfiguration {
+        if (mysql.experimentWorkflowConfigurations.exists { it.expId.eq(expId) }) {
+            throw BadRequestException("同一实验仅能配置一次工作流")
+        }
+
+        val experiment = Experiment.id(expId)
+        call.user().assertWrite(experiment)
+
+        // create resourcePool
+        val resourcePoolName = "exp-$expId-workflow"
+        val studentList = call.course.getAllStudents(experiment.course.id)
+        BusinessKubeClient
+            .createResourcePool(resourcePoolName, resource.cpu * studentList.size, resource.memory * studentList.size)
+            .getOrThrow()
+
+        // create projects for every student
+        CommonScheduler.multiCoroutinesProduceSync(
+            studentList.map { student ->
+                {
+                    call.project.createProjectForUser(
+                        student,
+                        "exp-$expId-workflow-${student.id}",
+                        expId,
+                        "${experiment.course.name}-${experiment.name}",
+                        "${experiment.course.name}-${experiment.name}的实验项目",
+                    )
+                }
+            }
+        )
+
+        val conf = ExperimentWorkflowConfiguration {
+            this.expId = expId
+            this.resourcePool = resourcePoolName
+            this.configuration = configuration
+        }
+        mysql.useTransaction {
+            mysql.experimentWorkflowConfigurations.add(conf)
+            experiment.enableWorkflow = true
+            mysql.experiments.update(experiment)
+
+            val resourcePool = ResourcePool {
+                this.name = resourcePoolName
+                this.ownerId = experiment.course.teacher.id
+            }
+            mysql.resourcePools.add(resourcePool)
+        }
+
+        return conf
     }
 
     companion object : IService.Caller<ExperimentService>() {

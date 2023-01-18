@@ -57,7 +57,7 @@ class CourseService(val call: ApplicationCall) : IService {
     }
 
     fun getAllStudents(courseId: Int): List<User> {
-        return mysql.courseStudents.filter { it.courseId eq courseId }.toList().map { it.student }
+        return mysql.courseStudents.filter { it.courseId eq courseId }.map { it.student }.toList()
     }
 
     suspend fun statCourseExps(courseId: Int): StatCourseExps = withContext(Dispatchers.Default) {
