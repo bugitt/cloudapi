@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 
 @Suppress("unused")
 fun Application.webModule() {
+    configureAuth()
     configureWebsocket()
     configureCORS()
     configureCallID()
