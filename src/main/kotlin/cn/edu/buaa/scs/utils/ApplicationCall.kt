@@ -24,6 +24,9 @@ fun ApplicationCall.token(): String =
 fun ApplicationCall.user(): User =
     this.attributes[USER_KEY]
 
+fun ApplicationCall.userOrNull(): User? =
+    this.attributes.getOrNull(USER_KEY)
+
 fun ApplicationCall.userId(): String =
     this.attributes[USER_ID_KEY]
 
