@@ -28,6 +28,8 @@ interface VmApply : Entity<VmApply>, IEntity {
     var status: Int // 0: 还未处理; 1: 允许; 2: 拒绝
     var handleTime: Long
     var expectedNum: Int
+    var replyMsg: String
+    var dueTime: Long
 
     fun isApproved(): Boolean = this.status == 1
 
@@ -52,6 +54,8 @@ object VmApplyList : Table<VmApply>("vm_apply") {
     val status = int("status").bindTo { it.status }
     val handleTime = long("handle_time").bindTo { it.handleTime }
     val exceptedNum = int("expected_num").bindTo { it.expectedNum }
+    var replyMsg = text("reply_msg").bindTo { it.replyMsg }
+    var dueTime = long("due_time").bindTo { it.dueTime }
 }
 
 val Database.vmApplyList get() = this.sequenceOf(VmApplyList)

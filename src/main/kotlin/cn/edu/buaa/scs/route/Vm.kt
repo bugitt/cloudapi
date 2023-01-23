@@ -179,6 +179,8 @@ internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
     handleTime = vmApply.handleTime,
     expectedNum = vmApply.expectedNum,
     actualNum = vmApply.getActualNum(),
+    dueTime = vmApply.dueTime,
+    replyMsg = vmApply.replyMsg
 )
 
 internal fun convertExpVmInfo(vmApply: VmApply) = ExpVmInfo(

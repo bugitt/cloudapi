@@ -3048,6 +3048,13 @@ components:
         namePrefix:
           type: string
           description: 最终生成的虚拟机的名称的前缀
+        dueTime:
+          type: integer
+          format: int64
+          description: 虚拟机使用的结束时间
+        replyMsg:
+          type: string
+          description: 管理员审批该申请的回复信息
       required:
         - id
         - studentId
