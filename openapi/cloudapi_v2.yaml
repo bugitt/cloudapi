@@ -1074,7 +1074,7 @@ paths:
           in: query
           name: reply
           required: true
-          description: '审批回复信息'
+          description: 审批回复信息
       description: 管理员处理“创建虚拟机的申请”
     parameters:
       - schema:
@@ -2007,7 +2007,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogRecord'
+                $ref: '#/components/schemas/LogRecordSearchResponse'
       description: |-
         搜索日志记录
         仅限管理员调用
@@ -3766,6 +3766,7 @@ components:
                 - descend
       required:
         - pagination
+      x-examples: {}
     LogRecord:
       title: LogRecord
       type: object
@@ -3837,6 +3838,29 @@ components:
       required:
         - current
         - pageSize
+    LogRecordSearchResponse:
+      title: LogRecordSearchResponse
+      x-stoplight:
+        id: 38hl7btn774l1
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogRecord'
+        total:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int32
+        success:
+          type: boolean
+      required:
+        - data
+        - total
+        - page
+        - success
   securitySchemes:
     Authorization:
       type: apiKey

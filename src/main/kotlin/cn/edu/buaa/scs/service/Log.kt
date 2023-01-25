@@ -18,7 +18,7 @@ val ApplicationCall.log
 class LogService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<LogService>()
 
-    suspend fun search(req: LogRecordSearchRequest): List<LogRecord> {
+    suspend fun search(req: LogRecordSearchRequest): PaginationResponse<LogRecord> {
         if (!call.user().isAdmin()) {
             throw AuthenticationException()
         }
@@ -50,6 +50,7 @@ class LogService(val call: ApplicationCall) : IService {
             filters.add(LogRecord::startAt gte start)
             filters.add(LogRecord::startAt lte end)
         }
+        val query = if (filters.isEmpty()) Filters.empty() else Filters.and(filters)
 
         val sortByList = mutableListOf<Bson>()
         if (req.order != null) {
@@ -69,11 +70,15 @@ class LogService(val call: ApplicationCall) : IService {
             }
         }
 
-        return mongo.logRecord
-            .find(if (filters.isEmpty()) Filters.empty() else Filters.and(filters))
+
+        val total = mongo.logRecord.countDocuments(query)
+        val records = mongo.logRecord
+            .find(query)
             .sort(if (sortByList.isEmpty()) Sorts.descending(LogRecord::startAt.name) else Sorts.orderBy(sortByList))
             .skip(skip)
             .limit(limit)
             .toList()
+
+        return PaginationResponse(records, total, req.pagination.current)
     }
 }
