@@ -31,3 +31,7 @@ suspend fun String.runCommand() = withContext(Dispatchers.IO) {
         throw ExecCommandException("Failed to execute command: $this@runCommand", e)
     }
 }
+
+fun formatHeaders(headers: Map<String, List<String>>): String {
+    return headers.map { (k, v) -> "$k: ${v.joinToString(" ")}" }.joinToString { "\n" }
+}

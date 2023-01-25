@@ -38,6 +38,8 @@ tags:
     description: 镜像相关接口
   - name: 容器服务
     description: 容器服务相关接口
+  - name: 日志管理
+    description: 日志管理相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -1989,6 +1991,29 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ExperimentWorkflowConfigurationRequest'
+  /logs:
+    post:
+      summary: 搜索日志记录
+      operationId: post-logs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogRecord'
+      description: |-
+        搜索日志记录
+        仅限管理员调用
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogRecordSearchRequest'
+      tags:
+        - 日志管理
 components:
   schemas:
     AssignmentResponse:
@@ -3681,6 +3706,116 @@ components:
         - expId
         - resourcePool
         - configuration
+    LogRecordSearchRequest:
+      title: LogRecordSearchRequest
+      x-stoplight:
+        id: n9p7xibrk8f8q
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/PaginationReq'
+        userId:
+          type: string
+        username:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        status:
+          type: integer
+          format: int32
+        errMsg:
+          type: string
+        timeRange:
+          type: string
+          description: '字符串格式为 ${start time stamp}-${end time stamp}'
+        order:
+          type: object
+          properties:
+            startAt:
+              type: string
+              enum:
+                - ascend
+                - descend
+            duration:
+              type: string
+              enum:
+                - ascend
+                - descend
+      required:
+        - pagination
+    LogRecord:
+      title: LogRecord
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        username:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        requestHeaders:
+          type: string
+          description: |-
+            应该是如下的格式化后的字符串：
+
+            Host: xxxx
+            X-Custom-Header: xxx xxx xxx
+            Another-Header: xxxx
+        httpVersion:
+          type: string
+        realIp:
+          type: string
+        userAgent:
+          type: string
+        responseStatus:
+          type: integer
+          format: int32
+        errMsg:
+          type: string
+        responseHeaders:
+          type: string
+          description: |-
+            应该是如下的格式化后的字符串：
+
+            Host: xxxx
+            X-Custom-Header: xxx xxx xxx
+            Another-Header: xxxx
+        startAt:
+          type: integer
+          format: int64
+          description: 发起调用的时间戳
+        duration:
+          type: integer
+          format: int64
+          description: 处理请求所花的时间
+      required:
+        - id
+        - method
+        - path
+        - requestHeaders
+        - httpVersion
+        - responseHeaders
+    PaginationReq:
+      title: PaginationReq
+      x-stoplight:
+        id: 2zh41tukua51n
+      type: object
+      properties:
+        current:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+      required:
+        - current
+        - pageSize
   securitySchemes:
     Authorization:
       type: apiKey

@@ -19,6 +19,7 @@ fun Application.configureRouting() {
             vmRoute()
             websocketRoute()
             routineRoute()
+            logRoute()
             // 添加其他的 route
         }
 
