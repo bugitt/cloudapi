@@ -33,5 +33,5 @@ suspend fun String.runCommand() = withContext(Dispatchers.IO) {
 }
 
 fun formatHeaders(headers: Map<String, List<String>>): String {
-    return headers.map { (k, v) -> "$k: ${v.joinToString(" ")}" }.joinToString { "\n" }
+    return headers.map { (k, v) -> "$k: ${v.joinToString(" ")}" }.joinToString("\n")
 }

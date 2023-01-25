@@ -70,8 +70,8 @@ class LogService(val call: ApplicationCall) : IService {
         }
 
         return mongo.logRecord
-            .find(Filters.and(filters))
-            .sort(Sorts.orderBy(sortByList))
+            .find(if (filters.isEmpty()) Filters.empty() else Filters.and(filters))
+            .sort(if (sortByList.isEmpty()) Sorts.descending(LogRecord::startAt.name) else Sorts.orderBy(sortByList))
             .skip(skip)
             .limit(limit)
             .toList()
