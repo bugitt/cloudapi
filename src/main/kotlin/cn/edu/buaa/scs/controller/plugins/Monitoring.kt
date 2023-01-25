@@ -30,7 +30,6 @@ fun Application.configureMonitoring() {
             val status = call.response.status()
             val userAgent = call.request.userAgent()
 
-            // save log to database
             val logRecordReq = LogRecordReq(
                 method = method,
                 path = requestUrl,
