@@ -3,8 +3,6 @@ package cn.edu.buaa.scs.controller.plugins
 import cn.edu.buaa.scs.model.LogRecord
 import cn.edu.buaa.scs.model.LogRecordReq
 import cn.edu.buaa.scs.model.LogRecordResp
-import cn.edu.buaa.scs.model.logRecord
-import cn.edu.buaa.scs.storage.mongo
 import cn.edu.buaa.scs.utils.getError
 import cn.edu.buaa.scs.utils.userOrNull
 import io.ktor.http.*
@@ -20,6 +18,11 @@ import org.slf4j.event.Level
 fun Application.configureMonitoring() {
     val startTimestampAttrKey = AttributeKey<Long>("start-time-stamp")
     val logRecordKey = AttributeKey<LogRecord>("log-record")
+    val ignoreKeyIpList = listOf(
+        "127.0.0.1",
+        "localhost",
+        "cloudapi",
+    )
 
     fun logRecord(call: ApplicationCall): LogRecord {
         return call.attributes.getOrNull(logRecordKey) ?: run {
@@ -76,8 +79,8 @@ fun Application.configureMonitoring() {
 
         on(ResponseSentSuspend) { call ->
             val logRecord = logRecord(call)
-            if (logRecord.request.realIp?.contains("127.0.0.1") != true) {
-                mongo.logRecord.insertOne(logRecord)
+            if (ignoreKeyIpList.any { logRecord.request.realIp?.contains(it) == true }) {
+                return@on
             }
         }
     })
