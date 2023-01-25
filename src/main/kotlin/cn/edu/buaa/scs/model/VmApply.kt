@@ -7,6 +7,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
 import org.ktorm.entity.count
+import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
@@ -28,10 +29,20 @@ interface VmApply : Entity<VmApply>, IEntity {
     var status: Int // 0: 还未处理; 1: 允许; 2: 拒绝
     var handleTime: Long
     var expectedNum: Int
+    var replyMsg: String
+    var dueTime: Long
 
     fun isApproved(): Boolean = this.status == 1
 
     fun getActualNum(): Int = mysql.virtualMachines.count { it.applyId.eq(this.id) }
+
+    fun getApplicant(): String {
+        return if (studentId == "default" && teacherId == "default") "管理员"
+        else if (studentId == "default") mysql.users.find { it.id.eq(this.teacherId) }?.name ?: ""
+        else mysql.users.find { it.id.eq(this.studentId) }?.name ?: ""
+    }
+
+    fun getTemplateName(): String = mysql.virtualMachines.find { it.uuid.eq(this.templateUuid) }?.name ?: ""
 }
 
 object VmApplyList : Table<VmApply>("vm_apply") {
@@ -52,6 +63,8 @@ object VmApplyList : Table<VmApply>("vm_apply") {
     val status = int("status").bindTo { it.status }
     val handleTime = long("handle_time").bindTo { it.handleTime }
     val exceptedNum = int("expected_num").bindTo { it.expectedNum }
+    var replyMsg = text("reply_msg").bindTo { it.replyMsg }
+    var dueTime = long("due_time").bindTo { it.dueTime }
 }
 
 val Database.vmApplyList get() = this.sequenceOf(VmApplyList)

@@ -89,7 +89,8 @@ fun Route.vmRoute() {
                         convertVmApplyResponse(
                             call.vm.handleApply(
                                 call.getApplyIdFromPath(),
-                                call.request.queryParameters["approve"]?.toBoolean() ?: false
+                                call.request.queryParameters["approve"]?.toBoolean() ?: false,
+                                call.request.queryParameters["reply"] ?: ""
                             )
                         )
                     )
@@ -167,18 +168,21 @@ internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
     namePrefix = vmApply.namePrefix,
     studentId = vmApply.studentId,
     teacherId = vmApply.teacherId,
+    applicant = vmApply.getApplicant(),
     experimentId = vmApply.experimentId,
     studentIdList = vmApply.studentIdList,
     cpu = vmApply.cpu,
     memory = vmApply.memory,
     diskSize = vmApply.diskSize,
-    templateUuid = vmApply.templateUuid,
+    templateName = vmApply.getTemplateName(),
     description = vmApply.description,
     applyTime = vmApply.applyTime,
     status = vmApply.status,
     handleTime = vmApply.handleTime,
     expectedNum = vmApply.expectedNum,
     actualNum = vmApply.getActualNum(),
+    dueTime = vmApply.dueTime,
+    replyMsg = vmApply.replyMsg
 )
 
 internal fun convertExpVmInfo(vmApply: VmApply) = ExpVmInfo(

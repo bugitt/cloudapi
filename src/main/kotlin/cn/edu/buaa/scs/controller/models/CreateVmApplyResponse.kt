@@ -17,12 +17,13 @@ package cn.edu.buaa.scs.controller.models
  * @param id 
  * @param studentId 
  * @param teacherId 
+ * @param applicant 
  * @param experimentId 
  * @param studentIdList 
  * @param cpu 
  * @param memory MB
  * @param diskSize bytes
- * @param templateUuid 创建虚拟机所使用的模板的UUID
+ * @param templateName 创建虚拟机所使用的模板名称
  * @param description 申请理由
  * @param applyTime 发起申请时的时间戳
  * @param status 0，表示还没有被处理 1，表示允许同意申请 2，表示拒绝申请
@@ -30,11 +31,14 @@ package cn.edu.buaa.scs.controller.models
  * @param expectedNum 预期希望得到的虚拟机个数
  * @param actualNum 当前实际的虚拟机个数
  * @param namePrefix 最终生成的虚拟机的名称的前缀
+ * @param dueTime 虚拟机使用的结束时间
+ * @param replyMsg 管理员审批该申请的回复信息
  */
 data class CreateVmApplyResponse(
     val id: kotlin.String,
     val studentId: kotlin.String,
     val teacherId: kotlin.String,
+    val applicant: kotlin.String,
     val experimentId: kotlin.Int,
     val studentIdList: kotlin.collections.List<kotlin.String>,
     val cpu: kotlin.Int,
@@ -42,8 +46,8 @@ data class CreateVmApplyResponse(
     val memory: kotlin.Int,
     /* bytes */
     val diskSize: kotlin.Long,
-    /* 创建虚拟机所使用的模板的UUID */
-    val templateUuid: kotlin.String,
+    /* 创建虚拟机所使用的模板名称 */
+    val templateName: kotlin.String,
     /* 申请理由 */
     val description: kotlin.String,
     /* 发起申请时的时间戳 */
@@ -57,6 +61,10 @@ data class CreateVmApplyResponse(
     /* 当前实际的虚拟机个数 */
     val actualNum: kotlin.Int,
     /* 最终生成的虚拟机的名称的前缀 */
-    val namePrefix: kotlin.String
+    val namePrefix: kotlin.String,
+    /* 虚拟机使用的结束时间 */
+    val dueTime: kotlin.Long? = null,
+    /* 管理员审批该申请的回复信息 */
+    val replyMsg: kotlin.String? = null
 ) 
 

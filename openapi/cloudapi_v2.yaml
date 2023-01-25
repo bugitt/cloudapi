@@ -1069,6 +1069,12 @@ paths:
           in: query
           name: approve
           required: true
+        - schema:
+            type: string
+          in: query
+          name: reply
+          required: true
+          description: '审批回复信息'
       description: 管理员处理“创建虚拟机的申请”
     parameters:
       - schema:
@@ -3003,6 +3009,10 @@ components:
         namePrefix:
           type: string
           description: 生成的虚拟机的名称的前缀
+        dueTime:
+          type: integer
+          format: int64
+          description: 使用截止时间
       required:
         - cpu
         - memory
@@ -3010,6 +3020,7 @@ components:
         - templateUuid
         - description
         - namePrefix
+        - dueTime
     CreateVmApplyResponse:
       title: CreateVmApplyResponse
       x-stoplight:
@@ -3022,6 +3033,8 @@ components:
         studentId:
           type: string
         teacherId:
+          type: string
+        applicant:
           type: string
         experimentId:
           type: integer
@@ -3041,9 +3054,9 @@ components:
           type: integer
           format: int64
           description: bytes
-        templateUuid:
+        templateName:
           type: string
-          description: 创建虚拟机所使用的模板的UUID
+          description: 创建虚拟机所使用的模板名称
         description:
           type: string
           description: 申请理由
@@ -3073,6 +3086,13 @@ components:
         namePrefix:
           type: string
           description: 最终生成的虚拟机的名称的前缀
+        dueTime:
+          type: integer
+          format: int64
+          description: 虚拟机使用的结束时间
+        replyMsg:
+          type: string
+          description: 管理员审批该申请的回复信息
       required:
         - id
         - studentId
@@ -3082,7 +3102,8 @@ components:
         - cpu
         - memory
         - diskSize
-        - templateUuid
+        - applicant
+        - templateName
         - description
         - applyTime
         - status
