@@ -161,7 +161,10 @@ interface User : Entity<User>, IEntity {
     }
 }
 
-object Users : Table<User>("user") {
+open class Users(alias: String?) : Table<User>("user", alias) {
+    companion object : Users(null)
+    override fun aliased(alias: String) = Users(alias)
+
     @Suppress("unused")
     val id = varchar("id").primaryKey().bindTo { it.id }
 

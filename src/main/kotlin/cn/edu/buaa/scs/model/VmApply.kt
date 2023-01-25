@@ -7,6 +7,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
 import org.ktorm.entity.count
+import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
@@ -34,6 +35,14 @@ interface VmApply : Entity<VmApply>, IEntity {
     fun isApproved(): Boolean = this.status == 1
 
     fun getActualNum(): Int = mysql.virtualMachines.count { it.applyId.eq(this.id) }
+
+    fun getApplicant(): String {
+        return if (studentId == "default" && teacherId == "default") "管理员"
+        else if (studentId == "default") mysql.users.find { it.id.eq(this.teacherId) }?.name ?: ""
+        else mysql.users.find { it.id.eq(this.studentId) }?.name ?: ""
+    }
+
+    fun getTemplateName(): String = mysql.virtualMachines.find { it.uuid.eq(this.templateUuid) }?.name ?: ""
 }
 
 object VmApplyList : Table<VmApply>("vm_apply") {

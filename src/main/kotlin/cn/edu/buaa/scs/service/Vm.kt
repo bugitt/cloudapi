@@ -106,11 +106,11 @@ class VmService(val call: ApplicationCall) : IService {
         return mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
     }
 
-    fun handleApply(id: String, approve: Boolean): VmApply {
+    fun handleApply(id: String, approve: Boolean, replyMsg: String): VmApply {
         if (!call.user().isAdmin()) throw AuthorizationException()
 
         val vmApply = mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
-        return approveApply(vmApply, approve)
+        return approveApply(vmApply, approve, replyMsg)
     }
 
     fun addVmsToApply(id: String, studentIdList: List<String>): VmApply {
@@ -118,15 +118,16 @@ class VmService(val call: ApplicationCall) : IService {
         call.user().assertWrite(vmApply)
         if (!vmApply.isApproved()) throw BadRequestException("the VMApply(${vmApply.id} is not approved")
         vmApply.studentIdList = vmApply.studentIdList.minus(studentIdList.toSet()) + studentIdList
-        return approveApply(vmApply, true)
+        return approveApply(vmApply, true, vmApply.replyMsg)
     }
 
-    private fun approveApply(vmApply: VmApply, approve: Boolean): VmApply {
+    private fun approveApply(vmApply: VmApply, approve: Boolean, replyMsg: String): VmApply {
         if (approve) {
             vmApply.status = 1
         } else {
             vmApply.status = 2
         }
+        vmApply.replyMsg = replyMsg
         vmApply.handleTime = System.currentTimeMillis()
         // generate vm creation tasks
         val tasks = generateVmCreationTasks(vmApply)
@@ -192,6 +193,7 @@ class VmService(val call: ApplicationCall) : IService {
             this.applyTime = System.currentTimeMillis()
             this.status = 0
             this.handleTime = 0L
+            this.dueTime = request.dueTime
         }
         when {
             request.studentId != null ->

@@ -89,7 +89,10 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     }
 }
 
-object VirtualMachines : Table<VirtualMachine>("vm") {
+open class VirtualMachines(alias: String?) : Table<VirtualMachine>("vm", alias) {
+    companion object : VirtualMachines(null)
+    override fun aliased(alias: String) = VirtualMachines(alias)
+
     val uuid = varchar("uuid").primaryKey().bindTo { it.uuid }
     val platform = varchar("platform").bindTo { it.platform }
     val name = varchar("name").bindTo { it.name }
