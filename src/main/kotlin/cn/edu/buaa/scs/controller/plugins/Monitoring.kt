@@ -3,6 +3,8 @@ package cn.edu.buaa.scs.controller.plugins
 import cn.edu.buaa.scs.model.LogRecord
 import cn.edu.buaa.scs.model.LogRecordReq
 import cn.edu.buaa.scs.model.LogRecordResp
+import cn.edu.buaa.scs.model.logRecord
+import cn.edu.buaa.scs.storage.mongo
 import cn.edu.buaa.scs.utils.getError
 import cn.edu.buaa.scs.utils.userOrNull
 import io.ktor.http.*
@@ -82,6 +84,7 @@ fun Application.configureMonitoring() {
             if (ignoreKeyIpList.any { logRecord.request.realIp?.contains(it) == true }) {
                 return@on
             }
+            mongo.logRecord.insertOne(logRecord)
         }
     })
 }
