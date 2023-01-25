@@ -75,7 +75,10 @@ fun Application.configureMonitoring() {
         }
 
         on(ResponseSentSuspend) { call ->
-            mongo.logRecord.insertOne(logRecord(call))
+            val logRecord = logRecord(call)
+            if (logRecord.request.realIp?.contains("127.0.0.1") != true) {
+                mongo.logRecord.insertOne(logRecord)
+            }
         }
     })
 }
