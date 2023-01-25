@@ -37,6 +37,7 @@ data class LogRecordReq(
 
 data class LogRecordResp(
     val status: Int?,
+    val errMsg: String?,
     val headers: Map<String, List<String>>,
 )
 

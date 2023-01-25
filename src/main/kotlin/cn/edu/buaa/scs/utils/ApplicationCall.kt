@@ -17,7 +17,6 @@ fun ApplicationCall.headerInt(key: String): Int =
 fun ApplicationCall.headerIntOrNull(key: String): Int? =
     this.request.header(key)?.toInt()
 
-
 fun ApplicationCall.token(): String =
     this.attributes[TOKEN_KEY]
 
@@ -56,4 +55,12 @@ fun ApplicationCall.warn(msg: String) {
 @Suppress("unused")
 fun ApplicationCall.error(msg: String) {
     logger(baseURLName)().error { "[${request.uri}] -  [$callId] - \t$msg" }
+}
+
+fun ApplicationCall.setError(err: Throwable) {
+    this.attributes.put(ERROR_KEY, err)
+}
+
+fun ApplicationCall.getError(): Throwable? {
+    return this.attributes.getOrNull(ERROR_KEY)
 }

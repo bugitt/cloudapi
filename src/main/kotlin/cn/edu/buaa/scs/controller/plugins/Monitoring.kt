@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.model.LogRecordReq
 import cn.edu.buaa.scs.model.LogRecordResp
 import cn.edu.buaa.scs.model.logRecord
 import cn.edu.buaa.scs.storage.mongo
+import cn.edu.buaa.scs.utils.getError
 import cn.edu.buaa.scs.utils.userOrNull
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -41,6 +42,7 @@ fun Application.configureMonitoring() {
             )
             val logRecordResp = LogRecordResp(
                 status = status?.value,
+                errMsg = call.getError()?.stackTraceToString(),
                 headers = call.response.headers.allValues().toMap(),
             )
             val startAt = call.attributes.getOrNull(startTimestampAttrKey)

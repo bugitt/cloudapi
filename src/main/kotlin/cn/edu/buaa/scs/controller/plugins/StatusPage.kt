@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.controller.plugins
 import cn.edu.buaa.scs.error.AuthenticationException
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.utils.error
+import cn.edu.buaa.scs.utils.setError
 import com.google.common.base.Throwables
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -14,6 +15,7 @@ fun Application.configureStatusPage() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             call.error(Throwables.getStackTraceAsString(cause))
+            call.setError(cause)
             when (cause) {
 
                 // 400 参数错误
