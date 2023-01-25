@@ -28,22 +28,22 @@ class LogService(val call: ApplicationCall) : IService {
 
         val filters = mutableListOf<Bson>()
         if (req.userId != null) {
-            filters.add(LogRecord::user / User::id regex "*${req.userId}*")
+            filters.add(LogRecord::user / User::id regex req.userId)
         }
         if (req.username != null) {
-            filters.add(LogRecord::user / User::name regex "*${req.username}*")
+            filters.add(LogRecord::user / User::name regex req.username)
         }
         if (req.method != null) {
             filters.add(LogRecord::request / LogRecordReq::method eq req.method.uppercase())
         }
         if (req.path != null) {
-            filters.add(LogRecord::request / LogRecordReq::path regex "*${req.path}*")
+            filters.add(LogRecord::request / LogRecordReq::path regex req.path)
         }
         if (req.status != null) {
             filters.add(LogRecord::response / LogRecordResp::status eq req.status)
         }
         if (req.errMsg != null) {
-            filters.add(LogRecord::response / LogRecordResp::errMsg regex "*${req.errMsg}*")
+            filters.add(LogRecord::response / LogRecordResp::errMsg regex req.errMsg)
         }
         if (req.timeRange != null) {
             val (start, end) = req.timeRange.split("-").let { it[0].toLong() to it[1].toLong() }
