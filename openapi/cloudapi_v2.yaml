@@ -1958,7 +1958,7 @@ paths:
   '/experiment/{experimentId}/workflowConfiguration':
     parameters:
       - schema:
-          type: string
+          type: integer
         name: experimentId
         in: path
         required: true
