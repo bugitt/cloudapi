@@ -364,6 +364,9 @@ class FileService(val call: ApplicationCall) : IService {
 
             FileType.ImageBuildContextTar ->
                 call.user().assertWrite(Project.id(involvedId.toLong()))
+
+            FileType.ExperimentWorkflowContext ->
+                call.user().assertWrite(Experiment.id(involvedId))
         }
         // get files
         val service = fileType.decorator(call)

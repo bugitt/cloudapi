@@ -28,6 +28,7 @@ sealed interface FileType {
                 "ExperimentResource".lowercase() -> ExperimentResource
                 "AssignmentReview".lowercase() -> AssignmentReview
                 "ImageBuildContextTar".lowercase() -> ImageBuildContextTar
+                "ExperimentWorkflowContext".lowercase() -> ExperimentWorkflowContext
                 else -> throw BadRequestException("Unknown file type: $name")
             }
         }
@@ -107,6 +108,19 @@ sealed interface FileType {
 
         override fun decorator(call: ApplicationCall): FileService.FileDecorator {
             return call.project
+        }
+    }
+
+    object ExperimentWorkflowContext : FileType {
+        override val name: String
+            get() = "ExperimentWorkflowContext"
+
+        override fun getInvolvedEntity(involvedId: Int): IEntity {
+            return Experiment.id(involvedId)
+        }
+
+        override fun decorator(call: ApplicationCall): FileService.FileDecorator {
+            return ExperimentWorkflowContextFileDecorator
         }
     }
 }

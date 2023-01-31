@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
+import cn.edu.buaa.scs.auth.authRead
 import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
 import cn.edu.buaa.scs.controller.models.PutExperimentRequest
 import cn.edu.buaa.scs.controller.models.ResourceModel
@@ -320,3 +321,26 @@ val Experiment.resourceFile: File?
         val resource = mysql.courseResources.find { it.expId eq this.id }
         return resource?.file
     }
+
+internal object ExperimentWorkflowContextFileDecorator : FileService.FileDecorator {
+    private const val storePath = "exp-workflow-context"
+    override fun manager(): FileManager {
+        return FileManager.buildFileManager("local", storePath)
+    }
+
+    override fun fixName(originalName: String?, ownerId: String, involvedId: Int): Pair<String, String> {
+        val fileExt = originalName?.getFileExtension() ?: ""
+        val expName = Experiment.id(involvedId).name.filterNot { it.isWhitespace() }
+        val name = "${ownerId}-${expName}-workflow-${UUID.randomUUID()}.$fileExt"
+        val storeName = "exp-${involvedId}/$name"
+        return Pair(name, storeName)
+    }
+
+    override fun checkPermission(ownerId: String, involvedId: Int): Boolean {
+        return User.id(ownerId).authRead(Experiment.id(involvedId))
+    }
+
+    override fun storePath(): String {
+        return storePath
+    }
+}

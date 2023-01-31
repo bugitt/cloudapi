@@ -47,6 +47,7 @@ fun User.authRead(entity: IEntity): Boolean {
                 FileType.ExperimentResource -> authRead(Experiment.id(entity.involvedId))
                 FileType.AssignmentReview -> authRead(Assignment.id(entity.involvedId))
                 FileType.ImageBuildContextTar -> authRead(Project.id(entity.involvedId.toLong()))
+                FileType.ExperimentWorkflowContext -> authRead(Experiment.id(entity.involvedId))
             }
 
         is PeerAppeal ->
@@ -96,6 +97,7 @@ fun User.authWrite(entity: IEntity): Boolean {
                 FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
                 FileType.AssignmentReview -> authWrite(Experiment.id(Assignment.id(entity.involvedId).experimentId))
                 FileType.ImageBuildContextTar -> authWrite(Project.id(entity.involvedId.toLong()))
+                FileType.ExperimentWorkflowContext -> authRead(Experiment.id(entity.involvedId))
             }
 
         is PeerAppeal ->
@@ -158,6 +160,7 @@ fun User.authAdmin(entity: IEntity): Boolean {
                 FileType.ExperimentResource -> authWrite(Experiment.id(entity.involvedId))
                 FileType.AssignmentReview -> authWrite(Experiment.id(Assignment.id(entity.involvedId).experimentId))
                 FileType.ImageBuildContextTar -> authWrite(Project.id(entity.involvedId.toLong()))
+                FileType.ExperimentWorkflowContext -> authRead(Experiment.id(entity.involvedId))
             }
 
         is PeerAppeal ->
