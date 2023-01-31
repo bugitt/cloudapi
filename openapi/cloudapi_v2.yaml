@@ -3688,9 +3688,6 @@ components:
         id: ho5c03njv0uqc
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
         expId:
           type: integer
           format: int32
@@ -3700,7 +3697,6 @@ components:
           type: string
           description: json string
       required:
-        - id
         - expId
         - resource
         - configuration
