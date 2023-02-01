@@ -10,7 +10,6 @@ import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.harbor.HarborClient
-import cn.edu.buaa.scs.image.ImageBuildTask
 import cn.edu.buaa.scs.kube.BusinessKubeClient
 import cn.edu.buaa.scs.kube.crd.v1alpha1.*
 import cn.edu.buaa.scs.model.*
@@ -24,9 +23,7 @@ import cn.edu.buaa.scs.storage.bugitDB
 import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.mongo
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.*
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newSecret
 import io.ktor.server.application.*
@@ -54,9 +51,6 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             val endpoint by lazy {
                 application.getConfigString("s3.builder.endpoint")
             }
-            val scheme by lazy {
-                application.getConfigString("s3.builder.scheme")
-            }
             val bucket by lazy {
                 application.getConfigString("s3.builder.bucket")
             }
@@ -74,7 +68,10 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
     }
 
     suspend fun createUser(userID: String) {
-        val user = User.id(userID)
+        createUser(User.id(userID))
+    }
+
+    private suspend fun createUser(user: User) {
         if (user.paasToken != "") return
         val paasToken = RandomStringUtils.randomAlphanumeric(13)
         managerList.forEach {
@@ -107,6 +104,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         if (mysql.projects.exists { it.name.eq(name) }) {
             return mysql.projects.find { it.name eq name }!!
         }
+        createUser(user)
 
         val experiment = if (expID != null) {
             val experiment = Experiment.id(expID)
@@ -262,29 +260,6 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         }
     }
 
-    private fun PostProjectProjectIdImagesRequest.fetchGitUrl(): String {
-        if (this.gitUrl.isNullOrBlank()) {
-            throw BadRequestException("Git url is required")
-        }
-        var finalGitUrl = this.gitUrl
-        if (!finalGitUrl.startsWith("https://") && !finalGitUrl.startsWith("http://")) {
-            throw BadRequestException("Git url must start with http:// or https://")
-        }
-        if (finalGitUrl.startsWith("https://github.com")) {
-            finalGitUrl = "https://ghproxy.com/$finalGitUrl"
-        }
-        if (!finalGitUrl.contains("@scs.buaa.edu.cn")) {
-            val protocolPrefix = if (finalGitUrl.startsWith("http://")) "http://" else "https://"
-            val gitAuthString = when {
-                gitUsername.isNullOrBlank() && gitPassword.isNullOrBlank() -> ""
-                gitUsername.isNullOrBlank() -> "$gitPassword@"
-                else -> "${gitUsername}:${gitPassword}@"
-            }
-            finalGitUrl = finalGitUrl.replace(protocolPrefix, "$protocolPrefix$gitAuthString")
-        }
-        return finalGitUrl
-    }
-
     suspend fun createImageBuilder(projectID: Long): Builder {
         val project = Project.id(projectID)
         val req = call.receive<PostProjectProjectIdImagesRequest>()
@@ -396,22 +371,6 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
                     updateTime = repo.updateTime?.toInstant()?.toEpochMilli()?.let { if (it < 0) 0 else it },
                     images = artifactList.map { it.toImage(repo.name) }
                 )
-            }
-    }
-
-    fun getImageBuildTasksByProject(projectID: Long): List<Pair<ImageMeta, TaskData>> {
-        val project = Project.id(projectID)
-        call.user().assertRead(project)
-        val indexIdList = mysql.imageBuildTaskIndexList
-            .filter { it.projectId eq projectID }
-            .map { it.id }
-        if (indexIdList.isEmpty()) return listOf()
-        return mysql.taskDataList
-            .filter { it.type.eq(Task.Type.ImageBuild).and(it.indexRef inList indexIdList) }
-            .toList()
-            .map { taskData ->
-                val content = jsonMapper.readValue<ImageBuildTask.Content>(taskData.data)
-                Pair(content.imageMeta, taskData)
             }
     }
 

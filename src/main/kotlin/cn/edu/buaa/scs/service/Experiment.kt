@@ -247,7 +247,7 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
                 {
                     call.project.createProjectForUser(
                         student,
-                        "exp-$expId-workflow-${student.id}",
+                        "exp-$expId-wf-${student.id}",
                         expId,
                         "${experiment.course.name}-${experiment.name}",
                         "${experiment.course.name}-${experiment.name}的实验项目",
