@@ -65,6 +65,11 @@ paths:
       description: 获取一项实验（作业）详情
       security:
         - Authorization: []
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: getWorkflowConfiguration
     put:
       summary: 修改实验/作业信息
       operationId: put-experimnet-experimentId
@@ -2293,7 +2298,6 @@ components:
       required:
         - idList
     ExperimentResponse:
-      description: ''
       type: object
       x-examples: {}
       title: ExperimentResponse
@@ -2338,6 +2342,8 @@ components:
           $ref: '#/components/schemas/CourseResponse'
         vm:
           $ref: '#/components/schemas/ExpVmInfo'
+        workflowExperimentConfiguration:
+          $ref: '#/components/schemas/ExperimentWorkflowConfigurationResponse'
       required:
         - id
         - name

@@ -15,13 +15,11 @@ import cn.edu.buaa.scs.controller.models.ResourceModel
 
 /**
  * 
- * @param id 
  * @param expId 
  * @param resource 
  * @param configuration json string
  */
 data class ExperimentWorkflowConfigurationRequest(
-    val id: kotlin.Long,
     val expId: kotlin.Int,
     val resource: ResourceModel,
     /* json string */

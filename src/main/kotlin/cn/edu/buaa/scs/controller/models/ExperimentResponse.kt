@@ -13,6 +13,7 @@ package cn.edu.buaa.scs.controller.models
 
 import cn.edu.buaa.scs.controller.models.CourseResponse
 import cn.edu.buaa.scs.controller.models.ExpVmInfo
+import cn.edu.buaa.scs.controller.models.ExperimentWorkflowConfigurationResponse
 import cn.edu.buaa.scs.controller.models.FileResponse
 
 /**
@@ -34,6 +35,7 @@ import cn.edu.buaa.scs.controller.models.FileResponse
  * @param course 
  * @param resourceFile 
  * @param vm 
+ * @param workflowExperimentConfiguration 
  */
 data class ExperimentResponse(
     val id: kotlin.Int,
@@ -52,6 +54,7 @@ data class ExperimentResponse(
     val sentEmail: kotlin.Boolean,
     val course: CourseResponse,
     val resourceFile: FileResponse? = null,
-    val vm: ExpVmInfo? = null
+    val vm: ExpVmInfo? = null,
+    val workflowExperimentConfiguration: ExperimentWorkflowConfigurationResponse? = null
 ) 
 

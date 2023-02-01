@@ -21,9 +21,9 @@ import cn.edu.buaa.scs.controller.models.LogRecord
  * @param success 
  */
 data class LogRecordSearchResponse(
-    val `data`: kotlin.collections.List<LogRecord>? = null,
-    val total: kotlin.Long? = null,
-    val page: kotlin.Int? = null,
-    val success: kotlin.Boolean? = null
+    val `data`: kotlin.collections.List<LogRecord>,
+    val total: kotlin.Long,
+    val page: kotlin.Int,
+    val success: kotlin.Boolean
 ) 
 

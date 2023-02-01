@@ -19,7 +19,7 @@ fun Route.experimentRoute() {
             val submitted = call.request.queryParameters["submitted"]?.toBoolean()
             val courseId = call.request.queryParameters["courseId"]?.toInt()
             call.experiment.getAll(termId, submitted, courseId).let {
-                call.respond(it.map { exp -> convertExperimentResponse(call, exp) })
+                call.respond(it.map { exp -> call.convertExperimentResponse(exp) })
             }
         }
 
@@ -37,7 +37,7 @@ fun Route.experimentRoute() {
         post {
             val request = call.receive<CreateExperimentRequest>()
             val experiment = call.experiment.create(request)
-            call.respond(convertExperimentResponse(call, experiment))
+            call.respond(call.convertExperimentResponse(experiment))
         }
 
         route("/{experimentId}") {
@@ -48,14 +48,21 @@ fun Route.experimentRoute() {
 
             get {
                 val experiment = call.experiment.get(call.getExpIdFromPath())
-                call.respond(convertExperimentResponse(call, experiment))
+                val getWorkflowConfiguration =
+                    call.request.queryParameters["getWorkflowConfiguration"]?.toBoolean() ?: false
+                val wfConf = if (getWorkflowConfiguration) {
+                    call.experiment.getWorkflowConfiguration(call.getExpIdFromPath())
+                } else {
+                    null
+                }
+                call.respond(call.convertExperimentResponse(experiment, wfConf))
             }
 
             put {
                 val experimentId = call.getExpIdFromPath()
                 val request = call.receive<PutExperimentRequest>()
                 val experiment = call.experiment.put(experimentId, request)
-                call.respond(convertExperimentResponse(call, experiment))
+                call.respond(call.convertExperimentResponse(experiment))
             }
 
             route("/assignments") {
@@ -165,7 +172,10 @@ fun Route.experimentRoute() {
     }
 }
 
-internal fun convertExperimentResponse(call: ApplicationCall, experiment: Experiment): ExperimentResponse =
+internal fun ApplicationCall.convertExperimentResponse(
+    experiment: Experiment,
+    wfConf: ExperimentWorkflowConfiguration? = null
+): ExperimentResponse =
     ExperimentResponse(
         id = experiment.id,
         name = experiment.name,
@@ -182,8 +192,9 @@ internal fun convertExperimentResponse(call: ApplicationCall, experiment: Experi
         peerAssessmentRules = experiment.peerAssessmentRules,
         peerAssessmentStart = experiment.peerAssessmentStart,
         sentEmail = experiment.sentEmail,
-        course = call.convertCourseResponse(experiment.course, true),
+        course = this.convertCourseResponse(experiment.course, true),
         vm = experiment.getVmApply()?.let { convertExpVmInfo(it) },
+        workflowExperimentConfiguration = wfConf?.let { convertExperimentWorkflowConfigurationResponse(it) }
     )
 
 internal fun convertAssignmentList(assignmentList: List<Assignment>): AssignmentListResponse =
