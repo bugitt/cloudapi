@@ -15,7 +15,6 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.util.*
@@ -216,10 +215,10 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
     }
 
-    fun getWorkflowConfiguration(expId: Int): ExperimentWorkflowConfiguration {
+    fun getWorkflowConfiguration(expId: Int): ExperimentWorkflowConfiguration? {
         val experiment = Experiment.id(expId)
         call.user().assertRead(experiment)
-        return mysql.experimentWorkflowConfigurations.find { it.expId.eq(expId) } ?: throw NotFoundException()
+        return mysql.experimentWorkflowConfigurations.find { it.expId.eq(expId) }
     }
 
     suspend fun createOrUpdateWorkflowConfiguration(
@@ -270,7 +269,9 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
                 this.name = resourcePoolName
                 this.ownerId = experiment.course.teacher.id
             }
-            mysql.resourcePools.add(resourcePool)
+            if (!mysql.resourcePools.exists { it.name.eq(resourcePoolName) }) {
+                mysql.resourcePools.add(resourcePool)
+            }
         }
 
         return conf

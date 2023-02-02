@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.model.AssignmentReview
 import cn.edu.buaa.scs.model.Experiment
 import cn.edu.buaa.scs.model.ExperimentWorkflowConfiguration
 import cn.edu.buaa.scs.service.*
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -127,9 +128,9 @@ fun Route.experimentRoute() {
 
             route("/workflowConfiguration") {
                 get {
-                    call.experiment.getWorkflowConfiguration(call.getExpIdFromPath()).let {
+                    call.experiment.getWorkflowConfiguration(call.getExpIdFromPath())?.let {
                         call.respond(convertExperimentWorkflowConfigurationResponse(it))
-                    }
+                    } ?: call.respond(HttpStatusCode.NotFound)
                 }
                 post {
                     val req = call.receive<ExperimentWorkflowConfigurationRequest>()
