@@ -1824,20 +1824,6 @@ paths:
         in: path
         required: true
         description: 需要触发的具体动作
-  '/resourceUsedRecords/{resourceUsedRecordId}':
-    parameters:
-      - schema:
-          type: string
-        name: resourceUsedRecordId
-        in: path
-        required: true
-  '/resourcePools/{resourcePoolId}':
-    parameters:
-      - schema:
-          type: string
-        name: resourcePoolId
-        in: path
-        required: true
   /containerServiceTemplates:
     get:
       summary: 获取容器服务模板列表
