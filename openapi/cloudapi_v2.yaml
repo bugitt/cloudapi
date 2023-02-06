@@ -2042,6 +2042,31 @@ paths:
           in: query
           name: action
           description: 'read, write, admin'
+  '/course/{courseId}/students':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: courseId
+        in: path
+        required: true
+    get:
+      summary: 获取一门课程的所有学生
+      tags:
+        - 课程
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserModel'
+      operationId: get-course-courseId-simpleStudents
+      description: 获取一门课程的所有学生
+      security:
+        - Authorization: [ ]
 components:
   schemas:
     AssignmentResponse:

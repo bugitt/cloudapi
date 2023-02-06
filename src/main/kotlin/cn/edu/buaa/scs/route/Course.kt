@@ -72,6 +72,12 @@ fun Route.courseRoute() {
                 callback.invoke()
             }
         }
+
+        route("/students") {
+            get {
+                call.respond(call.course.getAllStudents(call.getCourseIdFromPath()).map { convertUserModel(it) })
+            }
+        }
     }
 
 }
@@ -84,9 +90,10 @@ internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boo
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = if(hasCount) this.course.studentCnt(course.id) else null
+        studentCnt = if (hasCount) this.course.studentCnt(course.id) else null
     )
 }
+
 internal fun convertCourseResource(courseResource: CourseResource): CourseResourceResponse {
     return CourseResourceResponse(
         id = courseResource.id,

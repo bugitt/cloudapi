@@ -235,7 +235,7 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
 
         // create resourcePool
         val resourcePoolName = "exp-$expId-workflow"
-        val studentList = call.course.getAllStudents(experiment.course.id)
+        val studentList = call.course.getAllStudentsInternal(experiment.course.id)
         BusinessKubeClient
             .createResourcePool(resourcePoolName, resource.cpu * studentList.size, resource.memory * studentList.size)
             .getOrThrow()

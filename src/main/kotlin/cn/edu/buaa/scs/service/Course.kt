@@ -56,8 +56,14 @@ class CourseService(val call: ApplicationCall) : IService {
         return mysql.courses.toList().sortedByDescending { it.id }
     }
 
-    fun getAllStudents(courseId: Int): List<User> {
+    fun getAllStudentsInternal(courseId: Int): List<User> {
         return mysql.courseStudents.filter { it.courseId eq courseId }.map { it.student }.toList()
+    }
+
+    fun getAllStudents(courseId: Int): List<User> {
+        val course = Course.id(courseId)
+        call.user().isCourseAdmin(course)
+        return getAllStudentsInternal(courseId)
     }
 
     suspend fun statCourseExps(courseId: Int): StatCourseExps = withContext(Dispatchers.Default) {

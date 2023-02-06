@@ -147,7 +147,7 @@ class PeerService(val call: ApplicationCall) : IService {
                 .filterNot { middlePeerStands.map { pa -> pa.assignmentId }.contains(it.id) }
                 .shuffled()
 
-            val userMap = call.course.getAllStudents(experiment.course.id).associateBy { it.id }
+            val userMap = call.course.getAllStudentsInternal(experiment.course.id).associateBy { it.id }
 
             val len = assignments.size
             val batchInsertActionList: MutableList<suspend () -> IntArray> = mutableListOf()

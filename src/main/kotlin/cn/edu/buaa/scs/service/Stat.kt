@@ -16,7 +16,7 @@ class StatService(val call: ApplicationCall) : IService {
         val experiment = Experiment.id(expId)
         call.user().assertWrite(experiment.course)
         val assignments = call.assignment.getAll(expId).associateBy { it.studentId }
-        val students = call.course.getAllStudents(experiment.course.id)
+        val students = call.course.getAllStudentsInternal(experiment.course.id)
         return students.associateWith { assignments[it.id] }
     }
 }
