@@ -1,6 +1,9 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.application
+import cn.edu.buaa.scs.auth.authAdmin
+import cn.edu.buaa.scs.auth.authRead
+import cn.edu.buaa.scs.auth.authWrite
 import cn.edu.buaa.scs.auth.generateRSAToken
 import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.controller.models.LoginUserResponse
@@ -12,7 +15,7 @@ import cn.edu.buaa.scs.utils.encrypt.RSAEncrypt
 import com.yufeixuan.captcha.Captcha
 import com.yufeixuan.captcha.SpecCaptcha
 import io.ktor.client.*
-import io.ktor.client.call.body
+import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.server.application.*
@@ -131,5 +134,21 @@ class AuthService(val call: ApplicationCall) : IService {
             .body<String>()
         val regex = application.getConfigString("auth.buaaSSOValidation.regex").toRegex()
         regex.find(resp)?.groupValues?.get(1)?.uppercase() ?: throw BadRequestException("BUAA SSO Token 验证失败")
+    }
+
+    fun checkPermission(entityType: String, entityId: Long, action: String): Boolean {
+        val entity: IEntity = when (entityType.lowercase()) {
+            "project" -> Project.id(entityId)
+            "course" -> Course.id(entityId.toInt())
+            "assignment" -> Assignment.id(entityId.toInt())
+            "experiment" -> Experiment.id(entityId.toInt())
+            else -> throw BadRequestException("未知的实体类型")
+        }
+        return when (action.lowercase()) {
+            "read" -> call.user().authRead(entity)
+            "write" -> call.user().authWrite(entity)
+            "admin" -> call.user().authAdmin(entity)
+            else -> throw BadRequestException("未知的操作类型")
+        }
     }
 }

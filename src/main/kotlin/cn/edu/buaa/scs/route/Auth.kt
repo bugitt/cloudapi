@@ -51,4 +51,13 @@ fun Route.authRoute() {
             call.respond(call.auth.whoami(call.parameters["listProjects"].toBoolean()))
         }
     }
+
+    route("/checkPermission") {
+        get {
+            val entityType = call.parameters["entityType"] ?: throw BadRequestException("entityType is required")
+            val entityId = call.parameters["entityId"]?.toLong() ?: throw BadRequestException("entityId is required")
+            val action = call.parameters["action"] ?: throw BadRequestException("action is required")
+            call.respond(call.auth.checkPermission(entityType, entityId, action))
+        }
+    }
 }

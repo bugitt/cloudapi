@@ -2003,7 +2003,7 @@ paths:
         搜索日志记录
         仅限管理员调用
       security:
-        - Authorization: []
+        - Authorization: [ ]
       requestBody:
         content:
           application/json:
@@ -2011,6 +2011,37 @@ paths:
               $ref: '#/components/schemas/LogRecordSearchRequest'
       tags:
         - 日志管理
+  /checkPermission:
+    get:
+      summary: 检查是否有对某一实体的操作权限
+      tags:
+        - 鉴权
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: boolean
+      operationId: get-checkPermission
+      description: 检查是否有对某一实体的操作权限
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: entityType
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: entityId
+        - schema:
+            type: string
+          in: query
+          name: action
+          description: 'read, write, admin'
 components:
   schemas:
     AssignmentResponse:
