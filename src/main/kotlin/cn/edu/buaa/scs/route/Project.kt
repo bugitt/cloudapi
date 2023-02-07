@@ -31,8 +31,9 @@ fun Route.projectRoute() {
     route("/projects") {
         get {
             val expID = call.parameters["expId"]?.toInt()
+            val name = call.parameters["name"]
             call.respond(
-                call.project.getProjects(expID).map {
+                call.project.getProjects(expID, name).map {
                     call.convertProjectResponse(it)
                 }
             )

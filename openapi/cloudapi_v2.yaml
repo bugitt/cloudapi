@@ -1271,6 +1271,11 @@ paths:
           in: query
           name: expId
           description: 如果该值为空，则默认返回该用户创建或参与的所有项目
+        - schema:
+            type: string
+          in: query
+          name: name
+          description: 项目名称
     post:
       summary: 创建新项目
       operationId: post-projects
