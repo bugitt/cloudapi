@@ -19,6 +19,7 @@ import io.ktor.server.websocket.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 
 object BusinessKubeClient : IProjectManager {
@@ -151,9 +152,26 @@ fun Route.podLogWsRoute() {
         val loggable = podOp.inContainer(containerName).tailingLines(1000).withPrettyOutput()
         val channel = ByteChannel()
         val logWatch = loggable.watchLog(channel.toOutputStream())
+        var hasRead = false
 
         try {
             while (true) {
+                if (!hasRead) {
+                    hasRead = true
+                    val message = withTimeoutOrNull(3000) {
+                        channel.readUTF8Line()
+                    }
+                    if (message == null) {
+                        loggable.getLog(true)
+                            .split("\n")
+                            .forEach {
+                                send(it)
+                            }
+                    } else {
+                        send(message)
+                        continue
+                    }
+                }
                 val message = channel.readUTF8Line() ?: break
                 send(message)
             }
