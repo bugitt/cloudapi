@@ -23,24 +23,23 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 
 object BusinessKubeClient : IProjectManager {
-    val client by lazy(businessKubeClientBuilder)
 
     private val builderClient by lazy {
-        client.resources(
+        businessKubeClientBuilder().resources(
             Builder::class.java,
             BuilderList::class.java,
         ) as MixedOperation<Builder, BuilderList, Resource<Builder>>
     }
 
     private val deployerClient by lazy {
-        client.resources(
+        businessKubeClientBuilder().resources(
             Deployer::class.java,
             DeployerList::class.java,
         ) as MixedOperation<Deployer, DeployerList, Resource<Deployer>>
     }
 
     private val workflowClient by lazy {
-        client.resources(
+        businessKubeClientBuilder().resources(
             Workflow::class.java,
             WorkflowList::class.java,
         ) as MixedOperation<Workflow, WorkflowList, Resource<Workflow>>
@@ -68,7 +67,7 @@ object BusinessKubeClient : IProjectManager {
     }
 
     fun createOrUpdateSecret(secret: Secret): Result<Secret> = runCatching {
-        client.secrets().inNamespace(secret.metadata.namespace).resource(secret).createOrReplace()
+        businessKubeClientBuilder().secrets().inNamespace(secret.metadata.namespace).resource(secret).createOrReplace()
     }
 
     fun createResourcePool(name: String, cpu: Int, memory: Int) = runCatching {
@@ -82,20 +81,21 @@ spec:
     cpu: $cpu
     memory: $memory
 """
-        client.load(resourcePoolYamlStr.byteInputStream()).createOrReplace()
+        businessKubeClientBuilder().load(resourcePoolYamlStr.byteInputStream()).createOrReplace()
     }
 
     fun deleteResource(namespace: String, resourceName: String) = runCatching {
         // try to delete service
-        client.services().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        businessKubeClientBuilder().services().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
         // try to delete deployment
-        client.apps().deployments().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        businessKubeClientBuilder().apps().deployments().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
         // try to delete job
-        client.batch().v1().jobs().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        businessKubeClientBuilder().batch().v1().jobs().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
         // try to delete statefulset
-        client.apps().statefulSets().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        businessKubeClientBuilder().apps().statefulSets().inNamespace(namespace).withName(resourceName)
+            .tryGetAndDelete()
         // try to delete daemonset
-        client.apps().daemonSets().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
+        businessKubeClientBuilder().apps().daemonSets().inNamespace(namespace).withName(resourceName).tryGetAndDelete()
     }
 
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> {
@@ -108,8 +108,8 @@ spec:
         projectDisplayName: String,
         projectDescription: String
     ): Result<String> = runCatching {
-        if (!client.namespaces().withName(projectName).isReady) {
-            client.namespaces().resource(
+        if (!businessKubeClientBuilder().namespaces().withName(projectName).isReady) {
+            businessKubeClientBuilder().namespaces().resource(
                 newNamespace {
                     metadata {
                         name = projectName
@@ -127,7 +127,7 @@ spec:
     }
 
     override suspend fun deleteProject(projectName: String): Result<Unit> = runCatching {
-        client.namespaces().withName(projectName).delete()
+        businessKubeClientBuilder().namespaces().withName(projectName).delete()
     }
 
     override suspend fun addProjectMember(projectName: String, memberID: String): Result<Unit> {
