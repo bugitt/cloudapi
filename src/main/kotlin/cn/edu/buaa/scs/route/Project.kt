@@ -12,6 +12,7 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.user
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -198,6 +199,16 @@ fun Route.projectRoute() {
         val name = call.parameters["name"] ?: throw BadRequestException("请提供要查询的名称")
         call.respond(call.project.checkGitRepoNameExist(name))
     }
+
+    get("/containerLog") {
+        val podName = call.parameters["podName"] ?: throw BadRequestException("请提供要查询的pod名称")
+        val containerName = call.parameters["containerName"]
+        val namespace = call.parameters["namespace"] ?: throw BadRequestException("请提供要查询的命名空间")
+        call.project.getContainerLog(namespace, podName, containerName)?.let {
+            call.respond(it)
+        } ?: call.respond(HttpStatusCode.BadRequest)
+    }
+
 }
 
 fun ApplicationCall.convertProjectResponse(project: Project): ProjectResponse {

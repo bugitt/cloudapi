@@ -2072,6 +2072,37 @@ paths:
       description: 获取一门课程的所有学生
       security:
         - Authorization: [ ]
+  /containerLog:
+    get:
+      summary: 获取容器日志
+      tags:
+        - 容器服务
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+      operationId: get-containerLog
+      description: 获取容器日志
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: namespace
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: podName
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: containerName
 components:
   schemas:
     AssignmentResponse:

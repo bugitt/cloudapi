@@ -389,6 +389,13 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             .flatMap { projectId -> mysql.containerServiceList.filter { it.projectId eq projectId }.toList() }
     }
 
+    fun getContainerLog(namespace: String, podName: String, containerName: String? = null): String? {
+        val project = call.project.getProjects(name = namespace).firstOrNull()
+            ?: throw NotFoundException("namespace $namespace not found")
+        call.user().assertRead(project)
+        return BusinessKubeClient.getLog(namespace, podName, containerName).getOrNull()
+    }
+
     fun getResourcePools(): List<String> {
         return mysql.resourcePools.filter { it.ownerId eq call.userId() }.map { it.name }.toList()
     }

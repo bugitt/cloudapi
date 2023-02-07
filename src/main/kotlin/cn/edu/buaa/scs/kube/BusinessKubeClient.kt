@@ -119,6 +119,13 @@ spec:
         }
     }.map { projectName }
 
+    fun getLog(namespace: String, podName: String, containerName: String? = null): Result<String> = runCatching {
+        val podOp = businessKubeClientBuilder().pods().inNamespace(namespace).withName(podName)
+        val pod = podOp.get() ?: throw NotFoundException("pod $podName not found")
+        val containerName = containerName ?: pod.spec.containers.first().name
+        podOp.inContainer(containerName).tailingLines(1000).getLog(true)
+    }
+
     override suspend fun deleteProject(projectName: String): Result<Unit> = runCatching {
         client.namespaces().withName(projectName).delete()
     }
@@ -167,12 +174,13 @@ fun Route.podLogWsRoute() {
                             .forEach {
                                 send(it)
                             }
+                        continue
                     } else {
                         send(message)
                         continue
                     }
                 }
-                val message = channel.readUTF8Line() ?: break
+                val message = channel.readUTF8Line() ?: continue
                 send(message)
             }
         } catch (_: Exception) {
