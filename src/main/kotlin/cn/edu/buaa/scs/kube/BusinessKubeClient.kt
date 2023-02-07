@@ -146,7 +146,7 @@ fun Route.podLogWsRoute() {
         call.user().assertRead(project)
 
         val podName = call.request.queryParameters["podName"] ?: throw BadRequestException("podName is required")
-        val podOp = BusinessKubeClient.client.pods().inNamespace(namespace).withName(podName)
+        val podOp = businessKubeClientBuilder().pods().inNamespace(namespace).withName(podName)
         val pod = podOp.get() ?: throw NotFoundException("pod $podName not found")
         val containerName = call.request.queryParameters["containerName"] ?: pod.spec.containers.first().name
         val loggable = podOp.inContainer(containerName).tailingLines(1000).withPrettyOutput()
