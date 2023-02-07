@@ -1,15 +1,25 @@
 package cn.edu.buaa.scs.kube
 
 import cn.edu.buaa.scs.application
+import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.kube.crd.v1alpha1.*
 import cn.edu.buaa.scs.project.IProjectManager
+import cn.edu.buaa.scs.service.project
+import cn.edu.buaa.scs.utils.WsSessionHolder
 import cn.edu.buaa.scs.utils.getConfigString
+import cn.edu.buaa.scs.utils.user
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.client.dsl.MixedOperation
 import io.fabric8.kubernetes.client.dsl.Resource
 import io.ktor.server.plugins.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.jvm.javaio.*
+import io.ktor.websocket.*
+import java.util.*
 
 object BusinessKubeClient : IProjectManager {
     val client by lazy(businessKubeClientBuilder)
@@ -118,5 +128,39 @@ spec:
 
     override suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit> {
         return Result.success(Unit)
+    }
+}
+
+fun Route.podLogWsRoute() {
+    val connections = Collections.synchronizedSet<WsSessionHolder>(LinkedHashSet())
+
+    webSocket("/ws/kubeLog/{token}") {
+        val thisConnection = WsSessionHolder(this)
+        connections += thisConnection
+
+        val namespace =
+            call.request.queryParameters["namespace"] ?: throw BadRequestException("namespace is required")
+        val project = call.project.getProjects(name = namespace).firstOrNull()
+            ?: throw NotFoundException("namespace $namespace not found")
+        call.user().assertRead(project)
+
+        val podName = call.request.queryParameters["podName"] ?: throw BadRequestException("podName is required")
+        val podOp = BusinessKubeClient.client.pods().inNamespace(namespace).withName(podName)
+        val pod = podOp.get() ?: throw NotFoundException("pod $podName not found")
+        val containerName = call.request.queryParameters["containerName"] ?: pod.spec.containers.first().name
+        val loggable = podOp.inContainer(containerName).tailingLines(1000).withPrettyOutput()
+        val channel = ByteChannel()
+        val logWatch = loggable.watchLog(channel.toOutputStream())
+
+        try {
+            while (true) {
+                val message = channel.readUTF8Line() ?: break
+                send(message)
+            }
+        } catch (_: Exception) {
+        } finally {
+            connections -= thisConnection
+            logWatch.close()
+        }
     }
 }

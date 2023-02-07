@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.controller.plugins
 
+import cn.edu.buaa.scs.kube.podLogWsRoute
 import cn.edu.buaa.scs.route.*
 import cn.edu.buaa.scs.utils.test.test
 import io.ktor.server.application.*
@@ -17,10 +18,14 @@ fun Application.configureRouting() {
             peerRoute()
             projectRoute()
             vmRoute()
-            websocketRoute()
             routineRoute()
             logRoute()
             // 添加其他的 route
+
+
+            // ws
+            websocketRoute()
+            podLogWsRoute()
         }
 
         // just for test
