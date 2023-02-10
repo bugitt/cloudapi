@@ -87,10 +87,14 @@ dependencies {
 
 
     // kubernetes
-    val kubernetes_client_version = "6.3.1"
+    val kubernetes_client_version = "6.2.0"
     implementation("io.fabric8:kubernetes-model:$kubernetes_client_version")
     implementation("io.fabric8:kubernetes-client:$kubernetes_client_version")
+    annotationProcessor("io.fabric8:crd-generator-apt:$kubernetes_client_version")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.2.0")
+    val javaOperatorSdk = "4.2.6"
+    implementation("io.javaoperatorsdk:operator-framework:$javaOperatorSdk")
+    annotationProcessor("io.javaoperatorsdk:operator-framework:$javaOperatorSdk")
 
     // vm
     implementation("com.vmware.photon.controller:photon-vsphere-adapter-util:0.6.60")
