@@ -1,0 +1,9 @@
+apiVersion: cloudapi.scs.buaa.edu.cn/v1alpha1
+kind: VirtualMachine
+metadata:
+  name: vm-sample
+  namespace: default
+spec:
+  name: vm-sample
+status:
+  status: "running"

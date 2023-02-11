@@ -10,13 +10,11 @@ import io.fabric8.kubernetes.client.CustomResource
 import io.fabric8.kubernetes.model.annotation.Group
 import io.fabric8.kubernetes.model.annotation.Kind
 import io.fabric8.kubernetes.model.annotation.Version
-import javax.annotation.Generated
 
 /**
  * Builder is the Schema for the builders API
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("jsonschema2pojo")
 @Group(Constants.GROUP)
 @Version(Constants.API_VERSION)
 @Kind("Builder")
@@ -29,7 +27,6 @@ class BuilderList : DefaultKubernetesResourceList<Builder>()
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("base")
-@Generated("jsonschema2pojo")
 @JsonDeserialize(using = JsonDeserializer.None::class)
 class BuilderStatus : KubernetesResource {
     @get:JsonProperty("base")
@@ -75,7 +72,6 @@ class BuilderStatus : KubernetesResource {
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("context", "destination", "dockerfilePath", "pushSecretName", "round")
-@Generated("jsonschema2pojo")
 @JsonDeserialize(using = JsonDeserializer.None::class)
 class BuilderSpec : KubernetesResource {
     /**
@@ -175,7 +171,6 @@ class BuilderSpec : KubernetesResource {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("git", "raw", "s3")
-@Generated("jsonschema2pojo")
 class BuilderContext {
     @get:JsonProperty("git")
     @set:JsonProperty("git")
@@ -237,7 +232,6 @@ class BuilderContext {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("endpoint", "ref", "scheme", "userPassword", "username")
-@Generated("jsonschema2pojo")
 class GitContext {
     /**
      * (Required)
@@ -325,7 +319,6 @@ class GitContext {
         return (endpoint === rhs.endpoint || endpoint != null && endpoint == rhs.endpoint) && (ref === rhs.ref || ref != null && ref == rhs.ref) && (userPassword === rhs.userPassword || userPassword != null && userPassword == rhs.userPassword) && (scheme == rhs.scheme || scheme != null && scheme == rhs.scheme) && (username === rhs.username || username != null && username == rhs.username)
     }
 
-    @Generated("jsonschema2pojo")
     enum class Scheme(private val value: String) {
         HTTP("http"), HTTPS("https");
 
@@ -358,7 +351,6 @@ class GitContext {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("accessKeyID", "accessSecretKey", "bucket", "endpoint", "fileType", "objectKey", "region", "scheme")
-@Generated("jsonschema2pojo")
 class S3Context {
     /**
      * (Required)
@@ -508,7 +500,6 @@ class S3Context {
         return (accessKeyID === rhs.accessKeyID || accessKeyID != null && accessKeyID == rhs.accessKeyID) && (bucket === rhs.bucket || bucket != null && bucket == rhs.bucket) && (endpoint === rhs.endpoint || endpoint != null && endpoint == rhs.endpoint) && (scheme == rhs.scheme || scheme != null && scheme == rhs.scheme) && (objectKey === rhs.objectKey || objectKey != null && objectKey == rhs.objectKey) && (accessSecretKey === rhs.accessSecretKey || accessSecretKey != null && accessSecretKey == rhs.accessSecretKey) && (region === rhs.region || region != null && region == rhs.region) && (fileType == rhs.fileType || fileType != null && fileType == rhs.fileType)
     }
 
-    @Generated("jsonschema2pojo")
     enum class FileType(private val value: String) {
         TAR("tar"), TAR_GZ("tar.gz"), ZIP("zip"), RAR("rar"), DIR("dir");
 
@@ -538,7 +529,6 @@ class S3Context {
         }
     }
 
-    @Generated("jsonschema2pojo")
     enum class Scheme(private val value: String) {
         HTTP("http"), HTTPS("https");
 

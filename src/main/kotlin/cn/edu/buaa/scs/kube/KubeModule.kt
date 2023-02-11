@@ -29,6 +29,7 @@ fun Application.kubeModule() {
     }
 
     logger("kube")().info { "connected to official kubernetes apiserver successfully: ${kubeClient.kubernetesVersion.gitVersion}" }
+    VirtualMachineClient.registerVirtualMachineOperator()
 
     ImageBuildRoutine.run()
 }

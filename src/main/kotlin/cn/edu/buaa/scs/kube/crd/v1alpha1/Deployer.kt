@@ -10,13 +10,11 @@ import io.fabric8.kubernetes.client.CustomResource
 import io.fabric8.kubernetes.model.annotation.Group
 import io.fabric8.kubernetes.model.annotation.Kind
 import io.fabric8.kubernetes.model.annotation.Version
-import javax.annotation.Generated
 
 /**
  * Deployer is the Schema for the deployers API
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("jsonschema2pojo")
 @Group(Constants.GROUP)
 @Version(Constants.API_VERSION)
 @Kind("Deployer")
@@ -29,7 +27,6 @@ class DeployerList : DefaultKubernetesResourceList<Deployer>()
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("base")
-@Generated("jsonschema2pojo")
 @JsonDeserialize(using = JsonDeserializer.None::class)
 class DeployerStatus : KubernetesResource {
     @get:JsonProperty("base")
@@ -76,7 +73,6 @@ class DeployerStatus : KubernetesResource {
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("containers", "round", "type")
-@Generated("jsonschema2pojo")
 @JsonDeserialize(using = JsonDeserializer.None::class)
 class DeployerSpec : KubernetesResource {
     /**
@@ -153,7 +149,6 @@ class DeployerSpec : KubernetesResource {
         return (containers === rhs.containers || containers != null && containers == rhs.containers) && (round === rhs.round || round != null && round == rhs.round) && (type == rhs.type || type != null && type == rhs.type)
     }
 
-    @Generated("jsonschema2pojo")
     enum class Type(private val value: String) {
         JOB("job"), SERVICE("service");
 
@@ -186,7 +181,6 @@ class DeployerSpec : KubernetesResource {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("args", "command", "env", "image", "initial", "name", "ports", "resource")
-@Generated("jsonschema2pojo")
 class ContainerSpec {
     @get:JsonProperty("args")
     @set:JsonProperty("args")
@@ -299,7 +293,6 @@ class ContainerSpec {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("cpu", "memory")
-@Generated("jsonschema2pojo")
 class Resource {
     /**
      *
@@ -380,7 +373,6 @@ class Resource {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("export", "port", "protocol")
-@Generated("jsonschema2pojo")
 class Port {
     @get:JsonProperty("export")
     @set:JsonProperty("export")
@@ -447,7 +439,6 @@ class Port {
         return (protocol == rhs.protocol || protocol != null && protocol == rhs.protocol) && (export === rhs.export || export != null && export == rhs.export) && (port === rhs.port || port != null && port == rhs.port)
     }
 
-    @Generated("jsonschema2pojo")
     enum class Protocol(private val value: String) {
         TCP("tcp"), UDP("udp"), SCTP("sctp");
 

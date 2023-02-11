@@ -12,13 +12,11 @@ import io.fabric8.kubernetes.client.CustomResource
 import io.fabric8.kubernetes.model.annotation.Group
 import io.fabric8.kubernetes.model.annotation.Kind
 import io.fabric8.kubernetes.model.annotation.Version
-import javax.annotation.Generated
 
 /**
  * Workflow is the Schema for the workflows API
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("jsonschema2pojo")
 @Group(Constants.GROUP)
 @Version(Constants.API_VERSION)
 @Kind("Workflow")
@@ -28,7 +26,6 @@ class WorkflowList : DefaultKubernetesResourceList<Workflow>()
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("builderList", "deployerList", "round")
-@Generated("jsonschema2pojo")
 @JsonDeserialize(using = JsonDeserializer.None::class)
 class WorkflowSpec : KubernetesResource {
     /**
@@ -111,7 +108,6 @@ class WorkflowSpec : KubernetesResource {
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("base", "stage")
-@Generated("jsonschema2pojo")
 @JsonDeserialize(using = JsonDeserializer.None::class)
 class WorkflowStatus : KubernetesResource {
     @get:JsonProperty("base")
@@ -166,7 +162,6 @@ class WorkflowStatus : KubernetesResource {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("name", "namespace")
-@Generated("jsonschema2pojo")
 class NamespacedName {
     /**
      * (Required)
