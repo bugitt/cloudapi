@@ -25,6 +25,8 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":cloudapi-model"))
+
     val ktor_version = "2.1.3"
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     implementation("io.ktor:ktor-server-call-id:$ktor_version")
@@ -64,12 +66,7 @@ dependencies {
 
     // database
     // mysql
-    val ktorm_version = "3.4.1"
     implementation("com.zaxxer:HikariCP:4.0.3")
-    implementation("org.ktorm:ktorm-core:$ktorm_version")
-    implementation("org.ktorm:ktorm-jackson:$ktorm_version")
-    implementation("org.ktorm:ktorm-support-mysql:$ktorm_version")
-    implementation("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.25")
     // mongodb
     val kmongo_version = "4.7.2"

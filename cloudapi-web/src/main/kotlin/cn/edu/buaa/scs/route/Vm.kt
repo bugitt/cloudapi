@@ -140,8 +140,8 @@ internal fun convertVirtualMachineResponse(vm: VirtualMachine) = VirtualMachine(
     osFullName = vm.osFullName,
     diskNum = vm.diskNum,
     diskSize = vm.diskSize,
-    powerState = vm.powerState.value(),
-    overallStatus = vm.overallStatus.value(),
+    powerState = vm.powerState.value,
+    overallStatus = vm.overallStatus.value,
     netInfos = vm.netInfos.map { VmNetInfo(it.macAddress, it.ipList) }
 )
 
@@ -160,7 +160,7 @@ internal fun convertVirtualMachineTemplateResponse(vm: VirtualMachine) = Virtual
     osFullName = vm.osFullName,
     diskNum = vm.diskNum,
     diskSize = vm.diskSize,
-    overallStatus = vm.overallStatus.value(),
+    overallStatus = vm.overallStatus.value,
 )
 
 internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(

@@ -5,8 +5,6 @@ package cn.edu.buaa.scs.model
 import cn.edu.buaa.scs.utils.jsonMapper
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.vmware.vim25.ManagedEntityStatus
-import com.vmware.vim25.VirtualMachinePowerState
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
@@ -52,6 +50,42 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
         DELETED
     }
 
+    enum class PowerState(val value: String) {
+        PoweredOff("poweredOff"),
+        PoweredOn("poweredOn"),
+        Suspended("suspended");
+
+        companion object {
+            fun from(v: String): PowerState =
+                when (v.lowercase()) {
+                    "poweredoff" -> PoweredOff
+                    "poweredon" -> PoweredOn
+                    "suspended" -> Suspended
+                    else -> PoweredOff
+                }
+
+        }
+    }
+
+    enum class OverallStatus(val value: String) {
+        Green("green"),
+        Yellow("yellow"),
+        Red("red"),
+        Gray("gray");
+
+        companion object {
+            fun from(v: String): OverallStatus =
+                when (v.lowercase()) {
+                    "green" -> Green
+                    "yellow" -> Yellow
+                    "red" -> Red
+                    "gray" -> Gray
+                    else -> Gray
+                }
+        }
+
+    }
+
     data class NetInfo(
         val macAddress: String,
         val ipList: List<String>
@@ -80,8 +114,8 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var osFullName: String
     var diskNum: Int
     var diskSize: Long  // bytes
-    var powerState: VirtualMachinePowerState
-    var overallStatus: ManagedEntityStatus
+    var powerState: PowerState
+    var overallStatus: OverallStatus
     var netInfos: List<NetInfo>
 
     fun markDeleted() {
@@ -91,6 +125,7 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
 
 open class VirtualMachines(alias: String?) : Table<VirtualMachine>("vm", alias) {
     companion object : VirtualMachines(null)
+
     override fun aliased(alias: String) = VirtualMachines(alias)
 
     val uuid = varchar("uuid").primaryKey().bindTo { it.uuid }
@@ -111,9 +146,9 @@ open class VirtualMachines(alias: String?) : Table<VirtualMachine>("vm", alias) 
     val osFullName = varchar("os_full_name").bindTo { it.osFullName }
     val diskNum = int("disk_num").bindTo { it.diskNum }
     val diskSize = long("disk_size").bindTo { it.diskSize }
-    val powerState = varchar("power_state").transform({ VirtualMachinePowerState.fromValue(it) }, { it.value() })
+    val powerState = varchar("power_state").transform({ VirtualMachine.PowerState.from(it) }, { it.value })
         .bindTo { it.powerState }
-    val overallStatus = varchar("overall_status").transform({ ManagedEntityStatus.fromValue(it) }, { it.value() })
+    val overallStatus = varchar("overall_status").transform({ VirtualMachine.OverallStatus.from(it) }, { it.value })
         .bindTo { it.overallStatus }
     val netInfos = text("net_info")
         .transform(

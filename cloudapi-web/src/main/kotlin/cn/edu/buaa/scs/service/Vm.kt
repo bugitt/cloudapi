@@ -266,7 +266,7 @@ class VmService(val call: ApplicationCall) : IService {
         var vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
         call.user().assertWrite(vm)
         // 检查是否已经关机
-        if (vm.powerState != VirtualMachinePowerState.POWERED_OFF) {
+        if (vm.powerState.value.lowercase() != VirtualMachinePowerState.POWERED_OFF.value().lowercase()) {
             throw BadRequestException("VM is not powered off")
         }
         if (vm.isTemplate) {

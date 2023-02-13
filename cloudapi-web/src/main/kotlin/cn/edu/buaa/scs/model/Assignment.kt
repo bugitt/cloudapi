@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.model
 
-import cn.edu.buaa.scs.utils.IntOrString
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf

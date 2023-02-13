@@ -411,8 +411,8 @@ internal fun convertVMModel(
         }
     }.reduce { acc, l -> acc + l }
 
-    vm.powerState = vmSummary.runtime.powerState
-    vm.overallStatus = vmSummary.overallStatus
+    vm.powerState = VirtualMachine.PowerState.from(vmSummary.runtime.powerState.value())
+    vm.overallStatus = VirtualMachine.OverallStatus.from(vmSummary.overallStatus.value())
 
     vm.netInfos = guestNicInfoList.guestNicInfo.map {
         VirtualMachine.NetInfo(it.macAddress, it.ipAddress)

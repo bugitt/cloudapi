@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.utils
+package cn.edu.buaa.scs.model
 
 class IntOrString {
     private var intVal: Int = 0

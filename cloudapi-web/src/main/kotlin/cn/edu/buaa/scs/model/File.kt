@@ -3,7 +3,6 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.service.*
-import cn.edu.buaa.scs.utils.IntOrString
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import org.ktorm.database.Database

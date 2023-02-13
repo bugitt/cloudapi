@@ -4,7 +4,6 @@ package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.IntOrString
 import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.tryToInt
 import org.ktorm.database.Database
@@ -163,6 +162,7 @@ interface User : Entity<User>, IEntity {
 
 open class Users(alias: String?) : Table<User>("user", alias) {
     companion object : Users(null)
+
     override fun aliased(alias: String) = Users(alias)
 
     @Suppress("unused")
