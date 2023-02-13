@@ -5,8 +5,6 @@ plugins {
     application
     kotlin("jvm")
     kotlin("plugin.serialization")
-
-    // 打包用的插件
     id("com.github.johnrengelman.shadow")
 }
 
@@ -118,6 +116,10 @@ tasks {
             attributes(Pair("Main-Class", "cn.edu.buaa.scs.ApplicationKt"))
         }
         isZip64 = true
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = "11"
     }
 
     "test"(Test::class) {

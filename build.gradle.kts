@@ -12,3 +12,12 @@ plugins {
 
 group = "scs.buaa.edu.cn"
 version = "0.0.1"
+
+application {
+    mainClass.set("cn.edu.buaa.scs.ApplicationKt")
+}
+
+repositories {
+    mavenCentral()
+    maven(url = "https://jitpack.io")
+}
