@@ -1,0 +1,55 @@
+package cn.edu.buaa.scs.vcenter
+
+import cn.edu.buaa.scs.vm.ConfigVmOptions
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+
+fun Application.vcenterRouting() {
+    routing {
+        route("/api/v2/vcenter") {
+            route("/vms") {
+                get() {
+                    call.respond(VCenterWrapper.getAllVms().getOrThrow())
+                }
+
+                post {
+                    VCenterWrapper.create(call.receive()).getOrThrow()
+                    call.respond("OK")
+                }
+
+            }
+
+            route("/vm/{uuid}") {
+                fun ApplicationCall.getVmUuid() = parameters["uuid"]!!
+
+                delete {
+                    VCenterWrapper.delete(call.getVmUuid()).getOrThrow()
+                    call.respond("OK")
+                }
+
+                post("/powerOn") {
+                    VCenterWrapper.powerOn(call.getVmUuid()).getOrThrow()
+                    call.respond("OK")
+                }
+
+                post("/powerOff") {
+                    VCenterWrapper.powerOff(call.getVmUuid()).getOrThrow()
+                    call.respond("OK")
+                }
+
+                post("/config") {
+                    val opt = call.receive<ConfigVmOptions>()
+                    val vm = VCenterWrapper.configVM(call.getVmUuid(), opt).getOrThrow()
+                    call.respond(vm)
+                }
+
+                post("/convertToTemplate") {
+                    VCenterWrapper.convertVMToTemplate(call.getVmUuid()).getOrThrow()
+                    call.respond("OK")
+                }
+            }
+        }
+    }
+}

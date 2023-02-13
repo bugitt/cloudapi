@@ -54,34 +54,14 @@ interface IVMClient {
     }
 }
 
-data class CreateVmOptions(
-    val name: String,
-    val templateUuid: String,
+internal fun CreateVmOptions.existInDb() = mysql.virtualMachines.exists(existPredicate())
 
-    // course related
-    val adminId: String = "default",
-    val studentId: String = "default",
-    val teacherId: String = "default",
-    val isExperimental: Boolean = false,
-    val experimentId: Int = 0,
-    val applyId: String,
-
-    val memory: Int, // MB
-    val cpu: Int,
-    val disNum: Int = 1,
-    val diskSize: Long, // bytes
-
-    val powerOn: Boolean = false,
-) {
-    internal fun existInDb() = mysql.virtualMachines.exists(existPredicate())
-
-    internal fun existPredicate(): (VirtualMachines) -> ColumnDeclaring<Boolean> {
-        return {
-            it.name.eq(this.name)
-                .and(it.studentId.eq(this.studentId))
-                .and(it.teacherId.eq(this.teacherId))
-                .and(it.experimentId.eq(this.experimentId))
-                .and(it.applyId.eq(this.applyId))
-        }
+internal fun CreateVmOptions.existPredicate(): (VirtualMachines) -> ColumnDeclaring<Boolean> {
+    return {
+        it.name.eq(this.name)
+            .and(it.studentId.eq(this.studentId))
+            .and(it.teacherId.eq(this.teacherId))
+            .and(it.experimentId.eq(this.experimentId))
+            .and(it.applyId.eq(this.applyId))
     }
 }

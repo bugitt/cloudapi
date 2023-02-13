@@ -41,25 +41,12 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-jackson:$ktor_version")
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
-    implementation("io.ktor:ktor-client-core-jvm:$ktor_version")
-    implementation("io.ktor:ktor-client-cio-jvm:$ktor_version")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktor_version")
-
-    // coroutine
-    val coroutine_version = "1.6.4"
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutine_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutine_version")
 
     // json
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4")
-
-    // kotlin-log
-    implementation("io.github.microutils:kotlin-logging:2.1.21")
-    implementation("ch.qos.logback:logback-classic:1.2.11")
 
     // Redis
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
@@ -96,9 +83,6 @@ dependencies {
     val javaOperatorSdk = "4.2.6"
     implementation("io.javaoperatorsdk:operator-framework:$javaOperatorSdk")
     annotationProcessor("io.javaoperatorsdk:operator-framework:$javaOperatorSdk")
-
-    // vm
-    implementation("com.vmware.photon.controller:photon-vsphere-adapter-util:0.6.60")
 
     // ssh
     implementation("com.hierynomus:sshj:0.33.0")

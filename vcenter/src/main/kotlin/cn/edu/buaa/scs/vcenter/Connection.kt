@@ -1,4 +1,4 @@
-package cn.edu.buaa.scs.vm.vcenter
+package cn.edu.buaa.scs.vcenter
 
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Connection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.GetMoRef
@@ -20,12 +20,12 @@ fun Connection.getCreateVmSubFolder(): ManagedObjectReference {
         ?: vimPort.createFolder(vmFolderRef, "other")
 }
 
-fun Connection.getVmRefByUuid(uuid: String): ManagedObjectReference {
+fun Connection.getVmRefByUuid(uuid: String): ManagedObjectReference? {
     return vimPort.findByUuid(
         serviceContent.searchIndex,
         getDatacenterRef(),
         uuid,
         true,
         false
-    ) ?: throw VCenterClient.vmNotFound(uuid)
+    )
 }

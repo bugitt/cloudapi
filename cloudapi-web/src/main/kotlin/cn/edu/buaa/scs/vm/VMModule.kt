@@ -13,7 +13,6 @@ fun Application.vmModule() {
         username = getConfigString("vm.ssh.username"),
     )
 
-    VCenterClient.initialize(this)
     vmClient = VCenterClient
     VMRoutine.run()
 }

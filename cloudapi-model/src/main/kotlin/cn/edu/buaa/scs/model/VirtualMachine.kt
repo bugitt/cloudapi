@@ -10,6 +10,15 @@ import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
+fun VirtualMachine.applyExtraInfo(extraInfo: VirtualMachineExtraInfo) {
+    this.adminId = extraInfo.adminId
+    this.studentId = extraInfo.studentId
+    this.teacherId = extraInfo.teacherId
+    this.isExperimental = extraInfo.isExperimental
+    this.experimentId = extraInfo.experimentId
+    this.applyId = extraInfo.applyId
+}
+
 data class VirtualMachineExtraInfo(
     @JsonProperty("adminID") var adminId: String = "default",
     @JsonProperty("studentID") var studentId: String = "default",

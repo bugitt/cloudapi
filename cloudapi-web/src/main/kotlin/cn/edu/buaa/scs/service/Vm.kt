@@ -12,7 +12,6 @@ import cn.edu.buaa.scs.utils.exists
 import cn.edu.buaa.scs.utils.user
 import cn.edu.buaa.scs.utils.userId
 import cn.edu.buaa.scs.vm.*
-import com.vmware.vim25.VirtualMachinePowerState
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
@@ -266,7 +265,7 @@ class VmService(val call: ApplicationCall) : IService {
         var vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
         call.user().assertWrite(vm)
         // 检查是否已经关机
-        if (vm.powerState.value.lowercase() != VirtualMachinePowerState.POWERED_OFF.value().lowercase()) {
+        if (vm.powerState.value.lowercase() != "poweredoff") {
             throw BadRequestException("VM is not powered off")
         }
         if (vm.isTemplate) {
