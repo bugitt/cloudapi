@@ -27,7 +27,7 @@ class DeployerList : DefaultKubernetesResourceList<Deployer>()
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("base")
-@JsonDeserialize(using = JsonDeserializer.None::class)
+
 class DeployerStatus : KubernetesResource {
     @get:JsonProperty("base")
     @set:JsonProperty("base")

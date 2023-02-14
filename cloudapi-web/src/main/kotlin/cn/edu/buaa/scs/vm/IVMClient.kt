@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.exists
+import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import org.ktorm.dsl.and
@@ -51,6 +52,13 @@ interface IVMClient {
         } catch (e: Throwable) {
             Result.failure(Exception("waitForVMInDB timeout", e))
         }
+    }
+}
+
+fun newVMClient(platform: String): IVMClient {
+    return when (platform.lowercase()) {
+        "vcenter" -> VCenterClient
+        else -> throw Exception("unknown platform: $platform")
     }
 }
 

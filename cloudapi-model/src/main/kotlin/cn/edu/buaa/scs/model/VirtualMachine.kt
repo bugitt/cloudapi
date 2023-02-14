@@ -96,8 +96,8 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     }
 
     data class NetInfo(
-        @JsonProperty("macAddress") val macAddress: String,
-        @JsonProperty("ipList") val ipList: List<String>
+        @JsonProperty("macAddress") val macAddress: String?,
+        @JsonProperty("ipList") val ipList: List<String>?
     )
 
     // meta

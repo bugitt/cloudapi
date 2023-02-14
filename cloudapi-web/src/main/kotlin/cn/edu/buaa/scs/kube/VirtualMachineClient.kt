@@ -17,11 +17,31 @@ object VirtualMachineClient {
 
     fun registerVirtualMachineOperator() {
         val operator = Operator(kubeClient)
-        operator.register(VirtualMachineReconciler())
+        operator.register(VirtualMachineReconciler(kubeClient))
         operator.start()
     }
 
-    fun get(name: String, namespace: String): VirtualMachine? {
-        return client.inNamespace(namespace).withName(name).get()
+    fun list(): List<VirtualMachine> {
+        return client.list().items
+    }
+
+    fun get(name: String): VirtualMachine? {
+        return client.withName(name).get()
+    }
+
+    fun updateStatus(vm: VirtualMachine) {
+        client.resource(vm).patchStatus()
+    }
+
+    fun createOrReplace(vm: VirtualMachine) {
+        client.resource(vm).createOrReplace()
+    }
+
+    fun delete(vm: VirtualMachine) {
+        client.resource(vm).delete()
+    }
+
+    fun delete(name: String) {
+        client.withName(name).delete()
     }
 }

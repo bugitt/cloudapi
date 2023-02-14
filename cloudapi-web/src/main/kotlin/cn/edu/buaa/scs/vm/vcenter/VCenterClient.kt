@@ -4,8 +4,11 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.error.RemoteServiceException
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.model.virtualMachines
+import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.Constants
 import cn.edu.buaa.scs.utils.HttpClientWrapper
+import cn.edu.buaa.scs.utils.schedule.waitForDone
 import cn.edu.buaa.scs.vm.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -13,32 +16,36 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
+import kotlinx.coroutines.delay
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import org.ktorm.jackson.KtormModule
 
 object VCenterClient : IVMClient {
 
     internal val client by lazy {
-        HttpClientWrapper(HttpClient(CIO) {
-            defaultRequest {
-                url {
-                    protocol = URLProtocol.HTTP
-                    host = "127.0.0.1"
-                    port = Constants.VCenter.port
-                    path("/api/v2/vcenter/")
-                }
+        HttpClientWrapper(
+            HttpClient(CIO) {
+                defaultRequest {
+                    url {
+                        protocol = URLProtocol.HTTP
+                        host = "127.0.0.1"
+                        port = Constants.VCenter.port
+                    }
 
-            }
-            install(ContentNegotiation) {
-                jackson {
-                    registerModule(KtormModule())
                 }
-            }
-            install(HttpTimeout) {
-                requestTimeoutMillis = 100000L
-            }
-        })
+                install(ContentNegotiation) {
+                    jackson {
+                        registerModule(KtormModule())
+                    }
+                }
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 100000L
+                }
+            },
+            basePath = "/api/v2/vcenter/"
+        )
     }
 
     private fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
@@ -48,22 +55,20 @@ object VCenterClient : IVMClient {
     }
 
     override suspend fun getVM(uuid: String): Result<VirtualMachine> {
-        val vmResult = client.get<VirtualMachine>("vm/$uuid")
-        return if (vmResult.isSuccess) {
-            vmResult
-        } else {
-            vmResult.exceptionOrNull()?.let {
-                if (it is RemoteServiceException && it.status == HttpStatusCode.NotFound.value) {
-                    Result.failure(vmNotFound(uuid))
-                } else {
-                    Result.failure(it)
-                }
-            } ?: Result.failure(vmNotFound(uuid))
+        var vm = mysql.virtualMachines.find { it.uuid eq uuid }
+        if (vm == null) {
+            delay(1000L)
+            vm = mysql.virtualMachines.find { it.uuid eq uuid }
         }
+        return if (vm == null) Result.failure(vmNotFound(uuid))
+        else Result.success(vm)
     }
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> = runCatching {
         client.post<String>("/vm/$uuid/powerOn")
+        waitForDone(10000L) {
+            getVM(uuid).getOrNull()?.powerState == VirtualMachine.PowerState.PoweredOn
+        }
     }
 
     override suspend fun powerOnAsync(uuid: String) {
@@ -72,6 +77,9 @@ object VCenterClient : IVMClient {
 
     override suspend fun powerOffSync(uuid: String): Result<Unit> = runCatching {
         client.post<String>("/vm/$uuid/powerOff")
+        waitForDone(10000L) {
+            getVM(uuid).getOrNull()?.powerState == VirtualMachine.PowerState.PoweredOff
+        }
     }
 
     override suspend fun powerOffAsync(uuid: String) {
@@ -109,14 +117,14 @@ object VCenterClient : IVMClient {
         waitForVMInDB(options.existPredicate()).getOrThrow()
     }
 
-    override suspend fun deleteVM(uuid: String): Result<Unit> {
+    override suspend fun deleteVM(uuid: String): Result<Unit> = runCatching {
         // 先关机
         try {
             powerOffSync(uuid)
         } catch (_: Throwable) {
         }
         // 然后删除
-        return client.delete("/vm/$uuid")
+        client.delete<String>("/vm/$uuid")
     }
 
     override suspend fun convertVMToTemplate(uuid: String): Result<VirtualMachine> = runCatching {
