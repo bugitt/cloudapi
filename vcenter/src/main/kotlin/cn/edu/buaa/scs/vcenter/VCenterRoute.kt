@@ -24,6 +24,10 @@ fun Application.vcenterRouting() {
             route("/vm/{uuid}") {
                 fun ApplicationCall.getVmUuid() = parameters["uuid"]!!
 
+                get {
+                    call.respond(VCenterWrapper.getVM(call.getVmUuid()).getOrThrow())
+                }
+
                 delete {
                     VCenterWrapper.delete(call.getVmUuid()).getOrThrow()
                     call.respond("OK")

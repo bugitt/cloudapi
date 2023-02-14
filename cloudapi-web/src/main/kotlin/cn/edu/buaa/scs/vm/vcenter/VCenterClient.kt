@@ -2,23 +2,19 @@ package cn.edu.buaa.scs.vm.vcenter
 
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.NotFoundException
+import cn.edu.buaa.scs.error.RemoteServiceException
 import cn.edu.buaa.scs.model.VirtualMachine
-import cn.edu.buaa.scs.model.virtualMachines
-import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.Constants
 import cn.edu.buaa.scs.utils.HttpClientWrapper
 import cn.edu.buaa.scs.vm.*
-import cn.edu.buaa.scs.vm.existInDb
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
-import kotlinx.coroutines.*
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
-import org.ktorm.entity.find
 import org.ktorm.jackson.KtormModule
 
 object VCenterClient : IVMClient {
@@ -32,16 +28,18 @@ object VCenterClient : IVMClient {
                     port = Constants.VCenter.port
                     path("/api/v2/vcenter/")
                 }
+
             }
             install(ContentNegotiation) {
                 jackson {
                     registerModule(KtormModule())
                 }
             }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 100000L
+            }
         })
     }
-
-    private const val detention = 500L
 
     private fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
 
@@ -50,13 +48,18 @@ object VCenterClient : IVMClient {
     }
 
     override suspend fun getVM(uuid: String): Result<VirtualMachine> {
-        var vm = mysql.virtualMachines.find { it.uuid eq uuid }
-        if (vm == null) {
-            delay(detention)
-            vm = mysql.virtualMachines.find { it.uuid eq uuid }
+        val vmResult = client.get<VirtualMachine>("vm/$uuid")
+        return if (vmResult.isSuccess) {
+            vmResult
+        } else {
+            vmResult.exceptionOrNull()?.let {
+                if (it is RemoteServiceException && it.status == HttpStatusCode.NotFound.value) {
+                    Result.failure(vmNotFound(uuid))
+                } else {
+                    Result.failure(it)
+                }
+            } ?: Result.failure(vmNotFound(uuid))
         }
-        return if (vm == null) Result.failure(vmNotFound(uuid))
-        else Result.success(vm)
     }
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> = runCatching {

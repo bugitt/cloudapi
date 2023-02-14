@@ -13,8 +13,6 @@ import com.vmware.photon.controller.model.adapters.vsphere.util.connection.WaitF
 import com.vmware.vim25.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
 import java.net.URI
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -161,10 +159,7 @@ object VCenterWrapper {
                     RetrieveOptions()
                 )
                 vmList?.forEach { (_, vmProps) ->
-                    val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
-                    val guestNicInfoList = vmProps["guest.net"]!! as ArrayOfGuestNicInfo
-                    val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice
-                    val vm = convertVMModel(hostName, vmSummary, guestNicInfoList, devices)
+                    val vm = convertVMModel(hostName, vmProps)
                     finalVirtualMachineList.add(vm)
                 }
             } catch (e: Throwable) {
@@ -287,6 +282,19 @@ object VCenterWrapper {
         }
     }
 
+    suspend fun getVM(uuid: String): Result<VirtualMachine> = runCatching {
+        baseSyncTask { connection ->
+            val vmRef = connection.getVmRefByUuid(uuid)
+            val vmProps = connection.getMoRef().entityProps(vmRef, "summary", "config.hardware.device", "guest.net")
+
+            val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
+            val hostRef = vmSummary.runtime.host
+            val hostProps = connection.getMoRef().entityProps(hostRef, "name")
+            val hostName = hostProps["name"]!! as String
+            convertVMModel(hostName, vmProps)
+        }.getOrThrow()
+    }
+
     suspend fun convertVMToTemplate(uuid: String): Result<Unit> {
         return baseSyncTask { connection ->
             val vmRef = connection.getVmRefByUuid(uuid)
@@ -325,6 +333,16 @@ object VCenterWrapper {
             }
         }
     }
+}
+
+internal fun convertVMModel(
+    hostName: String,
+    vmProps: Map<String, Any>,
+): VirtualMachine {
+    val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
+    val guestNicInfoList = vmProps["guest.net"]!! as ArrayOfGuestNicInfo
+    val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice
+    return convertVMModel(hostName, vmSummary, guestNicInfoList, devices)
 }
 
 internal fun convertVMModel(
