@@ -27,7 +27,7 @@ repositories {
 dependencies {
     implementation(project(":cloudapi-model"))
 
-    val ktor_version = "2.1.3"
+    val ktor_version = "2.2.3"
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     implementation("io.ktor:ktor-server-call-id:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
