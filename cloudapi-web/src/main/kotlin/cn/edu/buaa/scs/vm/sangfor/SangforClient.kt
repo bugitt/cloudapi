@@ -268,37 +268,46 @@ object SangforClient : IVMClient {
             description
         )
         // Wait the creation be done.
-        var token = getToken()
-        val vmsRes: String = client.get("openstack/compute/v2/servers/detail") {
-            header("X-Auth-Token", token.id)
-        }.body()
-        val vms = jsonMapper.readTree(vmsRes).get("servers")
+        var token: Token
         var uuid = ""
-        for (vmJSON in vms) {
-            if (vmJSON["status"].toString() == "\"BUILD\"") {
-                uuid = vmJSON["status"].toString().split('"')[1]
+        waitForDone(20000L, 500L) {
+            token = getToken()
+            val vmsRes: String = client.get("openstack/compute/v2/servers/detail") {
+                header("X-Auth-Token", token.id)
+            }.body()
+            val vms = jsonMapper.readTree(vmsRes)["servers"]
+            for (vmJSON in vms) {
+//                println(vmJSON.toString())
+                if (vmJSON["OS-EXT-STS:task_state"].toString() == "\"creating\"") {
+                    uuid = vmJSON["id"].toString().split('"')[1]
+                }
             }
+            uuid != ""
         }
+//        println("uuid is $uuid")
         waitForDone(300000L, 1000L) {
             token = getToken()
-            val vmRes: String = client.get("admin/view/server-info?id=$uuid") {
-                header("Cookie", "aCMPAuthToken=${token.id}")
+            val vmRes: String = client.get("openstack/compute/v2/servers/$uuid") {
+                header("X-Auth-Token", token.id)
             }.body()
-            jsonMapper.readTree(vmRes)["data"]["os_installed"].intValue() != 0
+//            println(vmRes)
+//            println(jsonMapper.readTree(vmRes)["server"]["OS-EXT-STS:task_state"].toString())
+            jsonMapper.readTree(vmRes)["server"]["OS-EXT-STS:task_state"].toString() == "\"\""
         }
         createLock.unlock()
-        // Change settings of the new virtual machine.
+        // Initialize settings of the new virtual machine.
         token = getToken()
         val vmRes: String = client.get("admin/view/server-info?id=$uuid") {
             header("Cookie", "aCMPAuthToken=${token.id}")
         }.body()
         val vmJSON = jsonMapper.readTree(vmRes)["data"]
+        println(vmJSON.toString())
         val oldSetting = OldSetting(
             vmJSON["name"].toString().split('"')[1],
             vmJSON["description"].toString().split('"')[1],
             vmJSON["memory_mb"].intValue(),
             vmJSON["cores"].intValue(),
-            vmJSON["data"]["disks"].map {
+            vmJSON["disks"].map {
                 it["size_mb"].longValue()
             }.reduce { s, s1 -> s + s1 },
             vmJSON["networks"][0]["mac"].toString().split('"')[1].lowercase(),
