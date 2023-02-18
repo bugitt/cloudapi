@@ -53,6 +53,8 @@ fun VirtualMachine.applySangforExtraInfo(extraInfo: String) {
         this.experimentId = -1
         this.applyId = ""
     }
+    this.templateUuid = ""
+    this.initial = false
 }
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -156,6 +158,8 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var isExperimental: Boolean
     var experimentId: Int
     var applyId: String
+    var templateUuid: String
+    var initial: Boolean // initial in vm apply
 
     var lifeTime: Lifetime
 
