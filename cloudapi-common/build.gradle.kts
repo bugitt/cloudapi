@@ -34,6 +34,11 @@ dependencies {
     api("io.github.microutils:kotlin-logging:2.1.21")
     api("ch.qos.logback:logback-classic:1.2.11")
 
+    // kubernetes
+    val kubernetes_client_version = "6.2.0"
+    api("io.fabric8:kubernetes-model:$kubernetes_client_version")
+    api("io.fabric8:kubernetes-client:$kubernetes_client_version")
+
     // coroutine
     val coroutine_version = "1.6.4"
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")

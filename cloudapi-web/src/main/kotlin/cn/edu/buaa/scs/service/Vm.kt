@@ -6,17 +6,14 @@ import cn.edu.buaa.scs.auth.authRead
 import cn.edu.buaa.scs.auth.hasAccessToStudent
 import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
-import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineApply
-import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineApplySpec
-import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineApplyVmEntity
-import cn.edu.buaa.scs.kube.vmApplyKubeClient
+import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineSpec
+import cn.edu.buaa.scs.kube.kubeClient
+import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.exists
-import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
+import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.vm.*
-import io.fabric8.kubernetes.api.model.ObjectMeta
+import com.fkorotkov.kubernetes.newObjectMeta
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
@@ -133,13 +130,15 @@ class VmService(val call: ApplicationCall) : IService {
         }
         vmApply.replyMsg = replyMsg
         vmApply.handleTime = System.currentTimeMillis()
-        // generate vm creation tasks
-        mysql.useTransaction {
-            val vmApplyCrd = vmApplyKubeClient.withName(vmApply.id.lowercase()).get() ?: throw NotFoundException()
-            vmApplyCrd.spec = vmApplyCrd.spec.copy(status = vmApply.status)
-            vmApplyKubeClient.resource(vmApplyCrd).patch()
-            mysql.vmApplyList.update(vmApply)
+
+        vmApply.namespaceName().ensureNamespace(kubeClient)
+        vmApply.toVmCrdSpec(true).forEach { spec ->
+            vmKubeClient
+                .inNamespace(vmApply.namespaceName())
+                .resource(spec.toCrd())
+                .createOrReplace()
         }
+        mysql.vmApplyList.update(vmApply)
         return vmApply
     }
 
@@ -234,23 +233,7 @@ class VmService(val call: ApplicationCall) : IService {
             }
         }
 
-        // create vmApply crd
-        val vmApplyCrd = VirtualMachineApply().apply {
-            metadata.name = vmApply.id.lowercase()
-            spec = VirtualMachineApplySpec(
-                id = vmApply.id,
-                status = 0,
-                entityList = vmApply.toCreateVmOptions().map {
-                    VirtualMachineApplyVmEntity(
-                        createVmOptions = it,
-                        platform = "vcenter",
-                        vmUuid = null,
-                    )
-                }.toMutableList(),
-            )
-
-        }
-        vmApplyKubeClient.resource(vmApplyCrd).createOrReplace()
+        vmApply.namespaceName().ensureNamespace(kubeClient)
 
         mysql.vmApplyList.add(vmApply)
         return vmApply
@@ -340,42 +323,66 @@ suspend fun DefaultWebSocketServerSession.sshWS(uuid: String) {
     }
 }
 
-fun VmApply.toCreateVmOptions(): List<CreateVmOptions> {
+fun VmApply.namespaceName(): String {
+    return this.id.lowercase()
+}
+
+fun VmApply.toVmCrdSpec(initial: Boolean = false): List<VirtualMachineSpec> {
     val vmApply = this
-    val baseOptions = CreateVmOptions(
-        name = vmApply.namePrefix,
+    val baseExtraInfo = VirtualMachineExtraInfo(
+        applyId = vmApply.id,
         templateUuid = vmApply.templateUuid,
+        initial = initial,
+    )
+    val baseSpec = VirtualMachineSpec(
+        name = vmApply.namePrefix,
         memory = vmApply.memory,
         cpu = vmApply.cpu,
+        diskNum = 1,
         diskSize = vmApply.diskSize,
-        applyId = vmApply.id,
+        powerState = VirtualMachine.PowerState.PoweredOff,
+        platform = "vcenter",
+        template = false,
+        extraInfo = jsonMapper.writeValueAsString(baseExtraInfo),
     )
     return when {
         vmApply.studentId.isNotBlank() && vmApply.studentId != "default" ->
             listOf(
-                baseOptions.copy(
+                baseSpec.copy(
                     name = "${vmApply.namePrefix}-${vmApply.studentId}",
-                    studentId = vmApply.studentId
+                    extraInfo = jsonMapper.writeValueAsString(
+                        baseExtraInfo.copy(
+                            studentId = vmApply.studentId,
+                        )
+                    )
                 )
             )
 
         vmApply.teacherId.isNotBlank() && vmApply.teacherId != "default" ->
             listOf(
-                baseOptions.copy(
+                baseSpec.copy(
                     name = "${vmApply.namePrefix}-${vmApply.teacherId}",
-                    teacherId = vmApply.teacherId
+                    extraInfo = jsonMapper.writeValueAsString(
+                        baseExtraInfo.copy(
+                            teacherId = vmApply.teacherId,
+                        )
+                    )
                 )
             )
 
         vmApply.experimentId != 0 -> {
             val experiment = Experiment.id(vmApply.experimentId)
             vmApply.studentIdList.map { studentId ->
-                baseOptions.copy(
+                baseSpec.copy(
                     name = "${vmApply.namePrefix}-$studentId",
-                    studentId = studentId,
-                    teacherId = experiment.course.teacher.id,
-                    experimental = true,
-                    experimentId = experiment.id
+                    extraInfo = jsonMapper.writeValueAsString(
+                        baseExtraInfo.copy(
+                            studentId = studentId,
+                            teacherId = experiment.course.teacher.id,
+                            experimental = true,
+                            experimentId = experiment.id,
+                        )
+                    )
                 )
             }
         }

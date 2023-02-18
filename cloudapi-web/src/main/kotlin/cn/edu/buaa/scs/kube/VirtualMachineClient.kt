@@ -12,16 +12,8 @@ val vmKubeClient by lazy {
     ) as MixedOperation<VirtualMachine, VirtualMachineList, Resource<VirtualMachine>>
 }
 
-val vmApplyKubeClient by lazy {
-    kubeClient.resources(
-        VirtualMachineApply::class.java,
-        VirtualMachineApplyList::class.java,
-    ) as MixedOperation<VirtualMachineApply, VirtualMachineApplyList, Resource<VirtualMachineApply>>
-}
-
 fun registerVirtualMachineOperator() {
     val operator = Operator(kubeClient)
     operator.register(VirtualMachineReconciler(kubeClient))
-    operator.register(VirtualMachineApplyReconciler())
     operator.start()
 }

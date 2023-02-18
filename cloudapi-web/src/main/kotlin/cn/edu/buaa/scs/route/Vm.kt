@@ -142,11 +142,7 @@ internal fun convertVirtualMachineResponse(vm: VirtualMachine) = VirtualMachine(
     diskSize = vm.diskSize,
     powerState = vm.powerState.value,
     overallStatus = vm.overallStatus.value,
-    netInfos = vm.netInfos.map {
-        if (it.macAddress != null && it.ipList != null)
-            VmNetInfo(it.macAddress!!, it.ipList!!)
-        else null
-    }.filterNotNull(),
+    netInfos = vm.netInfos.map { VmNetInfo(it.macAddress, it.ipList) },
 )
 
 internal fun convertVirtualMachineTemplateResponse(vm: VirtualMachine) = VirtualMachineTemplate(

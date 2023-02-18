@@ -1,19 +1,14 @@
 package cn.edu.buaa.scs.vm
 
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class CreateVmOptions(
     @JsonProperty("name") val name: String,
-    @JsonProperty("templateUuid") val templateUuid: String,
 
     // course related
-    @JsonProperty("adminId") val adminId: String = "default",
-    @JsonProperty("studentId") val studentId: String = "default",
-    @JsonProperty("teacherId") val teacherId: String = "default",
-    @JsonProperty("experimental") val experimental: Boolean = false,
-    @JsonProperty("experimentId") val experimentId: Int = 0,
-    @JsonProperty("applyId") val applyId: String,
+    @JsonProperty("extraInfo") val extraInfo: VirtualMachineExtraInfo,
 
     @JsonProperty("memory") val memory: Int, // MB
     @JsonProperty("cpu") val cpu: Int,

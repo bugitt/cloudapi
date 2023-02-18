@@ -1,6 +1,9 @@
 package cn.edu.buaa.scs.utils
 
 import cn.edu.buaa.scs.error.ExecCommandException
+import io.fabric8.kubernetes.api.model.Namespace
+import io.fabric8.kubernetes.api.model.ObjectMeta
+import io.fabric8.kubernetes.client.KubernetesClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -34,4 +37,16 @@ suspend fun String.runCommand() = withContext(Dispatchers.IO) {
 
 fun formatHeaders(headers: Map<String, List<String>>): String {
     return headers.map { (k, v) -> "$k: ${v.joinToString(" ")}" }.joinToString("\n")
+}
+
+fun String.ensureNamespace(client: KubernetesClient) {
+    val nsName = this
+    if (!client.namespaces().list().items.map { it.metadata.name }.contains(this)) {
+        val namespace = Namespace().apply {
+            metadata = ObjectMeta().apply {
+                this.name = nsName
+            }
+        }
+        client.namespaces().resource(namespace).create()
+    }
 }

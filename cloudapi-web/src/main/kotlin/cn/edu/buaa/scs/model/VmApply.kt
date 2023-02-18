@@ -12,7 +12,9 @@ import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.*
 
 interface VmApply : Entity<VmApply>, IEntity {
-    companion object : Entity.Factory<VmApply>()
+    companion object : Entity.Factory<VmApply>() {
+        fun id(id: String): VmApply? = mysql.vmApplyList.find { it.id.eq(id) }
+    }
 
     var id: String
     var namePrefix: String
@@ -31,6 +33,8 @@ interface VmApply : Entity<VmApply>, IEntity {
     var expectedNum: Int
     var replyMsg: String
     var dueTime: Long
+
+    var done: Boolean   // 是否完成所有虚拟机的创建
 
     fun isApproved(): Boolean = this.status == 1
 
@@ -65,6 +69,8 @@ object VmApplyList : Table<VmApply>("vm_apply") {
     val exceptedNum = int("expected_num").bindTo { it.expectedNum }
     var replyMsg = text("reply_msg").bindTo { it.replyMsg }
     var dueTime = long("due_time").bindTo { it.dueTime }
+
+    var done = boolean("done").bindTo { it.done }
 }
 
 val Database.vmApplyList get() = this.sequenceOf(VmApplyList)
