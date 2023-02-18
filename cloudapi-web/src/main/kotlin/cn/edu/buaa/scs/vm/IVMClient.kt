@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.vm
 
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.vm.sangfor.SangforClient
 import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 
 interface IVMClient {
@@ -37,6 +38,7 @@ interface IVMClient {
 fun newVMClient(platform: String): IVMClient {
     return when (platform.lowercase()) {
         "vcenter" -> VCenterClient
+        "sangfor" -> SangforClient
         else -> throw Exception("unknown platform: $platform")
     }
 }
