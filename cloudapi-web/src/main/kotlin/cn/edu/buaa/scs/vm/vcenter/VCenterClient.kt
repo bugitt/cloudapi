@@ -41,17 +41,17 @@ object VCenterClient : IVMClient {
                     }
                 }
                 install(HttpTimeout) {
-                    requestTimeoutMillis = 100000L
+                    requestTimeoutMillis = 100000000L
                 }
             },
-            basePath = "/api/v2/vcenter/"
+            basePath = "/api/v2/vcenter"
         )
     }
 
     private fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
 
     override suspend fun getAllVMs(): Result<List<VirtualMachine>> = runCatching {
-        client.get<List<VirtualMachine>>("vms").getOrThrow()
+        client.get<List<VirtualMachine>>("/vms").getOrThrow()
     }
 
     override suspend fun getVM(uuid: String): Result<VirtualMachine> {
@@ -61,6 +61,12 @@ object VCenterClient : IVMClient {
             vm = mysql.virtualMachines.find { it.uuid eq uuid }
         }
         return if (vm == null) Result.failure(vmNotFound(uuid))
+        else Result.success(vm)
+    }
+
+    override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> {
+        val vm = mysql.virtualMachines.find { it.name eq name and (it.applyId eq applyId) }
+        return if (vm == null) Result.failure(vmNotFound(name))
         else Result.success(vm)
     }
 
@@ -111,7 +117,7 @@ object VCenterClient : IVMClient {
             return Result.failure(BadRequestException("there is already a VirtualMachine with the same name"))
         }
 
-        client.post<String>("vms", options).getOrThrow()
+        client.post<String>("/vms", options).getOrThrow()
 
         // wait to find the vm in db
         waitForVMInDB(options.existPredicate()).getOrThrow()
@@ -128,7 +134,7 @@ object VCenterClient : IVMClient {
     }
 
     override suspend fun convertVMToTemplate(uuid: String): Result<VirtualMachine> = runCatching {
-        client.post<String>("vm/$uuid/convertToTemplate").getOrThrow()
+        client.post<String>("/vm/$uuid/convertToTemplate").getOrThrow()
         waitForVMInDB {
             it.uuid eq uuid and it.isTemplate eq true
         }.getOrThrow()

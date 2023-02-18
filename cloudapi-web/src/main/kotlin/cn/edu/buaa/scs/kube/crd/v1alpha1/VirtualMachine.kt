@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.kube.crd.v1alpha1
 
-import cn.edu.buaa.scs.kube.VirtualMachineClient
 import cn.edu.buaa.scs.vm.newVMClient
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -38,6 +37,8 @@ data class VirtualMachineSpec(
     @JsonProperty("diskSize") val diskSize: Long, // bytes
     @JsonProperty("osFullName") val osFullName: String,
     @JsonProperty("powerState") @PrinterColumn(name = "spec_powerState") val powerState: VirtualMachineModel.PowerState?,
+
+    @JsonProperty("deleted") val deleted: Boolean? = false,
 ) : KubernetesResource
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -89,11 +90,18 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
         context: Context<VirtualMachine>?
     ): UpdateControl<VirtualMachine> {
         val vm = resource ?: return UpdateControl.noUpdate()
+        if (vm.spec.deleted == true) return UpdateControl.noUpdate()
         val vmClient = newVMClient(vm.spec.platform)
+
         runBlocking {
-            val vmModel = vmClient.getVM(vm.spec.uuid).getOrThrow()
-            vm.status = vmModel.toCrdStatus()
+            val vmModel = vmClient.getVM(vm.spec.uuid).getOrNull()
+            if (vmModel == null) {
+                vm.spec = vm.spec.copy(deleted = true)
+            } else {
+                vm.status = vmModel.toCrdStatus()
+            }
         }
+        if (vm.spec.deleted == true) return UpdateControl.updateResource(vm)
 
         // check the power
         if (vm.spec.powerState == VirtualMachineModel.PowerState.PoweredOn) {
@@ -123,7 +131,7 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                 vmClient.deleteVM(vm.spec.uuid).getOrThrow()
             }
         }
-        return if (exist) DeleteControl.defaultDelete().rescheduleAfter(1000L)
+        return if (exist) DeleteControl.noFinalizerRemoval().rescheduleAfter(1000L)
         else DeleteControl.defaultDelete()
     }
 

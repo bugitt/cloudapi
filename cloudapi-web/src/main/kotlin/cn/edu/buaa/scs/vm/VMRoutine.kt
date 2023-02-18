@@ -1,7 +1,7 @@
 package cn.edu.buaa.scs.vm
 
-import cn.edu.buaa.scs.kube.VirtualMachineClient
 import cn.edu.buaa.scs.kube.crd.v1alpha1.toCrdSpec
+import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachine as VmCrd
 import cn.edu.buaa.scs.model.VirtualMachines
@@ -21,18 +21,13 @@ object VMRoutine : Routine {
     private val updateVmCrd = Routine.alwaysDo("vm-worker-update-crd") {
         val vmList = vmClient.getAllVMs().getOrThrow()
         vmList.forEach { vmModel ->
-            if (VirtualMachineClient.get(vmModel.uuid.lowercase()) == null) {
+            if (vmKubeClient.withName(vmModel.uuid.lowercase()).get() == null) {
                 val vmCrd = VmCrd().apply {
                     metadata.name = vmModel.uuid.lowercase()
                     spec = vmModel.toCrdSpec()
                 }
-                VirtualMachineClient.createOrReplace(vmCrd)
+                vmKubeClient.resource(vmCrd).createOrReplace()
             }
-        }
-        val allVmCrdList = VirtualMachineClient.list()
-        val actualVmUuidSet = vmList.map { it.uuid.lowercase() }.toSet()
-        allVmCrdList.filterNot { it.metadata.name in actualVmUuidSet }.forEach {
-            VirtualMachineClient.delete(it.metadata.name)
         }
     }
 

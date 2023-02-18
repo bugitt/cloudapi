@@ -18,6 +18,8 @@ interface IVMClient {
 
     suspend fun getVM(uuid: String): Result<VirtualMachine>
 
+    suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine>
+
     suspend fun powerOnSync(uuid: String): Result<Unit>
 
     suspend fun powerOnAsync(uuid: String)

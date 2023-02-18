@@ -78,10 +78,18 @@ object VCenterWrapper {
         }.start()
     }
 
-    suspend fun getAllVms(): Result<List<VirtualMachine>> {
-        return baseSyncTask {
-            getAllVmsFromVCenter(it)
+    fun getAllVms(): Result<List<VirtualMachine>> {
+        var connection: Connection? = null
+        var vms: List<VirtualMachine>? = null
+        try {
+            connection = vcenterConnect()
+            vms = getAllVmsFromVCenter(connection)
+        } catch (e: Throwable) {
+            logger("vm-worker-$connection")().error { e.stackTraceToString() }
+        } finally {
+            connection?.close()
         }
+        return Result.success(vms ?: listOf())
     }
 
     suspend fun powerOn(uuid: String): Result<Unit> {
@@ -180,7 +188,7 @@ object VCenterWrapper {
                     options.adminId,
                     options.studentId,
                     options.teacherId,
-                    options.isExperimental,
+                    options.experimental,
                     options.experimentId,
                     options.applyId,
                 ),
