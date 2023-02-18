@@ -55,20 +55,21 @@ object VCenterWrapper {
 
     private fun start() {
         Thread {
+            val connectionPool = mutableMapOf<Int, Connection>()
             runBlocking {
                 withContext(Dispatchers.IO) {
-                    // launch 20 workers to receive and handle task
-                    repeat(20) {
+                    // launch 30 workers to receive and handle task
+                    repeat(30) { channelNum ->
+                        connectionPool[channelNum] = vcenterConnect()
                         launch {
                             for (taskFunc in taskChannel) {
-                                var connection: Connection? = null
+                                val connection = connectionPool[channelNum] ?: vcenterConnect()
                                 try {
-                                    connection = vcenterConnect()
                                     taskFunc(connection)
                                 } catch (e: Throwable) {
-                                    logger("vm-worker-$it")().error { e.stackTraceToString() }
+                                    logger("vm-worker-$channelNum")().error { e.stackTraceToString() }
                                 } finally {
-                                    connection?.close()
+                                    connectionPool[channelNum] = connection
                                 }
                             }
                         }
@@ -78,10 +79,24 @@ object VCenterWrapper {
         }.start()
     }
 
-    suspend fun getAllVms(): Result<List<VirtualMachine>> {
-        return baseSyncTask {
-            getAllVmsFromVCenter(it)
+    private var getAllVmsConnection: Connection? = null
+    fun getAllVms(): Result<List<VirtualMachine>> {
+        if (getAllVmsConnection == null) {
+            getAllVmsConnection = vcenterConnect()
         }
+        var vms: List<VirtualMachine>? = null
+        try {
+            vms = getAllVmsFromVCenter(getAllVmsConnection!!)
+        } catch (_: Throwable) {
+            getAllVmsConnection = vcenterConnect()
+            try {
+                getAllVmsConnection = vcenterConnect()
+                vms = getAllVmsFromVCenter(getAllVmsConnection!!)
+            } catch (e: Throwable) {
+                logger("vm-worker-$getAllVmsConnection")().error { e.stackTraceToString() }
+            }
+        }
+        return Result.success(vms ?: listOf())
     }
 
     suspend fun powerOn(uuid: String): Result<Unit> {
@@ -125,11 +140,16 @@ object VCenterWrapper {
         studentId: String? = null,
     ): Result<VirtualMachine> {
         val vmConfigSpec = VirtualMachineConfigSpec()
-        val vmExtraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(vm)
-        experimentId?.let { vmExtraInfo.experimentId = it; vmExtraInfo.isExperimental = true }
-        adminId?.let { vmExtraInfo.adminId = it }
-        teacherId?.let { vmExtraInfo.teacherId = it }
-        studentId?.let { vmExtraInfo.studentId = it }
+        var vmExtraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(vm)
+        experimentId?.let {
+            vmExtraInfo = vmExtraInfo.copy(
+                experimental = true,
+                experimentId = it
+            )
+        }
+        adminId?.let { vmExtraInfo = vmExtraInfo.copy(adminId = it) }
+        teacherId?.let { vmExtraInfo = vmExtraInfo.copy(teacherId = it) }
+        studentId?.let { vmExtraInfo = vmExtraInfo.copy(studentId = it) }
         vmConfigSpec.annotation = vmExtraInfo.toJson()
         val task = connection.vimPort.reconfigVMTask(vmRef, vmConfigSpec)
         try {
@@ -148,7 +168,7 @@ object VCenterWrapper {
         val getMoRef = connection.getMoRef()
         val hostList =
             getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("name"), RetrieveOptions())
-        val finalVirtualMachineList = mutableListOf<VirtualMachine>()
+        val finalVirtualMachineList = mutableListOf<VirtualMachine?>()
         hostList.forEach { (hostRef, hostProps) ->
             try {
                 val hostName = hostProps["name"]!! as String
@@ -167,29 +187,25 @@ object VCenterWrapper {
             }
         }
         logger.info { "done:) fetch virtual machine list from vcenter" }
-        return finalVirtualMachineList
+        return finalVirtualMachineList.filterNotNull()
     }
 
-    suspend fun create(options: CreateVmOptions): Result<Unit> {
+    suspend fun create(options: CreateVmOptions): Result<VirtualMachine> {
         return baseSyncTask { connection ->
             val task = clone(
                 connection,
                 options.name,
-                options.templateUuid,
-                VirtualMachineExtraInfo(
-                    options.adminId,
-                    options.studentId,
-                    options.teacherId,
-                    options.isExperimental,
-                    options.experimentId,
-                    options.applyId,
-                ),
+                options.extraInfo.templateUuid,
+                options.extraInfo,
                 options.cpu,
                 options.memory,
                 options.diskSize,
                 options.powerOn,
             )
             waitForTaskResult(connection, task).getOrThrow()
+            getAllVmsFromVCenter(connection).find { vm ->
+                vm.name == options.name && vm.applyId == options.extraInfo.applyId
+            } ?: throw Exception("can not found vm ${options.name}")
         }
     }
 
@@ -291,7 +307,7 @@ object VCenterWrapper {
             val hostRef = vmSummary.runtime.host
             val hostProps = connection.getMoRef().entityProps(hostRef, "name")
             val hostName = hostProps["name"]!! as String
-            convertVMModel(hostName, vmProps)
+            convertVMModel(hostName, vmProps) ?: throw Exception("can not found vm $uuid")
         }.getOrThrow()
     }
 
@@ -338,10 +354,10 @@ object VCenterWrapper {
 internal fun convertVMModel(
     hostName: String,
     vmProps: Map<String, Any>,
-): VirtualMachine {
+): VirtualMachine? {
     val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
     val guestNicInfoList = vmProps["guest.net"]!! as ArrayOfGuestNicInfo
-    val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice
+    val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice? ?: return null
     return convertVMModel(hostName, vmSummary, guestNicInfoList, devices)
 }
 

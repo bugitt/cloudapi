@@ -3,7 +3,10 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.utils.jsonMapper
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
@@ -14,9 +17,11 @@ fun VirtualMachine.applyExtraInfo(extraInfo: VirtualMachineExtraInfo) {
     this.adminId = extraInfo.adminId
     this.studentId = extraInfo.studentId
     this.teacherId = extraInfo.teacherId
-    this.isExperimental = extraInfo.isExperimental
+    this.isExperimental = extraInfo.experimental
     this.experimentId = extraInfo.experimentId
     this.applyId = extraInfo.applyId
+    this.templateUuid = extraInfo.templateUuid
+    this.initial = extraInfo.initial
 }
 
 fun VirtualMachine.applySangforExtraInfo(extraInfo: String) {
@@ -48,15 +53,21 @@ fun VirtualMachine.applySangforExtraInfo(extraInfo: String) {
         this.experimentId = -1
         this.applyId = ""
     }
+    this.templateUuid = ""
+    this.initial = false
 }
 
+@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonDeserialize(using = JsonDeserializer.None::class)
 data class VirtualMachineExtraInfo(
-    @JsonProperty("adminID") var adminId: String = "default",
-    @JsonProperty("studentID") var studentId: String = "default",
-    @JsonProperty("teacherID") var teacherId: String = "default",
-    @JsonProperty("isExperimental") var isExperimental: Boolean = false,
-    @JsonProperty("experimentID") var experimentId: Int = 0,
-    @JsonProperty("applyID") var applyId: String = "default",
+    @JsonProperty("adminID") val adminId: String = "default",
+    @JsonProperty("studentID") val studentId: String = "default",
+    @JsonProperty("teacherID") val teacherId: String = "default",
+    @JsonProperty("experimental") val experimental: Boolean = false,
+    @JsonProperty("experimentID") val experimentId: Int = 0,
+    @JsonProperty("applyID") val applyId: String = "default",
+    @JsonProperty("templateUuid") val templateUuid: String = "default",
+    @JsonProperty("initial") val initial: Boolean = false,
 ) {
     companion object {
         fun valueFromJson(jsonStr: String?): VirtualMachineExtraInfo {
@@ -75,7 +86,9 @@ data class VirtualMachineExtraInfo(
                 vm.teacherId,
                 vm.isExperimental,
                 vm.experimentId,
-                vm.applyId
+                vm.applyId,
+                vm.templateUuid,
+                vm.initial,
             )
     }
 
@@ -128,7 +141,7 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
 
     data class NetInfo(
         @JsonProperty("macAddress") val macAddress: String,
-        @JsonProperty("ipList") val ipList: List<String>
+        @JsonProperty("ipList") val ipList: List<String> = listOf(),
     )
 
     // meta
@@ -145,6 +158,8 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var isExperimental: Boolean
     var experimentId: Int
     var applyId: String
+    var templateUuid: String
+    var initial: Boolean // initial in vm apply
 
     var lifeTime: Lifetime
 

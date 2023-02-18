@@ -1,5 +1,8 @@
 package cn.edu.buaa.scs.vm
 
+import cn.edu.buaa.scs.kube.crd.v1alpha1.toCrdSpec
+import cn.edu.buaa.scs.kube.kubeClient
+import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachines
 import cn.edu.buaa.scs.model.taskDataList
@@ -8,12 +11,29 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.task.Routine
 import cn.edu.buaa.scs.task.RoutineTask
 import cn.edu.buaa.scs.task.Task
+import cn.edu.buaa.scs.utils.ensureNamespace
+import cn.edu.buaa.scs.utils.jsonMapper
+import kotlinx.coroutines.delay
 import org.ktorm.dsl.*
 import org.ktorm.entity.filter
 import org.ktorm.entity.map
 import org.ktorm.entity.toList
 
 object VMRoutine : Routine {
+
+    private val updateVmCrd = Routine.alwaysDo("vm-worker-update-crd") {
+        val vmList = vmClient.getAllVMs().getOrThrow()
+        vmList.forEach { vmModel ->
+            val ns = vmModel.applyId.lowercase()
+            ns.ensureNamespace(kubeClient)
+            val vmCrdList = vmKubeClient.inNamespace(ns).list().items
+            if (vmCrdList.find { it.spec.name == vmModel.name } == null) {
+                vmKubeClient.resource(vmModel.toCrdSpec().toCrd()).createOrReplace()
+            }
+        }
+        delay(2000L)
+    }
+
     private val updateVMsToDatabase = Routine.alwaysDo("vm-worker-update-db") {
         val vmList = vmClient.getAllVMs().getOrThrow()
         val existedVmUUIDList = mysql.virtualMachines.map { it.uuid }.toSet()
@@ -98,6 +118,7 @@ object VMRoutine : Routine {
     }
 
     override val routineList: List<RoutineTask> = listOf(
+        updateVmCrd,
         updateVMsToDatabase,
         createVm,
         deleteVm,

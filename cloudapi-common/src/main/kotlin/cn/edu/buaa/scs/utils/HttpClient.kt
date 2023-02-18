@@ -7,7 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 
-class HttpClientWrapper(val client: HttpClient) {
+class HttpClientWrapper(val client: HttpClient, val basePath: String) {
     suspend inline fun <reified T> handleResponse(response: HttpResponse): Result<T> =
         if (response.status.isSuccess()) {
             Result.success(response.body())
@@ -16,7 +16,7 @@ class HttpClientWrapper(val client: HttpClient) {
         }
 
     suspend inline fun <reified T> get(path: String): Result<T> {
-        val response = client.get(path)
+        val response = client.get(basePath + path)
         return handleResponse(response)
     }
 
@@ -25,7 +25,7 @@ class HttpClientWrapper(val client: HttpClient) {
         body: Any? = null,
         contentType: ContentType = ContentType.Application.Json,
     ): Result<T> {
-        val response = client.post(path) {
+        val response = client.post(basePath + path) {
             contentType(contentType)
             setBody(body)
         }
@@ -37,7 +37,7 @@ class HttpClientWrapper(val client: HttpClient) {
         body: Any? = null,
         contentType: ContentType = ContentType.Application.Json,
     ): Result<T> {
-        val response = client.delete(path) {
+        val response = client.delete(basePath + path) {
             contentType(contentType)
             setBody(body)
         }

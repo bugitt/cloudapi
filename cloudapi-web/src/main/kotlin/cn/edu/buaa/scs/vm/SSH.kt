@@ -56,7 +56,7 @@ class SSH(
             }
 
         fun vmGetSSH(vm: VirtualMachine, username: String = sshConfig.defaultUsername): SSH? {
-            val ipList = vm.netInfos.map { it.ipList }.flatten()
+            val ipList = vm.netInfos.map { it.ipList }.filterNotNull().flatten()
             for (ip in ipList) {
                 val ssh = connect(ip, username = username)
                 if (ssh.isSuccess) return ssh.getOrNull()

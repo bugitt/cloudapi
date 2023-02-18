@@ -27,7 +27,7 @@ repositories {
 dependencies {
     implementation(project(":cloudapi-model"))
 
-    val ktor_version = "2.1.3"
+    val ktor_version = "2.2.3"
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     implementation("io.ktor:ktor-server-call-id:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
@@ -76,8 +76,6 @@ dependencies {
 
     // kubernetes
     val kubernetes_client_version = "6.2.0"
-    implementation("io.fabric8:kubernetes-model:$kubernetes_client_version")
-    implementation("io.fabric8:kubernetes-client:$kubernetes_client_version")
     annotationProcessor("io.fabric8:crd-generator-apt:$kubernetes_client_version")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.2.0")
     val javaOperatorSdk = "4.2.6"

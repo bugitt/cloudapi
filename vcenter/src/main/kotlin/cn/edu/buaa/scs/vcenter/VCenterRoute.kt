@@ -15,8 +15,8 @@ fun Application.vcenterRouting() {
                 }
 
                 post {
-                    VCenterWrapper.create(call.receive()).getOrThrow()
-                    call.respond("OK")
+                    val vm = VCenterWrapper.create(call.receive()).getOrThrow()
+                    call.respond(vm)
                 }
 
             }

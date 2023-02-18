@@ -2,6 +2,8 @@ package cn.edu.buaa.scs.vm.sangfor
 
 import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.cache.authRedis
+
+import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.applySangforExtraInfo
 import cn.edu.buaa.scs.utils.getConfigString
@@ -11,6 +13,7 @@ import cn.edu.buaa.scs.utils.schedule.waitForDone
 import cn.edu.buaa.scs.utils.setExpireKey
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.IVMClient
+import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -61,15 +64,17 @@ object SangforClient : IVMClient {
         val response = client.post("openstack/identity/v2.0/tokens") {
             contentType(ContentType.Application.Json)
             setBody(
-                "{\n" +
-                "    \"auth\": {\n" +
-                "        \"tenantName\": \"$username\",\n" +
-                "        \"passwordCredentials\": {\n" +
-                "            \"username\": \"$username\",\n" +
-                "            \"password\": \"$password\"\n" +
-                "        }\n" +
-                "    }\n" +
-                "}"
+                """
+                {
+                    "auth": {
+                        "tenantName": "$username",
+                        "passwordCredentials": {
+                            "username": "$username",
+                            "password": "$password"
+                        }
+                    }
+                }
+                """.trimIndent()
             )
         }
         val body: String = response.body()
@@ -152,6 +157,12 @@ object SangforClient : IVMClient {
         }
         return Result.success(vm)
     }
+    
+    override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> = runCatching {
+        getAllVMs().getOrElse { listOf() }.find { vm ->
+            vm.name == name && vm.applyId == applyId
+        } ?: throw NotFoundException("virtualMachine($name) not found")
+    }
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> {
         powerOnAsync(uuid)
@@ -172,9 +183,11 @@ object SangforClient : IVMClient {
             contentType(ContentType.Application.Json)
             header("X-Auth-Token", token)
             setBody(
-                "{\n" +
-                "    \"os-start\": null\n" +
-                "}"
+                """
+                {
+                    "os-start": null
+                }
+                """.trimIndent()
             )
         }
     }
@@ -198,9 +211,11 @@ object SangforClient : IVMClient {
             contentType(ContentType.Application.Json)
             header("X-Auth-Token", token)
             setBody(
-                "{\n" +
-                "    \"os-stop\": null\n" +
-                "}"
+                """
+                {
+                    "os-stop": null
+                }
+                """.trimIndent()
             )
         }
     }
@@ -258,13 +273,14 @@ object SangforClient : IVMClient {
     override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> {
         createLock.lock()
         // Send clone vm request.
-        val owner = if (options.teacherId != "default") options.teacherId
-                    else if (options.studentId != "default") options.studentId
+
+        val owner = if (options.extraInfo.teacherId != "default") options.extraInfo.teacherId
+                    else if (options.extraInfo.studentId != "default") options.extraInfo.studentId
                     else "default"
-        val description = "$owner,false,${options.experimentId},${options.applyId}"
+        val description = "$owner,false,${options.extraInfo.experimentId},${options.extraInfo.applyId}"
         clone(
             options.name,
-            options.templateUuid,
+            options.extraInfo.templateUuid,
             description
         )
         // Wait the creation be done.
@@ -277,21 +293,17 @@ object SangforClient : IVMClient {
             }.body()
             val vms = jsonMapper.readTree(vmsRes)["servers"]
             for (vmJSON in vms) {
-//                println(vmJSON.toString())
                 if (vmJSON["OS-EXT-STS:task_state"].toString() == "\"creating\"") {
                     uuid = vmJSON["id"].toString().split('"')[1]
                 }
             }
             uuid != ""
         }
-//        println("uuid is $uuid")
         waitForDone(300000L, 1000L) {
             token = getToken()
             val vmRes: String = client.get("openstack/compute/v2/servers/$uuid") {
                 header("X-Auth-Token", token.id)
             }.body()
-//            println(vmRes)
-//            println(jsonMapper.readTree(vmRes)["server"]["OS-EXT-STS:task_state"].toString())
             jsonMapper.readTree(vmRes)["server"]["OS-EXT-STS:task_state"].toString() == "\"\""
         }
         createLock.unlock()
@@ -381,19 +393,21 @@ object SangforClient : IVMClient {
             header("CSRFPreventionToken", token.ticket)
             header("sid", token.sid)
             setBody(
-                "{\n" +
-                "    \"batch_server_info\": {\n" +
-                "        \"name\": \"$name\",\n" +
-                "        \"description\": \"$description\",\n" +
-                "        \"location_type\": \"storage_tag\",\n" +
-                "        \"location\": {\n" +
-                "            \"storage_tag_id\": \"11111111-1111-1111-1111-111111111111\"\n" +
-                "        },\n" +
-                "        \"power_on\": 0,\n" +
-                "        \"hci_param\": {},\n" +
-                "        \"count\": 1\n" +
-                "    }\n" +
-                "}"
+                """
+                {
+                    "batch_server_info": {
+                        "name": "$name",
+                        "description": "$description",
+                        "location_type": "storage_tag",
+                        "location": {
+                            "storage_tag_id": "11111111-1111-1111-1111-111111111111"
+                        },
+                        "power_on": 0,
+                        "hci_param": {},
+                        "count": 1
+                    }
+                }
+                """.trimIndent()
             )
         }.status.value
     }
@@ -414,116 +428,118 @@ object SangforClient : IVMClient {
             header("CSRFPreventionToken", token.ticket)
             header("sid", token.sid)
             setBody(
-                "{\n" +
-                "    \"server\": {\n" +
-                "        \"hci_param\": {\n" +
-                "            \"schedopt\": 0,\n" +
-                "            \"hugepage_memory\": 0,\n" +
-                "            \"use_vblk\": 1,\n" +
-                "            \"boot_order\": \"dc\",\n" +
-                "            \"cpu_hotplug\": 0,\n" +
-                "            \"balloon_memory\": 0,\n" +
-                "            \"use_uuid\": 0,\n" +
-                "            \"abnormal_recovery\": 1,\n" +
-                "            \"mem_hotplug\": 0,\n" +
-                "            \"cpu_type\": \"core2duo\",\n" +
-                "            \"real_use_vblk\": 1,\n" +
-                "            \"onboot\": 0,\n" +
-                "            \"dir\": \"71dc87680938\",\n" +
-                "            \"boot_disk\": \"ide0\",\n" +
-                "            \"regen_uuid\": 0\n" +
-                "        },\n" +
-                "        \"name\": \"$name\",\n" +
-                "        \"description\": \"$description\",\n" +
-                "        \"memory_mb\": $memory,\n" +
-                "        \"cores\": $cores,\n" +
-                "        \"sockets\": 1,\n" +
-                "        \"disks\": [\n" +
-                "            {\n" +
-                "                \"id\": \"ide0\",\n" +
-                "                \"type\": \"new_disk\",\n" +
-                "                \"preallocate\": \"metadata\",\n" +
-                "                \"size_mb\": $disk,\n" +
-                "                \"is_old_disk\": 1,\n" +
-                "                \"storage_file\": \"3600d0231000859694803abfa3b686284:vm-disk-1.qcow2\"\n" +
-                "            }\n" +
-                "        ],\n" +
-                "        \"networks\": [\n" +
-                "            {\n" +
-                "                \"network\": \"dvs66d81f0\",\n" +
-                "                \"name\": \"默认经典网络出口1-出口交换机\",\n" +
-                "                \"id\": \"net0\",\n" +
-                "                \"mac\": \"${oldSetting.mac}\",\n" +
-                "                \"connect\": 1,\n" +
-                "                \"model\": \"virtio\",\n" +
-                "                \"port\": \"12345678\",\n" +
-                "                \"host_tso\": 0\n" +
-                "            }\n" +
-                "        ],\n" +
-                "        \"usbs\": [],\n" +
-                "        \"os_type\": \"${oldSetting.osType}\",\n" +
-                "        \"compute_location\": {\n" +
-                "            \"id\": \"cluster\",\n" +
-                "            \"location\": 0\n" +
-                "        },\n" +
-                "        \"storage_location\": \"3600d0231000859694803abfa3b686284\",\n" +
-                "        \"cdroms\": []\n" +
-                "    },\n" +
-                "    \"old_server\": {\n" +
-                "        \"hci_param\": {\n" +
-                "            \"schedopt\": 0,\n" +
-                "            \"hugepage_memory\": 0,\n" +
-                "            \"use_vblk\": 1,\n" +
-                "            \"boot_order\": \"dc\",\n" +
-                "            \"cpu_hotplug\": 0,\n" +
-                "            \"balloon_memory\": 0,\n" +
-                "            \"use_uuid\": 0,\n" +
-                "            \"abnormal_recovery\": 1,\n" +
-                "            \"mem_hotplug\": 0,\n" +
-                "            \"cpu_type\": \"core2duo\",\n" +
-                "            \"real_use_vblk\": 1,\n" +
-                "            \"onboot\": 0,\n" +
-                "            \"dir\": \"71dc87680938\",\n" +
-                "            \"boot_disk\": \"ide0\"\n" +
-                "        },\n" +
-                "        \"name\": \"${oldSetting.name}\",\n" +
-                "        \"group_id\": null,\n" +
-                "        \"description\": \"${oldSetting.description}\",\n" +
-                "        \"memory_mb\": ${oldSetting.memory},\n" +
-                "        \"cores\": ${oldSetting.cores},\n" +
-                "        \"sockets\": 1,\n" +
-                "        \"disks\": [\n" +
-                "            {\n" +
-                "                \"preallocate\": \"metadata\",\n" +
-                "                \"storage_name\": \"iscsi\",\n" +
-                "                \"id\": \"ide0\",\n" +
-                "                \"size_mb\": ${oldSetting.disk},\n" +
-                "                \"use_virtio\": 1,\n" +
-                "                \"storage_file\": \"3600d0231000859694803abfa3b686284:vm-disk-1.qcow2\",\n" +
-                "                \"type\": \"new_disk\",\n" +
-                "                \"is_old_disk\": 1\n" +
-                "            }\n" +
-                "        ],\n" +
-                "        \"networks\": [\n" +
-                "            {\n" +
-                "                \"id\": \"net0\",\n" +
-                "                \"host_tso\": 0,\n" +
-                "                \"mac\": \"${oldSetting.mac}\",\n" +
-                "                \"model\": \"virtio\",\n" +
-                "                \"connect\": 0\n" +
-                "            }\n" +
-                "        ],\n" +
-                "        \"usbs\": [],\n" +
-                "        \"os_type\": \"${oldSetting.osType}\",\n" +
-                "        \"compute_location\": {\n" +
-                "            \"location\": 0,\n" +
-                "            \"policy_type\": \"\",\n" +
-                "            \"id\": \"cluster\"\n" +
-                "        },\n" +
-                "        \"storage_location\": \"3600d0231000859694803abfa3b686284\",\n" +
-                "        \"cdroms\": []\n" +
-                "    }\n" +
-                "}"
+                """
+                {
+                    "server": {
+                        "hci_param": {
+                            "schedopt": 0,
+                            "hugepage_memory": 0,
+                            "use_vblk": 1,
+                            "boot_order": "dc",
+                            "cpu_hotplug": 0,
+                            "balloon_memory": 0,
+                            "use_uuid": 0,
+                            "abnormal_recovery": 1,
+                            "mem_hotplug": 0,
+                            "cpu_type": "core2duo",
+                            "real_use_vblk": 1,
+                            "onboot": 0,
+                            "dir": "71dc87680938",
+                            "boot_disk": "ide0",
+                            "regen_uuid": 0
+                        },
+                        "name": "$name",
+                        "description": "$description",
+                        "memory_mb": $memory,
+                        "cores": $cores,
+                        "sockets": 1,
+                        "disks": [
+                            {
+                                "id": "ide0",
+                                "type": "new_disk",
+                                "preallocate": "metadata",
+                                "size_mb": $disk,
+                                "is_old_disk": 1,
+                                "storage_file": "3600d0231000859694803abfa3b686284:vm-disk-1.qcow2"
+                            }
+                        ],
+                        "networks": [
+                            {
+                                "network": "dvs66d81f0",
+                                "name": "默认经典网络出口1-出口交换机",
+                                "id": "net0",
+                                "mac": "${oldSetting.mac}",
+                                "connect": 1,
+                                "model": "virtio",
+                                "port": "12345678",
+                                "host_tso": 0
+                            }
+                        ],
+                        "usbs": [],
+                        "os_type": "${oldSetting.osType}",
+                        "compute_location": {
+                            "id": "cluster",
+                            "location": 0
+                        },
+                        "storage_location": "3600d0231000859694803abfa3b686284",
+                        "cdroms": []
+                    },
+                    "old_server": {
+                        "hci_param": {
+                            "schedopt": 0,
+                            "hugepage_memory": 0,
+                            "use_vblk": 1,
+                            "boot_order": "dc",
+                            "cpu_hotplug": 0,
+                            "balloon_memory": 0,
+                            "use_uuid": 0,
+                            "abnormal_recovery": 1,
+                            "mem_hotplug": 0,
+                            "cpu_type": "core2duo",
+                            "real_use_vblk": 1,
+                            "onboot": 0,
+                            "dir": "71dc87680938",
+                            "boot_disk": "ide0"
+                        },
+                        "name": "${oldSetting.name}",
+                        "group_id": null,
+                        "description": "${oldSetting.description}",
+                        "memory_mb": ${oldSetting.memory},
+                        "cores": ${oldSetting.cores},
+                        "sockets": 1,
+                        "disks": [
+                            {
+                                "preallocate": "metadata",
+                                "storage_name": "iscsi",
+                                "id": "ide0",
+                                "size_mb": ${oldSetting.disk},
+                                "use_virtio": 1,
+                                "storage_file": "3600d0231000859694803abfa3b686284:vm-disk-1.qcow2",
+                                "type": "new_disk",
+                                "is_old_disk": 1
+                            }
+                        ],
+                        "networks": [
+                            {
+                                "id": "net0",
+                                "host_tso": 0,
+                                "mac": "${oldSetting.mac}",
+                                "model": "virtio",
+                                "connect": 0
+                            }
+                        ],
+                        "usbs": [],
+                        "os_type": "${oldSetting.osType}",
+                        "compute_location": {
+                            "location": 0,
+                            "policy_type": "",
+                            "id": "cluster"
+                        },
+                        "storage_location": "3600d0231000859694803abfa3b686284",
+                        "cdroms": []
+                    }
+                }
+                """.trimIndent()
             )
         }.status.value
     }

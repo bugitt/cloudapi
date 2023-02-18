@@ -6,12 +6,14 @@ import cn.edu.buaa.scs.auth.authRead
 import cn.edu.buaa.scs.auth.hasAccessToStudent
 import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
+import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineSpec
+import cn.edu.buaa.scs.kube.kubeClient
+import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.exists
-import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
+import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.vm.*
+import com.fkorotkov.kubernetes.newObjectMeta
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
@@ -128,12 +130,15 @@ class VmService(val call: ApplicationCall) : IService {
         }
         vmApply.replyMsg = replyMsg
         vmApply.handleTime = System.currentTimeMillis()
-        // generate vm creation tasks
-        val tasks = generateVmCreationTasks(vmApply)
-        mysql.useTransaction {
-            mysql.vmApplyList.update(vmApply)
-            if (vmApply.isApproved()) tasks.forEach { mysql.taskDataList.add(it) }
+
+        vmApply.namespaceName().ensureNamespace(kubeClient)
+        vmApply.toVmCrdSpec(true).forEach { spec ->
+            vmKubeClient
+                .inNamespace(vmApply.namespaceName())
+                .resource(spec.toCrd())
+                .createOrReplace()
         }
+        mysql.vmApplyList.update(vmApply)
         return vmApply
     }
 
@@ -227,6 +232,9 @@ class VmService(val call: ApplicationCall) : IService {
                 }
             }
         }
+
+        vmApply.namespaceName().ensureNamespace(kubeClient)
+
         mysql.vmApplyList.add(vmApply)
         return vmApply
     }
@@ -290,51 +298,6 @@ class VmService(val call: ApplicationCall) : IService {
             studentId = studentId,
         ).getOrThrow()
     }
-
-    private fun generateVmCreationTasks(vmApply: VmApply): List<TaskData> {
-        val baseOptions = CreateVmOptions(
-            name = vmApply.namePrefix,
-            templateUuid = vmApply.templateUuid,
-            memory = vmApply.memory,
-            cpu = vmApply.cpu,
-            diskSize = vmApply.diskSize,
-            applyId = vmApply.id,
-        )
-        return when {
-            vmApply.studentId.isNotBlank() && vmApply.studentId != "default" ->
-                listOf(
-                    baseOptions.copy(
-                        name = "${vmApply.namePrefix}-${vmApply.studentId}",
-                        studentId = vmApply.studentId
-                    )
-                )
-
-            vmApply.teacherId.isNotBlank() && vmApply.teacherId != "default" ->
-                listOf(
-                    baseOptions.copy(
-                        name = "${vmApply.namePrefix}-${vmApply.teacherId}",
-                        teacherId = vmApply.teacherId
-                    )
-                )
-
-            vmApply.experimentId != 0 -> {
-                val experiment = Experiment.id(vmApply.experimentId)
-                vmApply.studentIdList.map { studentId ->
-                    baseOptions.copy(
-                        name = "${vmApply.namePrefix}-$studentId",
-                        studentId = studentId,
-                        teacherId = experiment.course.teacher.id,
-                        isExperimental = true,
-                        experimentId = experiment.id
-                    )
-                }
-            }
-
-            else -> listOf()
-        }
-            .filter { !it.existInDb() }
-            .map { VMTask.vmCreateTask(it) }
-    }
 }
 
 suspend fun DefaultWebSocketServerSession.sshWS(uuid: String) {
@@ -357,5 +320,73 @@ suspend fun DefaultWebSocketServerSession.sshWS(uuid: String) {
             }
             delay(20)
         }
+    }
+}
+
+fun VmApply.namespaceName(): String {
+    return this.id.lowercase()
+}
+
+fun VmApply.toVmCrdSpec(initial: Boolean = false): List<VirtualMachineSpec> {
+    val vmApply = this
+    val baseExtraInfo = VirtualMachineExtraInfo(
+        applyId = vmApply.id,
+        templateUuid = vmApply.templateUuid,
+        initial = initial,
+    )
+    val baseSpec = VirtualMachineSpec(
+        name = vmApply.namePrefix,
+        memory = vmApply.memory,
+        cpu = vmApply.cpu,
+        diskNum = 1,
+        diskSize = vmApply.diskSize,
+        powerState = VirtualMachine.PowerState.PoweredOff,
+        platform = "vcenter",
+        template = false,
+        extraInfo = jsonMapper.writeValueAsString(baseExtraInfo),
+    )
+    return when {
+        vmApply.studentId.isNotBlank() && vmApply.studentId != "default" ->
+            listOf(
+                baseSpec.copy(
+                    name = "${vmApply.namePrefix}-${vmApply.studentId}",
+                    extraInfo = jsonMapper.writeValueAsString(
+                        baseExtraInfo.copy(
+                            studentId = vmApply.studentId,
+                        )
+                    )
+                )
+            )
+
+        vmApply.teacherId.isNotBlank() && vmApply.teacherId != "default" ->
+            listOf(
+                baseSpec.copy(
+                    name = "${vmApply.namePrefix}-${vmApply.teacherId}",
+                    extraInfo = jsonMapper.writeValueAsString(
+                        baseExtraInfo.copy(
+                            teacherId = vmApply.teacherId,
+                        )
+                    )
+                )
+            )
+
+        vmApply.experimentId != 0 -> {
+            val experiment = Experiment.id(vmApply.experimentId)
+            vmApply.studentIdList.map { studentId ->
+                baseSpec.copy(
+                    name = "${vmApply.namePrefix}-$studentId",
+                    extraInfo = jsonMapper.writeValueAsString(
+                        baseExtraInfo.copy(
+                            studentId = studentId,
+                            teacherId = experiment.course.teacher.id,
+                            experimental = true,
+                            experimentId = experiment.id,
+                        )
+                    )
+                )
+            }
+        }
+
+        else -> listOf()
     }
 }

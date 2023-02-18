@@ -26,7 +26,6 @@ object GitClient : IProjectManager {
                     url {
                         protocol = URLProtocol.HTTPS
                         host = application.getConfigString("bugit.host")
-                        path(application.getConfigString("bugit.pathPrefix"))
                     }
                     header(HttpHeaders.Authorization, "token $adminToken")
                 }
@@ -35,7 +34,8 @@ object GitClient : IProjectManager {
                         registerModule(KtormModule())
                     }
                 }
-            }
+            },
+            basePath = application.getConfigString("bugit.pathPrefix"),
         )
     }
 
