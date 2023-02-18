@@ -24,6 +24,37 @@ fun VirtualMachine.applyExtraInfo(extraInfo: VirtualMachineExtraInfo) {
     this.initial = extraInfo.initial
 }
 
+fun VirtualMachine.applySangforExtraInfo(extraInfo: String) {
+    val info = extraInfo.split(',')
+    if (info.size == 4) {
+        if (info[0] == "default") {
+            this.adminId = "default"
+            this.studentId = "default"
+            this.teacherId = "default"
+        } else if (info[0].length == 5) {
+            this.adminId = "default"
+            this.studentId = "default"
+            this.teacherId = info[0]
+        } else {
+            this.adminId = "default"
+            this.studentId = info[0]
+            this.teacherId = "default"
+        }
+        this.isTemplate = info[1].toBoolean()
+        this.isExperimental = info[2].toInt() != -1
+        this.experimentId = info[2].toInt()
+        this.applyId = info[3]
+    } else {
+        this.adminId = "default"
+        this.studentId = "default"
+        this.teacherId = "default"
+        this.isExperimental = false
+        this.isTemplate = false
+        this.experimentId = -1
+        this.applyId = ""
+    }
+}
+
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonDeserialize(using = JsonDeserializer.None::class)
 data class VirtualMachineExtraInfo(
@@ -125,8 +156,6 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var isExperimental: Boolean
     var experimentId: Int
     var applyId: String
-    var templateUuid: String
-    var initial: Boolean // initial in vm apply
 
     var lifeTime: Lifetime
 
