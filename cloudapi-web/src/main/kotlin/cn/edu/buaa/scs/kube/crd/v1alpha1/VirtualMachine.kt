@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.kube.crd.v1alpha1
 
+import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.vm.newVMClient
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -13,9 +14,9 @@ import io.javaoperatorsdk.operator.api.reconciler.*
 import kotlinx.coroutines.runBlocking
 import cn.edu.buaa.scs.model.VirtualMachine as VirtualMachineModel
 
-class VirtualMachineList() : DefaultKubernetesResourceList<VirtualMachine>()
+class VirtualMachineList : DefaultKubernetesResourceList<VirtualMachine>()
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonDeserialize(using = JsonDeserializer.None::class)
 data class VirtualMachineSpec(
     @JsonProperty("uuid") val uuid: String,
@@ -24,12 +25,7 @@ data class VirtualMachineSpec(
     @JsonProperty("template") val template: Boolean?,
     @JsonProperty("host") val host: String?,
 
-    @JsonProperty("adminId") val adminId: String?,
-    @JsonProperty("studentId") val studentId: String?,
-    @JsonProperty("teacherId") val teacherId: String?,
-    @JsonProperty("experimental") val experimental: Boolean?,
-    @JsonProperty("experimentId") val experimentId: Int?,
-    @JsonProperty("applyId") val applyId: String?,
+    @JsonProperty("extraInfo") val extraInfo: VirtualMachineExtraInfo,
 
     @JsonProperty("cpu") val cpu: Int,
     @JsonProperty("memory") val memory: Int, //MB
@@ -41,12 +37,12 @@ data class VirtualMachineSpec(
     @JsonProperty("deleted") val deleted: Boolean? = false,
 ) : KubernetesResource
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonDeserialize(using = JsonDeserializer.None::class)
 data class VirtualMachineStatus(
     @JsonProperty("powerState") @PrinterColumn(name = "status_powerState") val powerState: VirtualMachineModel.PowerState,
     @JsonProperty("overallStatus") val overallStatus: VirtualMachineModel.OverallStatus,
-    @JsonProperty("netInfos") val netInfos: List<VirtualMachineModel.NetInfo>?,
+    @JsonProperty("netInfos") val netInfos: List<VirtualMachineModel.NetInfo> = listOf(),
 )
 
 fun VirtualMachineModel.toCrdSpec(): VirtualMachineSpec {
@@ -57,12 +53,7 @@ fun VirtualMachineModel.toCrdSpec(): VirtualMachineSpec {
         template = this.isTemplate,
         host = this.host,
 
-        adminId = this.adminId,
-        studentId = this.studentId,
-        teacherId = this.teacherId,
-        experimental = this.isExperimental,
-        experimentId = this.experimentId,
-        applyId = this.applyId,
+        extraInfo = VirtualMachineExtraInfo.valueFromVirtualMachine(this),
 
         cpu = this.cpu,
         memory = this.memory,

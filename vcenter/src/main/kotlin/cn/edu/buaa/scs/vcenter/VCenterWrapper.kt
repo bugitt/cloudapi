@@ -55,20 +55,21 @@ object VCenterWrapper {
 
     private fun start() {
         Thread {
+            val connectionPool = mutableMapOf<Int, Connection>()
             runBlocking {
                 withContext(Dispatchers.IO) {
-                    // launch 20 workers to receive and handle task
-                    repeat(20) {
+                    // launch 30 workers to receive and handle task
+                    repeat(30) { channelNum ->
+                        connectionPool[channelNum] = vcenterConnect()
                         launch {
                             for (taskFunc in taskChannel) {
-                                var connection: Connection? = null
+                                val connection = connectionPool[channelNum] ?: vcenterConnect()
                                 try {
-                                    connection = vcenterConnect()
                                     taskFunc(connection)
                                 } catch (e: Throwable) {
-                                    logger("vm-worker-$it")().error { e.stackTraceToString() }
+                                    logger("vm-worker-$channelNum")().error { e.stackTraceToString() }
                                 } finally {
-                                    connection?.close()
+                                    connectionPool[channelNum] = connection
                                 }
                             }
                         }
@@ -78,16 +79,22 @@ object VCenterWrapper {
         }.start()
     }
 
+    private var getAllVmsConnection: Connection? = null
     fun getAllVms(): Result<List<VirtualMachine>> {
-        var connection: Connection? = null
+        if (getAllVmsConnection == null) {
+            getAllVmsConnection = vcenterConnect()
+        }
         var vms: List<VirtualMachine>? = null
         try {
-            connection = vcenterConnect()
-            vms = getAllVmsFromVCenter(connection)
-        } catch (e: Throwable) {
-            logger("vm-worker-$connection")().error { e.stackTraceToString() }
-        } finally {
-            connection?.close()
+            vms = getAllVmsFromVCenter(getAllVmsConnection!!)
+        } catch (_: Throwable) {
+            getAllVmsConnection = vcenterConnect()
+            try {
+                getAllVmsConnection = vcenterConnect()
+                vms = getAllVmsFromVCenter(getAllVmsConnection!!)
+            } catch (e: Throwable) {
+                logger("vm-worker-$getAllVmsConnection")().error { e.stackTraceToString() }
+            }
         }
         return Result.success(vms ?: listOf())
     }
@@ -178,7 +185,7 @@ object VCenterWrapper {
         return finalVirtualMachineList
     }
 
-    suspend fun create(options: CreateVmOptions): Result<Unit> {
+    suspend fun create(options: CreateVmOptions): Result<VirtualMachine> {
         return baseSyncTask { connection ->
             val task = clone(
                 connection,
@@ -198,6 +205,9 @@ object VCenterWrapper {
                 options.powerOn,
             )
             waitForTaskResult(connection, task).getOrThrow()
+            getAllVmsFromVCenter(connection).find { vm ->
+                vm.name == options.name && vm.applyId == options.applyId
+            } ?: throw Exception("can not found vm ${options.name}")
         }
     }
 

@@ -1,11 +1,7 @@
 package cn.edu.buaa.scs.vm.vcenter
 
-import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.NotFoundException
-import cn.edu.buaa.scs.error.RemoteServiceException
 import cn.edu.buaa.scs.model.VirtualMachine
-import cn.edu.buaa.scs.model.virtualMachines
-import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.Constants
 import cn.edu.buaa.scs.utils.HttpClientWrapper
 import cn.edu.buaa.scs.utils.schedule.waitForDone
@@ -16,10 +12,6 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
-import kotlinx.coroutines.delay
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.entity.find
 import org.ktorm.jackson.KtormModule
 
 object VCenterClient : IVMClient {
@@ -54,20 +46,14 @@ object VCenterClient : IVMClient {
         client.get<List<VirtualMachine>>("/vms").getOrThrow()
     }
 
-    override suspend fun getVM(uuid: String): Result<VirtualMachine> {
-        var vm = mysql.virtualMachines.find { it.uuid eq uuid }
-        if (vm == null) {
-            delay(1000L)
-            vm = mysql.virtualMachines.find { it.uuid eq uuid }
-        }
-        return if (vm == null) Result.failure(vmNotFound(uuid))
-        else Result.success(vm)
+    override suspend fun getVM(uuid: String): Result<VirtualMachine> = runCatching {
+        client.get<VirtualMachine>("/vm/$uuid").getOrThrow()
     }
 
-    override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> {
-        val vm = mysql.virtualMachines.find { it.name eq name and (it.applyId eq applyId) }
-        return if (vm == null) Result.failure(vmNotFound(name))
-        else Result.success(vm)
+    override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> = runCatching {
+        getAllVMs().getOrElse { listOf() }.find { vm ->
+            vm.name == name && vm.applyId == applyId
+        } ?: throw vmNotFound(name)
     }
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> = runCatching {
@@ -112,15 +98,7 @@ object VCenterClient : IVMClient {
 
 
     override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> = runCatching {
-        // 首先检查是不是有同名vm
-        if (options.existInDb()) {
-            return Result.failure(BadRequestException("there is already a VirtualMachine with the same name"))
-        }
-
-        client.post<String>("/vms", options).getOrThrow()
-
-        // wait to find the vm in db
-        waitForVMInDB(options.existPredicate()).getOrThrow()
+        client.post<VirtualMachine>("/vms", options).getOrThrow()
     }
 
     override suspend fun deleteVM(uuid: String): Result<Unit> = runCatching {
@@ -135,9 +113,7 @@ object VCenterClient : IVMClient {
 
     override suspend fun convertVMToTemplate(uuid: String): Result<VirtualMachine> = runCatching {
         client.post<String>("/vm/$uuid/convertToTemplate").getOrThrow()
-        waitForVMInDB {
-            it.uuid eq uuid and it.isTemplate eq true
-        }.getOrThrow()
+        getVM(uuid).getOrThrow()
     }
 
 }
