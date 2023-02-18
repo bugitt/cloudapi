@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.vm.sangfor
 
 import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.cache.authRedis
+
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.applySangforExtraInfo
@@ -156,7 +157,7 @@ object SangforClient : IVMClient {
         }
         return Result.success(vm)
     }
-
+    
     override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> = runCatching {
         getAllVMs().getOrElse { listOf() }.find { vm ->
             vm.name == name && vm.applyId == applyId
@@ -272,6 +273,7 @@ object SangforClient : IVMClient {
     override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> {
         createLock.lock()
         // Send clone vm request.
+
         val owner = if (options.extraInfo.teacherId != "default") options.extraInfo.teacherId
                     else if (options.extraInfo.studentId != "default") options.extraInfo.studentId
                     else "default"
