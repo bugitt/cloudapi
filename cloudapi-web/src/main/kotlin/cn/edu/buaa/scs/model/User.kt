@@ -131,6 +131,11 @@ interface User : Entity<User>, IEntity {
 
     fun personalProjectName() = "personal-${this.id.lowercase()}"
 
+    fun getAllExperimentIdListAsStudent(): List<Int> {
+        val courseIdList = mysql.courseStudents.filter { it.studentId.eq(this.id) }.map { it.courseId }
+        return if (courseIdList.isEmpty()) listOf()
+        else mysql.experiments.filter { it.courseId.inList(courseIdList) }.map { it.id }.distinct()
+    }
 
     fun getAllManagedExperimentIdList(): List<Int> {
         val courseIdList = if (isAdmin()) {

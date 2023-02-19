@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.*
+import cn.edu.buaa.scs.controller.models.VirtualMachine as VirtualMachineResponse
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VmApply
@@ -23,13 +24,18 @@ fun Route.vmRoute() {
                 call.respond(convertVirtualMachineResponse(call.vm.getVmByUUID(vmId)))
             }
 
+            delete {
+                val vmId = call.getVmIdFromPath()
+                call.vm.deleteVm(vmId)
+                call.respond("OK")
+            }
+
             route("/power") {
                 patch {
                     val vmId = call.getVmIdFromPath()
                     call.vm.vmPower(
                         vmId,
-                        call.request.queryParameters["action"] ?: "",
-                        call.request.queryParameters["sync"]?.toBoolean() ?: false
+                        call.request.queryParameters["action"] ?: throw BadRequestException("action is invalid"),
                     )
                     call.respond("OK")
                 }
@@ -40,7 +46,7 @@ fun Route.vmRoute() {
         route("/template") {
 
             get {
-                call.respond(call.vm.getAllTemplates().map { convertVirtualMachineResponse(it) })
+                call.respond(call.vm.getAllTemplates().map { convertVirtualMachineTemplateResponse(it) })
             }
 
             post {
@@ -57,12 +63,23 @@ fun Route.vmRoute() {
         }
     }
 
+    route("/experimentVms") {
+        get {
+            val experimentId = call.request.queryParameters["experimentId"]?.toInt()
+            val managed = call.request.queryParameters["managed"]?.toBoolean() ?: false
+            call.respond(call.vm.getExperimentVms(experimentId, managed).map { convertVirtualMachineResponse(it) })
+        }
+    }
+
+    route("/personalVms") {
+        get {
+            call.respond(call.vm.getPersonalVms().map { convertVirtualMachineResponse(it) })
+        }
+    }
+
     route("/vms") {
         get {
-            val studentId = call.request.queryParameters["studentId"]
-            val teacherId = call.request.queryParameters["teacherId"]
-            val experimentId = call.request.queryParameters["experimentId"]?.toInt()
-            call.respond(call.vm.getVms(studentId, teacherId, experimentId).map { convertVirtualMachineResponse(it) })
+            call.respond(call.vm.adminGetAllVms().map { convertVirtualMachineResponse(it) })
         }
 
         route("/apply") {
@@ -123,27 +140,47 @@ fun Route.vmRoute() {
     }
 }
 
-internal fun convertVirtualMachineResponse(vm: VirtualMachine) = VirtualMachine(
-    uuid = vm.uuid,
-    platform = vm.platform,
-    name = vm.name,
-    isTemplate = vm.isTemplate,
-    host = vm.host,
-    adminId = vm.adminId,
-    studentId = vm.studentId,
-    teacherId = vm.teacherId,
-    isExperimental = vm.isExperimental,
-    experimentId = vm.experimentId,
-    applyId = vm.applyId,
-    memory = vm.memory,
-    cpu = vm.cpu,
-    osFullName = vm.osFullName,
-    diskNum = vm.diskNum,
-    diskSize = vm.diskSize,
-    powerState = vm.powerState.value,
-    overallStatus = vm.overallStatus.value,
-    netInfos = vm.netInfos.map { VmNetInfo(it.macAddress, it.ipList) },
-)
+internal fun convertVirtualMachineResponse(vm: cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachine): VirtualMachineResponse {
+    val state = when {
+        vm.status == null -> "creating"
+        vm.status.powerState == VirtualMachine.PowerState.PoweredOn -> when (vm.spec.powerState) {
+            VirtualMachine.PowerState.PoweredOff -> "shuttingDown"
+            else -> "running"
+        }
+
+        vm.status.powerState == VirtualMachine.PowerState.PoweredOff -> when (vm.spec.powerState) {
+            VirtualMachine.PowerState.PoweredOn -> "booting"
+            else -> "stopped"
+        }
+
+        vm.metadata.deletionTimestamp != null -> "deleting"
+        else -> "unknown"
+    }.lowercase()
+
+    val extraInfo = vm.spec.getVmExtraInfo()
+
+    return VirtualMachineResponse(
+        uuid = vm.status?.uuid,
+        platform = vm.spec.platform,
+        name = vm.spec.name,
+        isTemplate = vm.spec.template,
+        host = vm.status.host,
+        adminId = extraInfo.adminId,
+        studentId = extraInfo.studentId,
+        teacherId = extraInfo.teacherId,
+        isExperimental = extraInfo.experimental,
+        experimentId = extraInfo.experimentId,
+        applyId = extraInfo.applyId,
+        memory = vm.spec.memory,
+        cpu = vm.spec.cpu,
+        osFullName = vm.status.osFullName,
+        diskNum = vm.spec.diskNum,
+        diskSize = vm.spec.diskSize,
+        state = state,
+        overallStatus = vm.status?.overallStatus?.value?.lowercase(),
+        netInfos = vm.status?.netInfos?.map { VmNetInfo(it.macAddress, it.ipList) } ?: listOf(),
+    )
+}
 
 internal fun convertVirtualMachineTemplateResponse(vm: VirtualMachine) = VirtualMachineTemplate(
     uuid = vm.uuid,

@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.auth.hasAccessToStudent
 import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineSpec
+import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachine as VirtualMachineCrd
 import cn.edu.buaa.scs.kube.kubeClient
 import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.*
@@ -30,60 +31,68 @@ val ApplicationCall.vm
 class VmService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<VmService>()
 
-    private fun assertRead(uuid: String): VirtualMachine {
-        val vm = mysql.virtualMachines.find { it.uuid.eq(uuid) }
+    fun vmPower(uuid: String, action: String) {
+        val vm = getVmByUUID(uuid)
+        when (action.lowercase()) {
+            "poweron" -> vm.spec = vm.spec.copy(powerState = VirtualMachine.PowerState.PoweredOn)
+            "poweroff" -> vm.spec = vm.spec.copy(powerState = VirtualMachine.PowerState.PoweredOff)
+        }
+    }
+
+    fun getVmByUUID(uuid: String): VirtualMachineCrd {
+        return vmKubeClient.inAnyNamespace().withField("metadata.name", uuid).list().items.filterNot { it.spec.deleted }
+            .firstOrNull()
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
-        call.user().assertRead(vm)
-        return vm
     }
 
-    suspend fun vmPower(uuid: String, action: String, sync: Boolean = false) {
-        assertRead(uuid)
-        when (action) {
-            "powerOn" -> if (sync) vmClient.powerOnSync(uuid).getOrThrow() else vmClient.powerOnAsync(uuid)
-            "powerOff" -> if (sync) vmClient.powerOffSync(uuid).getOrThrow() else vmClient.powerOffAsync(uuid)
+    fun deleteVm(id: String) {
+        val vm = getVmByUUID(id)
+        vmKubeClient.resource(vm).delete()
+    }
+
+    fun getPersonalVms(): List<VirtualMachineCrd> {
+        val vmApplyList =
+            mysql.vmApplyList.filter { ((it.studentId eq call.userId()) or (it.teacherId eq call.userId())) and (it.experimentId eq 0) }
+                .toList()
+        return vmApplyList.flatMap { vmApply ->
+            val vmList = vmKubeClient.inNamespace(vmApply.namespaceName()).list().items
+            vmList.filter {
+                val extraInfo = it.spec.getVmExtraInfo()
+                extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
+            }.filterNot { it.spec.deleted }
         }
     }
 
-    fun getVmByUUID(uuid: String): VirtualMachine {
-        return assertRead(uuid)
-    }
-
-    fun getVms(studentId: String?, teacherId: String?, experimentId: Int?): List<VirtualMachine> {
-        var finalStudentId =
-            if (studentId != null)
-                if (call.user().hasAccessToStudent(studentId)) studentId
-                else throw AuthorizationException("has no access to student($studentId)")
-            else if (call.user().isStudent())
-                call.userId()
-            else null
-
-        val finalTeacherId =
-            if (teacherId != null)
-                if (call.user().isAdmin() || call.user().isTeacher() && call.userId() == teacherId) teacherId
-                else throw AuthorizationException("has no access to teacher($teacherId)")
-            else if (call.user().isTeacher())
-                call.userId()
-            else null
-
-        val finalExpId =
-            if (experimentId != null) {
-                call.user().assertWrite(Experiment.id(experimentId))
-                experimentId
+    fun getExperimentVms(experimentId: Int?, managed: Boolean): List<VirtualMachineCrd> {
+        val expIdList = if (experimentId != null) {
+            val experiment = Experiment.id(experimentId)
+            call.user().assertRead(experiment)
+            listOf(experimentId)
+        } else {
+            if (managed) {
+                call.user().getAllManagedExperimentIdList()
             } else {
-                null
+                call.user().getAllExperimentIdListAsStudent()
             }
-
-        // 处理一下是助教的特殊情况
-        if (experimentId != null && call.user().isCourseAssistant(Experiment.id(experimentId).course)) {
-            finalStudentId = null
         }
+        val vmApplyList =
+            if (expIdList.isEmpty()) listOf()
+            else mysql.vmApplyList.filter { it.experimentId.inList(expIdList) }.toList()
+        return vmApplyList.flatMap { vmApply ->
+            val vmList = vmKubeClient.inNamespace(vmApply.namespaceName()).list().items
+            if (managed) vmList
+            else vmList.filter {
+                val extraInfo = it.spec.getVmExtraInfo()
+                extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
+            }.filterNot { it.spec.deleted }
+        }
+    }
 
-        var condition: ColumnDeclaring<Boolean> = VirtualMachines.uuid.isNotNull()
-        finalStudentId?.let { condition = condition.and(VirtualMachines.studentId.eq(it)) }
-        finalTeacherId?.let { condition = condition.and(VirtualMachines.teacherId.eq(it)) }
-        finalExpId?.let { condition = condition.and((VirtualMachines.experimentId.eq(it))) }
-        return mysql.virtualMachines.filter { condition }.toList()
+    fun adminGetAllVms(): List<VirtualMachineCrd> {
+        if (!call.user().isAdmin()) {
+            throw AuthorizationException()
+        }
+        return vmKubeClient.inAnyNamespace().list().items.filterNot { it.spec.deleted }
     }
 
     fun getVmApplyList(): List<VmApply> {
@@ -118,8 +127,14 @@ class VmService(val call: ApplicationCall) : IService {
         val vmApply = mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
         call.user().assertWrite(vmApply)
         if (!vmApply.isApproved()) throw BadRequestException("the VMApply(${vmApply.id} is not approved")
-        vmApply.studentIdList = vmApply.studentIdList.minus(studentIdList.toSet()) + studentIdList
-        return approveApply(vmApply, true, vmApply.replyMsg)
+        vmApply.namespaceName().ensureNamespace(kubeClient)
+        vmApply.toVmCrdSpec(false, studentIdList).forEach { spec ->
+            vmKubeClient
+                .inNamespace(vmApply.namespaceName())
+                .resource(spec.toCrd())
+                .createOrReplace()
+        }
+        return vmApply
     }
 
     private fun approveApply(vmApply: VmApply, approve: Boolean, replyMsg: String): VmApply {
@@ -327,7 +342,7 @@ fun VmApply.namespaceName(): String {
     return this.id.lowercase()
 }
 
-fun VmApply.toVmCrdSpec(initial: Boolean = false): List<VirtualMachineSpec> {
+fun VmApply.toVmCrdSpec(initial: Boolean = false, extraStudentList: List<String>? = null): List<VirtualMachineSpec> {
     val vmApply = this
     val baseExtraInfo = VirtualMachineExtraInfo(
         applyId = vmApply.id,
@@ -345,7 +360,22 @@ fun VmApply.toVmCrdSpec(initial: Boolean = false): List<VirtualMachineSpec> {
         template = false,
         extraInfo = jsonMapper.writeValueAsString(baseExtraInfo),
     )
-    return when {
+    return if (extraStudentList != null) {
+        val experiment = Experiment.id(vmApply.experimentId)
+        extraStudentList.map { studentId ->
+            baseSpec.copy(
+                name = "${vmApply.namePrefix}-$studentId",
+                extraInfo = jsonMapper.writeValueAsString(
+                    baseExtraInfo.copy(
+                        studentId = studentId,
+                        teacherId = experiment.course.teacher.id,
+                        experimental = true,
+                        experimentId = experiment.id,
+                    )
+                )
+            )
+        }
+    } else when {
         vmApply.studentId.isNotBlank() && vmApply.studentId != "default" ->
             listOf(
                 baseSpec.copy(

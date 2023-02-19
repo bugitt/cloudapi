@@ -15,11 +15,9 @@ import cn.edu.buaa.scs.controller.models.VmNetInfo
 
 /**
  * 
- * @param uuid 
  * @param platform 
  * @param name 
  * @param isTemplate 
- * @param host 
  * @param adminId 
  * @param studentId 
  * @param teacherId 
@@ -31,16 +29,16 @@ import cn.edu.buaa.scs.controller.models.VmNetInfo
  * @param osFullName 
  * @param diskNum 
  * @param diskSize byte
- * @param powerState suspended, poweredOn, poweredOff
- * @param overallStatus gray, green, yellow, red
+ * @param state creating, booting, poweredon, poweredoff, shuttingdown,deleting
  * @param netInfos 
+ * @param uuid 
+ * @param host 
+ * @param overallStatus gray, green, yellow, red
  */
 data class VirtualMachine(
-    val uuid: kotlin.String,
     val platform: kotlin.String,
     val name: kotlin.String,
     val isTemplate: kotlin.Boolean,
-    val host: kotlin.String,
     val adminId: kotlin.String,
     val studentId: kotlin.String,
     val teacherId: kotlin.String,
@@ -54,10 +52,12 @@ data class VirtualMachine(
     val diskNum: kotlin.Int,
     /* byte */
     val diskSize: kotlin.Long,
-    /* suspended, poweredOn, poweredOff */
-    val powerState: kotlin.String,
+    /* creating, booting, poweredon, poweredoff, shuttingdown,deleting */
+    val state: kotlin.String,
+    val netInfos: kotlin.collections.List<VmNetInfo>,
+    val uuid: kotlin.String? = null,
+    val host: kotlin.String? = null,
     /* gray, green, yellow, red */
-    val overallStatus: kotlin.String,
-    val netInfos: kotlin.collections.List<VmNetInfo>
+    val overallStatus: kotlin.String? = null
 ) 
 

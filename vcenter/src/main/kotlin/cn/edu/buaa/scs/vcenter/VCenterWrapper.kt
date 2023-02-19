@@ -357,7 +357,7 @@ internal fun convertVMModel(
 ): VirtualMachine? {
     val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
     val guestNicInfoList = vmProps["guest.net"]!! as ArrayOfGuestNicInfo
-    val devices = vmProps["config.hardware.device"]!! as ArrayOfVirtualDevice? ?: return null
+    val devices = vmProps["config.hardware.device"] as ArrayOfVirtualDevice? ?: return null
     return convertVMModel(hostName, vmSummary, guestNicInfoList, devices)
 }
 

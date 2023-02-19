@@ -2039,7 +2039,7 @@ paths:
         搜索日志记录
         仅限管理员调用
       security:
-        - Authorization: [ ]
+        - Authorization: []
       requestBody:
         content:
           application/json:
@@ -2062,7 +2062,7 @@ paths:
       operationId: get-checkPermission
       description: 检查是否有对某一实体的操作权限
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -2102,7 +2102,7 @@ paths:
       operationId: get-course-courseId-simpleStudents
       description: 获取一门课程的所有学生
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /containerLog:
     get:
       summary: 获取容器日志
@@ -2118,7 +2118,7 @@ paths:
       operationId: get-containerLog
       description: 获取容器日志
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -2134,6 +2134,51 @@ paths:
             type: string
           in: query
           name: containerName
+  /vm/personalVms:
+    get:
+      summary: 获取个人虚拟机
+      tags:
+        - 虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualMachine'
+      operationId: get-vm-personalVms
+      security:
+        - Authorization: []
+      description: 获取个人虚拟机
+  /vm/experimentVms:
+    get:
+      summary: 获取实验虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualMachine'
+      operationId: get-vm-experimentVms
+      tags:
+        - 虚拟机
+      description: 获取实验虚拟机
+      security:
+        - Authorization: []
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: managed
+          required: true
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: experimentId
 components:
   schemas:
     AssignmentResponse:
@@ -2981,9 +3026,9 @@ components:
           type: integer
           format: int64
           description: byte
-        powerState:
+        state:
           type: string
-          description: 'suspended, poweredOn, poweredOff'
+          description: 'creating, booting, running, stopped, shuttingdown,deleting'
         overallStatus:
           type: string
           description: 'gray, green, yellow, red'
@@ -2992,11 +3037,9 @@ components:
           items:
             $ref: '#/components/schemas/VmNetInfo'
       required:
-        - uuid
         - platform
         - name
         - isTemplate
-        - host
         - adminId
         - studentId
         - teacherId
@@ -3008,8 +3051,7 @@ components:
         - osFullName
         - diskNum
         - diskSize
-        - powerState
-        - overallStatus
+        - state
         - netInfos
     VirtualMachineTemplate:
       title: VirtualMachineTemplate
