@@ -14,6 +14,13 @@ fun Route.userRoute() {
             call.respond(call.hr.getStudents(search).map { convertUserModel(it) })
         }
     }
+
+    route("/stuffs") {
+        get {
+            val search = call.parameters["search"]
+            call.respond(call.hr.getTeachersAndStudents(search).map { convertUserModel(it) })
+        }
+    }
 }
 
 internal fun convertUserModel(user: User): UserModel {

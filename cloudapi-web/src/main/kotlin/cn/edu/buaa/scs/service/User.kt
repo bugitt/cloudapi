@@ -38,4 +38,21 @@ class UserService(val call: ApplicationCall) : IService {
         }
         return query.toList()
     }
+
+    fun getTeachersAndStudents(search: String?, limit: Int = 10): List<User> {
+        if (call.user().isStudent()) return listOf()
+
+        if (search.isNullOrBlank()) return listOf()
+
+        var query = mysql.users
+            .filter {
+                (it.id.like("%$search%").or(it.name.like("%$search%")))
+                    .and((it.role eq UserRole.STUDENT).or(it.role eq UserRole.TEACHER))
+            }
+            .sortedBy { it.id }
+        if (limit != -1) {
+            query = query.take(limit)
+        }
+        return query.toList()
+    }
 }
