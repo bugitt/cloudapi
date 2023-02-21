@@ -1762,6 +1762,37 @@ paths:
           in: query
           name: limit
           description: '-1表示无限制。默认为10'
+  /stuffs:
+    get:
+      summary: 获取教师和学生列表
+      tags:
+        - 人员
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserModel'
+      operationId: get-stuffs
+      description: |-
+        获取教师和学生列表。仅限管理员、教师调用。
+        按照学生学号倒序排列（新注册的学生排序靠前）
+      security:
+        - Authorization: [ ]
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: search
+          description: 支持按照学号和姓名模糊搜索学生
+        - schema:
+            type: integer
+          in: query
+          name: limit
+          description: '-1表示无限制。默认为10'
   /resourcePools:
     parameters: []
     get:
