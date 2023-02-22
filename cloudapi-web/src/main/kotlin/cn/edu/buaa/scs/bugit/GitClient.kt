@@ -51,7 +51,7 @@ object GitClient : IProjectManager {
         val exception = client.get<GitUser>("users/$userID").exceptionOrNull()
         return if (exception == null) Result.success(userID)
         else if (exception is RemoteServiceException && exception.status == HttpStatusCode.NotFound.value) {
-            client.post<String>(
+            val exception = client.post<String>(
                 "admin/users", CreateUserReq(
                     username = userID,
                     fullName = realName,
@@ -59,7 +59,19 @@ object GitClient : IProjectManager {
                     loginName = userID,
                     password = password,
                 )
-            ).map { userID }
+            ).map { userID }.exceptionOrNull()
+            if (exception == null) Result.success(userID)
+            else if (exception is RemoteServiceException && (exception.status == HttpStatusCode.Conflict.value || exception.status == HttpStatusCode.UnprocessableEntity.value)) {
+                client.post<String>(
+                    "admin/users", CreateUserReq(
+                        username = userID,
+                        fullName = realName,
+                        email = email.replace("@", "+$userID@"),
+                        loginName = userID,
+                        password = password,
+                    )
+                ).map { userID }
+            } else Result.failure(exception)
         } else Result.failure(exception)
     }
 

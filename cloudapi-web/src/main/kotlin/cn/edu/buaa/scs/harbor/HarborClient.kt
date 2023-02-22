@@ -31,13 +31,27 @@ object HarborClient : IProjectManager {
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> =
         runCatching {
             if (userClient.searchUsers(userID).isNotEmpty()) return Result.success(userID)
-            val userReq = UserCreationReq(
-                email = email,
-                realname = realName,
-                password = password,
-                username = userID,
-            )
-            userClient.createUser(userReq)
+            try {
+                val userReq = UserCreationReq(
+                    email = email,
+                    realname = realName,
+                    password = password,
+                    username = userID,
+                )
+                userClient.createUser(userReq)
+            } catch (e: ClientException) {
+                if (e.statusCode == HttpStatusCode.Conflict.value) {
+                    val userReq = UserCreationReq(
+                        email = email.replace("@", "+$userID@"),
+                        realname = realName,
+                        password = password,
+                        username = userID,
+                    )
+                    userClient.createUser(userReq)
+                } else {
+                    throw e
+                }
+            }
         }.map { userID }
 
 
