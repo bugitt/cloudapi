@@ -11,12 +11,12 @@
 */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.SimpleUser
+import cn.edu.buaa.scs.controller.models.VmApplyProcess
 
 /**
  * 
  * @param id 
- * @param studentId 
- * @param teacherId 
  * @param applicant 
  * @param experimentId 
  * @param studentIdList 
@@ -31,14 +31,15 @@ package cn.edu.buaa.scs.controller.models
  * @param expectedNum 预期希望得到的虚拟机个数
  * @param actualNum 当前实际的虚拟机个数
  * @param namePrefix 最终生成的虚拟机的名称的前缀
+ * @param process 
+ * @param studentId 
+ * @param teacherId 
  * @param dueTime 虚拟机使用的结束时间
  * @param replyMsg 管理员审批该申请的回复信息
  */
 data class CreateVmApplyResponse(
     val id: kotlin.String,
-    val studentId: kotlin.String,
-    val teacherId: kotlin.String,
-    val applicant: kotlin.String,
+    val applicant: SimpleUser,
     val experimentId: kotlin.Int,
     val studentIdList: kotlin.collections.List<kotlin.String>,
     val cpu: kotlin.Int,
@@ -62,6 +63,9 @@ data class CreateVmApplyResponse(
     val actualNum: kotlin.Int,
     /* 最终生成的虚拟机的名称的前缀 */
     val namePrefix: kotlin.String,
+    val process: VmApplyProcess,
+    val studentId: SimpleUser? = null,
+    val teacherId: SimpleUser? = null,
     /* 虚拟机使用的结束时间 */
     val dueTime: kotlin.Long? = null,
     /* 管理员审批该申请的回复信息 */

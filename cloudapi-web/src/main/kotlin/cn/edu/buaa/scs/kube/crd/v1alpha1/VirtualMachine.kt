@@ -129,9 +129,24 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
         context: Context<VirtualMachine>?
     ): UpdateControl<VirtualMachine> {
         val vm = resource ?: return UpdateControl.noUpdate()
-        if (vm.spec.deleted) return UpdateControl.noUpdate()
-
         val vmClient = newVMClient(vm.spec.platform)
+        if (vm.spec.deleted) {
+            val exist = runBlocking {
+                if (vmClient.getVM(vm.status.uuid).isSuccess) {
+                    vmClient.deleteVM(vm.status.uuid).getOrThrow()
+                    true
+                } else {
+                    false
+                }
+            }
+            if (exist) {
+                return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
+            } else {
+                return UpdateControl.noUpdate()
+            }
+        }
+
+
 
         if (vm.status == null) {
             val vmModelResult = runBlocking { vmClient.getVMByName(vm.spec.name, vm.spec.getVmExtraInfo().applyId) }
@@ -139,6 +154,10 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                 vm.status = vmModelResult.getOrThrow().toCrdStatus()
                 return UpdateControl.patchStatus(vm).rescheduleAfter(1000L)
             } else {
+                val vmApply = VmApply.id(vm.spec.getVmExtraInfo().applyId)
+                if (vmApply == null || !vmApply.isApproved()) {
+                    return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
+                }
                 val vmModel = runBlocking {
                     if (createVmProcessMutex.tryLock(vm)) {
                         try {

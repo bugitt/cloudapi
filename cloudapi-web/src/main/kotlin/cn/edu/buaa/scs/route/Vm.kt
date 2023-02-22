@@ -3,8 +3,10 @@ package cn.edu.buaa.scs.route
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.controller.models.VirtualMachine as VirtualMachineResponse
 import cn.edu.buaa.scs.error.BadRequestException
+import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VmApply
+import cn.edu.buaa.scs.service.namespaceName
 import cn.edu.buaa.scs.service.vm
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -84,12 +86,13 @@ fun Route.vmRoute() {
 
         route("/apply") {
             get {
-                call.respond(call.vm.getVmApplyList().map { convertVmApplyResponse(it) })
+                call.respond(
+                    call.vm.getVmApplyList(call.parameters["expId"]?.toInt()).map { call.convertVmApplyResponse(it) })
             }
 
             post {
                 val request = call.receive<CreateVmApplyRequest>()
-                call.respond(convertVmApplyResponse(call.vm.createVmApply(request)))
+                call.respond(call.convertVmApplyResponse(call.vm.createVmApply(request)))
             }
 
             route("/{applyId}") {
@@ -98,12 +101,12 @@ fun Route.vmRoute() {
                     parameters["applyId"] ?: throw BadRequestException("apply id is invalid")
 
                 get {
-                    call.respond(convertVmApplyResponse(call.vm.getVmApply(call.getApplyIdFromPath())))
+                    call.respond(call.convertVmApplyResponse(call.vm.getVmApply(call.getApplyIdFromPath())))
                 }
 
                 patch {
                     call.respond(
-                        convertVmApplyResponse(
+                        call.convertVmApplyResponse(
                             call.vm.handleApply(
                                 call.getApplyIdFromPath(),
                                 call.request.queryParameters["approve"]?.toBoolean() ?: false,
@@ -143,6 +146,7 @@ fun Route.vmRoute() {
 internal fun convertVirtualMachineResponse(vm: cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachine): VirtualMachineResponse {
     val state = when {
         vm.status == null -> "creating"
+        vm.metadata.deletionTimestamp != null -> "deleting"
         vm.status.powerState == VirtualMachine.PowerState.PoweredOn -> when (vm.spec.powerState) {
             VirtualMachine.PowerState.PoweredOff -> "shuttingDown"
             else -> "running"
@@ -153,7 +157,6 @@ internal fun convertVirtualMachineResponse(vm: cn.edu.buaa.scs.kube.crd.v1alpha1
             else -> "stopped"
         }
 
-        vm.metadata.deletionTimestamp != null -> "deleting"
         else -> "unknown"
     }.lowercase()
 
@@ -164,7 +167,7 @@ internal fun convertVirtualMachineResponse(vm: cn.edu.buaa.scs.kube.crd.v1alpha1
         platform = vm.spec.platform,
         name = vm.spec.name,
         isTemplate = vm.spec.template,
-        host = vm.status.host,
+        host = vm.status?.host,
         adminId = extraInfo.adminId,
         studentId = extraInfo.studentId,
         teacherId = extraInfo.teacherId,
@@ -173,12 +176,13 @@ internal fun convertVirtualMachineResponse(vm: cn.edu.buaa.scs.kube.crd.v1alpha1
         applyId = extraInfo.applyId,
         memory = vm.spec.memory,
         cpu = vm.spec.cpu,
-        osFullName = vm.status.osFullName,
+        osFullName = vm.status?.osFullName,
         diskNum = vm.spec.diskNum,
         diskSize = vm.spec.diskSize,
         state = state,
         overallStatus = vm.status?.overallStatus?.value?.lowercase(),
         netInfos = vm.status?.netInfos?.map { VmNetInfo(it.macAddress, it.ipList) } ?: listOf(),
+        id = vm.metadata.name,
     )
 }
 
@@ -200,12 +204,12 @@ internal fun convertVirtualMachineTemplateResponse(vm: VirtualMachine) = Virtual
     overallStatus = vm.overallStatus.value,
 )
 
-internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
+internal fun ApplicationCall.convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
     id = vmApply.id,
     namePrefix = vmApply.namePrefix,
-    studentId = vmApply.studentId,
-    teacherId = vmApply.teacherId,
-    applicant = vmApply.getApplicant(),
+    studentId = convertSimpleUser(vmApply.studentId),
+    teacherId = convertSimpleUser(vmApply.teacherId),
+    applicant = convertSimpleUser(vmApply.applicant)!!,
     experimentId = vmApply.experimentId,
     studentIdList = vmApply.studentIdList,
     cpu = vmApply.cpu,
@@ -219,12 +223,13 @@ internal fun convertVmApplyResponse(vmApply: VmApply) = CreateVmApplyResponse(
     expectedNum = vmApply.expectedNum,
     actualNum = vmApply.getActualNum(),
     dueTime = vmApply.dueTime,
-    replyMsg = vmApply.replyMsg
+    replyMsg = vmApply.replyMsg,
+    process = this.vm.getVmApplyProcess(vmApply).let { (wanted, actual) -> VmApplyProcess(wanted, actual) },
 )
 
 internal fun convertExpVmInfo(vmApply: VmApply) = ExpVmInfo(
     status = vmApply.status,
     applyId = vmApply.id,
     expectedNum = vmApply.expectedNum,
-    actualNum = vmApply.getActualNum(),
+    actualNum = vmKubeClient.inNamespace(vmApply.namespaceName()).list().items.count { !it.spec.deleted },
 )

@@ -145,7 +145,8 @@ interface User : Entity<User>, IEntity {
         } else {
             mysql.assistants.filter { it.studentId.eq(this.id) }.map { it.id }
         }
-        return mysql.experiments.filter { it.courseId.inList(courseIdList.distinct()) }.map { it.id }.distinct()
+        return if (courseIdList.isEmpty()) listOf()
+        else mysql.experiments.filter { it.courseId.inList(courseIdList.distinct()) }.map { it.id }.distinct()
     }
 
     fun getAllAssistantIdList(): List<String> {

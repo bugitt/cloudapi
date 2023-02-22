@@ -31,7 +31,7 @@ object VMRoutine : Routine {
                 vmKubeClient.resource(vmModel.toCrdSpec().toCrd()).createOrReplace()
             }
         }
-        delay(2000L)
+        delay(4000L)
     }
 
     private val updateVMsToDatabase = Routine.alwaysDo("vm-worker-update-db") {
@@ -97,6 +97,7 @@ object VMRoutine : Routine {
                 it.uuid.notInList(vmList.map { vm -> vm.uuid })
             }
         }
+        delay(4000L)
     }
 
     private val createVm = Routine.alwaysDo("create-virtual-machine") {

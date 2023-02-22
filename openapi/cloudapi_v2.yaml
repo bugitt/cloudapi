@@ -911,6 +911,17 @@ paths:
       security:
         - Authorization: []
       description: 根据UUID获取虚拟机信息
+    delete:
+      summary: 删除虚拟机
+      operationId: delete-vm-vmId
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 虚拟机
+      description: 删除当前虚拟机
+      security:
+        - Authorization: []
   '/vm/{vmId}/power':
     parameters:
       - schema:
@@ -1036,6 +1047,12 @@ paths:
         ！！！注意，该接口返回的是一个数组！！！
       security:
         - Authorization: []
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+          in: query
+          name: expId
   '/vms/apply/{applyId}':
     get:
       summary: 查看“创建虚拟机的申请”
@@ -1056,7 +1073,7 @@ paths:
         - Authorization: []
     patch:
       summary: 管理员处理“创建虚拟机的申请”
-      operationId: patch-vms-apply
+      operationId: approve-vms-apply
       responses:
         '200':
           description: OK
@@ -2047,6 +2064,31 @@ paths:
               $ref: '#/components/schemas/LogRecordSearchRequest'
       tags:
         - 日志管理
+  '/course/{courseId}/students':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: courseId
+        in: path
+        required: true
+    get:
+      summary: 获取一门课程的所有学生
+      tags:
+        - 课程
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserModel'
+      operationId: get-course-courseId-simpleStudents
+      description: 获取一门课程的所有学生
+      security:
+        - Authorization: []
   /checkPermission:
     get:
       summary: 检查是否有对某一实体的操作权限
@@ -2078,31 +2120,6 @@ paths:
           in: query
           name: action
           description: 'read, write, admin'
-  '/course/{courseId}/students':
-    parameters:
-      - schema:
-          type: integer
-          format: int32
-        name: courseId
-        in: path
-        required: true
-    get:
-      summary: 获取一门课程的所有学生
-      tags:
-        - 课程
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserModel'
-      operationId: get-course-courseId-simpleStudents
-      description: 获取一门课程的所有学生
-      security:
-        - Authorization: []
   /containerLog:
     get:
       summary: 获取容器日志
@@ -2134,7 +2151,7 @@ paths:
             type: string
           in: query
           name: containerName
-  /vm/personalVms:
+  /personalVms:
     get:
       summary: 获取个人虚拟机
       tags:
@@ -2152,7 +2169,8 @@ paths:
       security:
         - Authorization: []
       description: 获取个人虚拟机
-  /vm/experimentVms:
+    parameters: []
+  /experimentVms:
     get:
       summary: 获取实验虚拟机
       responses:
@@ -2161,7 +2179,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VirtualMachine'
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualMachine'
       operationId: get-vm-experimentVms
       tags:
         - 虚拟机
@@ -2179,6 +2199,7 @@ paths:
             format: int32
           in: query
           name: experimentId
+    parameters: []
 components:
   schemas:
     AssignmentResponse:
@@ -3036,6 +3057,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/VmNetInfo'
+        id:
+          type: string
       required:
         - platform
         - name
@@ -3048,11 +3071,11 @@ components:
         - applyId
         - memory
         - cpu
-        - osFullName
         - diskNum
         - diskSize
         - state
         - netInfos
+        - id
     VirtualMachineTemplate:
       title: VirtualMachineTemplate
       type: object
@@ -3183,16 +3206,15 @@ components:
       x-stoplight:
         id: qnrdg9ok6otgh
       type: object
-      description: ''
       properties:
         id:
           type: string
         studentId:
-          type: string
+          $ref: '#/components/schemas/SimpleUser'
         teacherId:
-          type: string
+          $ref: '#/components/schemas/SimpleUser'
         applicant:
-          type: string
+          $ref: '#/components/schemas/SimpleUser'
         experimentId:
           type: integer
           format: int32
@@ -3250,16 +3272,16 @@ components:
         replyMsg:
           type: string
           description: 管理员审批该申请的回复信息
+        process:
+          $ref: '#/components/schemas/VmApplyProcess'
       required:
         - id
-        - studentId
-        - teacherId
+        - applicant
         - experimentId
         - studentIdList
         - cpu
         - memory
         - diskSize
-        - applicant
         - templateName
         - description
         - applyTime
@@ -3268,6 +3290,7 @@ components:
         - expectedNum
         - actualNum
         - namePrefix
+        - process
     PatchVmApplyVms:
       title: PatchVmApplyVms
       x-stoplight:
@@ -4014,6 +4037,21 @@ components:
         - total
         - page
         - success
+    VmApplyProcess:
+      title: VmApplyProcess
+      x-stoplight:
+        id: 0y8s784j2gw6o
+      type: object
+      properties:
+        wanted:
+          type: integer
+          format: int32
+        actual:
+          type: integer
+          format: int32
+      required:
+        - wanted
+        - actual
   securitySchemes:
     Authorization:
       type: apiKey

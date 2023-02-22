@@ -3,7 +3,6 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.auth.authRead
-import cn.edu.buaa.scs.auth.hasAccessToStudent
 import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineSpec
@@ -14,7 +13,6 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.vm.*
-import com.fkorotkov.kubernetes.newObjectMeta
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
@@ -37,6 +35,7 @@ class VmService(val call: ApplicationCall) : IService {
             "poweron" -> vm.spec = vm.spec.copy(powerState = VirtualMachine.PowerState.PoweredOn)
             "poweroff" -> vm.spec = vm.spec.copy(powerState = VirtualMachine.PowerState.PoweredOff)
         }
+        vmKubeClient.resource(vm).patch()
     }
 
     fun getVmByUUID(uuid: String): VirtualMachineCrd {
@@ -46,8 +45,9 @@ class VmService(val call: ApplicationCall) : IService {
     }
 
     fun deleteVm(id: String) {
-        val vm = getVmByUUID(id)
-        vmKubeClient.resource(vm).delete()
+        var vm = getVmByUUID(id)
+        vm.spec = vm.spec.copy(deleted = true)
+        vmKubeClient.resource(vm).patch()
     }
 
     fun getPersonalVms(): List<VirtualMachineCrd> {
@@ -84,8 +84,8 @@ class VmService(val call: ApplicationCall) : IService {
             else vmList.filter {
                 val extraInfo = it.spec.getVmExtraInfo()
                 extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
-            }.filterNot { it.spec.deleted }
-        }
+            }
+        }.filterNot { it.spec.deleted }
     }
 
     fun adminGetAllVms(): List<VirtualMachineCrd> {
@@ -95,20 +95,45 @@ class VmService(val call: ApplicationCall) : IService {
         return vmKubeClient.inAnyNamespace().list().items.filterNot { it.spec.deleted }
     }
 
-    fun getVmApplyList(): List<VmApply> {
-        val applyList = mutableListOf<VmApply>()
-        if (call.user().isAdmin()) return mysql.vmApplyList.toList()
-        applyList += mysql.vmApplyList.filter {
-            it.studentId.eq(call.userId())
-                .or(it.teacherId.eq(call.userId()))
-        }.toList()
-        val experimentIdList = call.user().getAllManagedExperimentIdList()
-        if (experimentIdList.isNotEmpty()) {
+    fun getVmApplyList(expId: Int?): List<VmApply> {
+        // fixme(loheagn): stupid logic
+        val applyList = if (call.user().isAdmin()) {
+            val applyList = mysql.vmApplyList.toList().toMutableList()
+            applyList.sortByDescending { it.applyTime }
+            applyList
+        } else {
+            val applyList = mutableListOf<VmApply>()
             applyList += mysql.vmApplyList.filter {
-                it.experimentId.inList(experimentIdList)
+                it.studentId.eq(call.userId())
+                    .or(it.teacherId.eq(call.userId()))
             }.toList()
+            val experimentIdList = call.user().getAllManagedExperimentIdList()
+            if (experimentIdList.isNotEmpty()) {
+                applyList += mysql.vmApplyList.filter {
+                    it.experimentId.inList(experimentIdList)
+                }.toList()
+            }
+            applyList
         }
-        return applyList
+        applyList.sortByDescending { it.applyTime }
+        return if (expId != null) applyList.filter { it.experimentId == expId } else applyList
+    }
+
+    // return (wanted, actual)
+    fun getVmApplyProcess(vmApply: VmApply): Pair<Int, Int> {
+        return when (vmApply.status) {
+            0, 2 -> Pair(0, 0)
+            1 -> {
+                val vmList = vmKubeClient.inNamespace(vmApply.namespaceName()).list().items
+                val wanted = if (vmApply.experimentId != 0) vmApply.studentIdList.size else 1
+                val actual =
+                    if (vmApply.done) wanted
+                    else vmList.count { !it.spec.deleted && it.status != null && it.spec.getVmExtraInfo().initial }
+                Pair(wanted, actual)
+            }
+
+            else -> throw BadRequestException("unknown status")
+        }
     }
 
     fun getVmApply(id: String): VmApply {
@@ -146,12 +171,14 @@ class VmService(val call: ApplicationCall) : IService {
         vmApply.replyMsg = replyMsg
         vmApply.handleTime = System.currentTimeMillis()
 
-        vmApply.namespaceName().ensureNamespace(kubeClient)
-        vmApply.toVmCrdSpec(true).forEach { spec ->
-            vmKubeClient
-                .inNamespace(vmApply.namespaceName())
-                .resource(spec.toCrd())
-                .createOrReplace()
+        if (approve) {
+            vmApply.namespaceName().ensureNamespace(kubeClient)
+            vmApply.toVmCrdSpec(true).forEach { spec ->
+                vmKubeClient
+                    .inNamespace(vmApply.namespaceName())
+                    .resource(spec.toCrd())
+                    .createOrReplace()
+            }
         }
         mysql.vmApplyList.update(vmApply)
         return vmApply
@@ -203,6 +230,7 @@ class VmService(val call: ApplicationCall) : IService {
             this.studentId = "default"
             this.teacherId = "default"
             this.experimentId = 0
+            this.applicant = call.userId()
             this.studentIdList = listOf()
             this.cpu = request.cpu
             this.memory = request.memory

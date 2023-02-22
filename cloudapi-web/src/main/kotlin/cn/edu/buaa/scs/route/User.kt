@@ -1,8 +1,10 @@
 package cn.edu.buaa.scs.route
 
+import cn.edu.buaa.scs.controller.models.SimpleUser
 import cn.edu.buaa.scs.controller.models.UserModel
 import cn.edu.buaa.scs.model.User
 import cn.edu.buaa.scs.service.hr
+import cn.edu.buaa.scs.service.id
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -31,4 +33,14 @@ internal fun convertUserModel(user: User): UserModel {
         email = user.email,
         role = user.role.name.lowercase(),
     )
+}
+
+internal fun convertSimpleUser(userId: String): SimpleUser? {
+    return try {
+        if (userId == "admin") return SimpleUser("admin", "管理员")
+        val user = User.id(userId)
+        SimpleUser(user.id, user.name)
+    } catch (e: Throwable) {
+        null
+    }
 }

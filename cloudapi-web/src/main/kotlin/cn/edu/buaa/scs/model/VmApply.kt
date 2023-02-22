@@ -33,18 +33,13 @@ interface VmApply : Entity<VmApply>, IEntity {
     var expectedNum: Int
     var replyMsg: String
     var dueTime: Long
+    var applicant: String
 
     var done: Boolean   // 是否完成所有虚拟机的创建
 
     fun isApproved(): Boolean = this.status == 1
 
     fun getActualNum(): Int = mysql.virtualMachines.count { it.applyId.eq(this.id) }
-
-    fun getApplicant(): String {
-        return if (studentId == "default" && teacherId == "default") "管理员"
-        else if (studentId == "default") mysql.users.find { it.id.eq(this.teacherId) }?.name ?: ""
-        else mysql.users.find { it.id.eq(this.studentId) }?.name ?: ""
-    }
 
     fun getTemplateName(): String = mysql.virtualMachines.find { it.uuid.eq(this.templateUuid) }?.name ?: ""
 }
@@ -55,6 +50,7 @@ object VmApplyList : Table<VmApply>("vm_apply") {
     val studentId = varchar("student_id").bindTo { it.studentId }
     val teacherId = varchar("teacher_id").bindTo { it.teacherId }
     val experimentId = int("experiment_id").bindTo { it.experimentId }
+    var applicant = varchar("applicant").bindTo { it.applicant }
     val studentIdList = text("student_id_list")
         .transform({ jsonMapper.readValue<List<String>>(it) }, { jsonMapper.writeValueAsString(it) })
         .bindTo { it.studentIdList }
