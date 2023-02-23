@@ -17,3 +17,14 @@ fun RedisClient.setToken(token: String, userId: String) =
         it.async().set(token, "\"$userId\"")
         Unit
     }
+
+fun RedisClient.getValueByKey(key: String): String? =
+    this.connect().use {
+        it.async().get(key)?.get()
+    }
+
+fun RedisClient.setExpireKey(key: String, value: String, expireTime: Long) =
+    this.connect().use {
+        it.async().setex(key, expireTime, value)
+        Unit
+    }
