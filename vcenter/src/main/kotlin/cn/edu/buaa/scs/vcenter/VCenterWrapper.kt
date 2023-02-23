@@ -1,9 +1,9 @@
 package cn.edu.buaa.scs.vcenter
 
+import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.applyExtraInfo
-import cn.edu.buaa.scs.utils.Constants
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.ConfigVmOptions
 import cn.edu.buaa.scs.vm.CreateVmOptions
@@ -39,11 +39,11 @@ object VCenterWrapper {
     fun initialize() {
         vcenterConnect = {
             val res = BasicConnection()
-            res.uri = URI(Constants.VCenter.endpoint)
-            res.password = Constants.VCenter.password
+            res.uri = URI(globalConfig.vcenter.entrypoint)
+            res.password = globalConfig.vcenter.password
             res.isIgnoreSslErrors = true
             res.trustManager = TrustAllTrustManager()
-            res.username = Constants.VCenter.username
+            res.username = globalConfig.vcenter.username
             res.setRequestTimeout(1000000, TimeUnit.MILLISECONDS)
             res.connect()
             res

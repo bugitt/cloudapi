@@ -1,6 +1,6 @@
 package cn.edu.buaa.scs.vcenter
 
-import cn.edu.buaa.scs.utils.Constants
+import cn.edu.buaa.scs.config.globalConfig
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -8,9 +8,9 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import org.ktorm.jackson.KtormModule
 
-fun main(args: Array<String>) {
+fun main() {
     VCenterWrapper.initialize()
-    embeddedServer(Netty, port = Constants.VCenter.port, host = "0.0.0.0", module = Application::module)
+    embeddedServer(Netty, port = globalConfig.vcenter.port, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 

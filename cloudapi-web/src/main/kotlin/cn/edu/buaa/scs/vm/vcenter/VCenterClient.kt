@@ -1,8 +1,8 @@
 package cn.edu.buaa.scs.vm.vcenter
 
+import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
-import cn.edu.buaa.scs.utils.Constants
 import cn.edu.buaa.scs.utils.HttpClientWrapper
 import cn.edu.buaa.scs.utils.schedule.waitForDone
 import cn.edu.buaa.scs.vm.*
@@ -23,7 +23,7 @@ object VCenterClient : IVMClient {
                     url {
                         protocol = URLProtocol.HTTP
                         host = "127.0.0.1"
-                        port = Constants.VCenter.port
+                        port = globalConfig.vcenter.port
                     }
 
                 }

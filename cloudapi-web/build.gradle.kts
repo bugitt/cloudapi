@@ -55,10 +55,6 @@ dependencies {
     // mysql
     implementation("com.zaxxer:HikariCP:4.0.3")
     implementation("mysql:mysql-connector-java:8.0.25")
-    // mongodb
-    val kmongo_version = "4.7.2"
-    implementation("org.litote.kmongo:kmongo-coroutine:$kmongo_version")
-    implementation("org.litote.kmongo:kmongo-id:$kmongo_version")
 
     // minio
     implementation("io.minio:minio:8.3.4")
