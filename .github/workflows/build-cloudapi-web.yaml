@@ -20,7 +20,7 @@ jobs:
 
       - name: Build and Push Docker Image
         env:
-          image: ${{ secrets.ALIYUN_DOCKER_NAMESPACE }}/cloudapi
+          image: ${{ secrets.ALIYUN_DOCKER_NAMESPACE }}/cloudapi-web
           tags: ${{ github.sha }}
           registry: ${{ secrets.ALIYUN_DOCKER_REGISTRY }}
           username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
