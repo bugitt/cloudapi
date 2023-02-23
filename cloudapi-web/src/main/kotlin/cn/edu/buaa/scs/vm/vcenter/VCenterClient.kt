@@ -10,6 +10,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import org.ktorm.jackson.KtormModule
@@ -20,12 +21,7 @@ object VCenterClient : IVMClient {
         HttpClientWrapper(
             HttpClient(CIO) {
                 defaultRequest {
-                    url {
-                        protocol = URLProtocol.HTTP
-                        host = "127.0.0.1"
-                        port = globalConfig.vcenter.port
-                    }
-
+                    header(HttpHeaders.Authorization, "Bearer ${globalConfig.vcenter.serviceToken}")
                 }
                 install(ContentNegotiation) {
                     jackson {
@@ -36,7 +32,7 @@ object VCenterClient : IVMClient {
                     requestTimeoutMillis = 100000000L
                 }
             },
-            basePath = "/api/v2/vcenter"
+            basePath = globalConfig.vcenter.serviceUrl
         )
     }
 

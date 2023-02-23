@@ -24,5 +24,7 @@ data class Config(
         val entrypoint: String,
         val username: String,
         val password: String,
+        val serviceUrl: String,
+        val serviceToken: String,
     )
 }
