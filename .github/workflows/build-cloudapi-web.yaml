@@ -1,0 +1,32 @@
+name: '编译并推送cloudapi-web模块镜像'
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 11
+
+      - name: Build
+        run: ./gradlew clean :cloudapi-web:build -x test --no-daemon
+
+      - name: Build and Push Docker Image
+        env:
+          image: ${{ secrets.ALIYUN_DOCKER_NAMESPACE }}/cloudapi
+          tags: ${{ github.sha }}
+          registry: ${{ secrets.ALIYUN_DOCKER_REGISTRY }}
+          username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
+          password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
+        run: |
+          cd cloudapi-web
+          docker login ${registry} -u ${username} -p ${password}
+          docker build -t ${image}:${tags} .
+          docker push ${image}:${tags}
