@@ -139,10 +139,10 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                     false
                 }
             }
-            if (exist) {
-                return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
+            return if (exist) {
+                UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
             } else {
-                return UpdateControl.noUpdate()
+                UpdateControl.noUpdate()
             }
         }
 

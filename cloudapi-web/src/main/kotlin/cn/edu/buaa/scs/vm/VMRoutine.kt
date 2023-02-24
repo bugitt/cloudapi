@@ -12,7 +12,6 @@ import cn.edu.buaa.scs.task.Routine
 import cn.edu.buaa.scs.task.RoutineTask
 import cn.edu.buaa.scs.task.Task
 import cn.edu.buaa.scs.utils.ensureNamespace
-import cn.edu.buaa.scs.utils.jsonMapper
 import kotlinx.coroutines.delay
 import org.ktorm.dsl.*
 import org.ktorm.entity.filter
@@ -27,8 +26,12 @@ object VMRoutine : Routine {
             val ns = vmModel.applyId.lowercase()
             ns.ensureNamespace(kubeClient)
             val vmCrdList = vmKubeClient.inNamespace(ns).list().items
-            if (vmCrdList.find { it.spec.name == vmModel.name } == null) {
+            val vmCrd = vmCrdList.find { it.spec.name == vmModel.name }
+            if (vmCrd == null) {
                 vmKubeClient.resource(vmModel.toCrdSpec().toCrd()).createOrReplace()
+            } else {
+                vmCrd.spec = vmCrd.spec.copy(extraInfo = vmModel.toCrdSpec().extraInfo)
+                vmKubeClient.resource(vmCrd).patch()
             }
         }
         delay(4000L)

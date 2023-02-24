@@ -44,10 +44,6 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktor_version")
 
-    // json
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4")
-
     // Redis
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
 
