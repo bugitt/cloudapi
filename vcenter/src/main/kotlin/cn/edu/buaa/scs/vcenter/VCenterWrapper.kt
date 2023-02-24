@@ -401,9 +401,9 @@ internal fun convertVMModel(
         VirtualMachine.NetInfo(it.macAddress, it.ipAddress)
     }
 
-    val extraInfo: VirtualMachineExtraInfo = if (vmConfig.annotation != null) {
+    val extraInfo: VirtualMachineExtraInfo = try {
         jsonMapper.readValue(vmConfig.annotation)
-    } else {
+    } catch (e: Exception) {
         VirtualMachineExtraInfo()
     }
     vm.applyExtraInfo(extraInfo)
