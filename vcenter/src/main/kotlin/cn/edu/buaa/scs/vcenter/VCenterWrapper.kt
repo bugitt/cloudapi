@@ -4,15 +4,20 @@ import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.applyExtraInfo
+import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.ConfigVmOptions
 import cn.edu.buaa.scs.vm.CreateVmOptions
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.BasicConnection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Connection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.WaitForValues
 import com.vmware.vim25.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.net.URI
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -396,7 +401,12 @@ internal fun convertVMModel(
         VirtualMachine.NetInfo(it.macAddress, it.ipAddress)
     }
 
-    vm.applyExtraInfo(VirtualMachineExtraInfo.valueFromJson(vmConfig.annotation))
+    val extraInfo: VirtualMachineExtraInfo = if (vmConfig.annotation != null) {
+        jsonMapper.readValue(vmConfig.annotation)
+    } else {
+        VirtualMachineExtraInfo()
+    }
+    vm.applyExtraInfo(extraInfo)
 
     return vm
 }

@@ -3,6 +3,7 @@
 package cn.edu.buaa.scs.model
 
 import cn.edu.buaa.scs.utils.jsonMapper
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonDeserializer
@@ -63,22 +64,13 @@ data class VirtualMachineExtraInfo(
     @JsonProperty("adminID") val adminId: String = "default",
     @JsonProperty("studentID") val studentId: String = "default",
     @JsonProperty("teacherID") val teacherId: String = "default",
-    @JsonProperty("experimental") val experimental: Boolean = false,
+    @JsonProperty("experimental") @JsonAlias("isExperimental") val experimental: Boolean = false,
     @JsonProperty("experimentID") val experimentId: Int = 0,
     @JsonProperty("applyID") val applyId: String = "default",
     @JsonProperty("templateUuid") val templateUuid: String = "default",
     @JsonProperty("initial") val initial: Boolean = false,
 ) {
     companion object {
-        fun valueFromJson(jsonStr: String?): VirtualMachineExtraInfo {
-            if (jsonStr == null) return VirtualMachineExtraInfo()
-            return try {
-                jsonMapper.readValue(jsonStr)
-            } catch (e: Exception) {
-                VirtualMachineExtraInfo()
-            }
-        }
-
         fun valueFromVirtualMachine(vm: VirtualMachine) =
             VirtualMachineExtraInfo(
                 vm.adminId,
