@@ -21,7 +21,9 @@ import org.ktorm.entity.toList
 object VMRoutine : Routine {
 
     private val updateVmCrd = Routine.alwaysDo("vm-worker-update-crd") {
-        val vmList = vmClient.getAllVMs().getOrThrow()
+        val vmList = mutableListOf<VirtualMachine>()
+        vmList.addAll(vmClient.getAllVMs().getOrThrow())
+        vmList.addAll(sfClient.getAllVMs().getOrThrow())
         vmList.forEach { vmModel ->
             val ns = vmModel.applyId.lowercase()
             ns.ensureNamespace(kubeClient)
