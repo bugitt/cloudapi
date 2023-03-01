@@ -15,6 +15,8 @@ interface ExperimentWorkflowConfiguration : Entity<ExperimentWorkflowConfigurati
 
     var id: Long
     var expId: Int
+    var name: String
+    var studentIdList: List<String>
     var resourcePool: String
     var configuration: String
 }
@@ -22,6 +24,10 @@ interface ExperimentWorkflowConfiguration : Entity<ExperimentWorkflowConfigurati
 object ExperimentWorkflowConfigurations : Table<ExperimentWorkflowConfiguration>("experiment_workflow_configuration") {
     val id = long("id").primaryKey().bindTo { it.id }
     val expId = int("exp_id").bindTo { it.expId }
+    val name = varchar("name").bindTo { it.name }
+    val studentIdList = varchar("student_list").transform({ listStr ->
+        listStr.split(",").map { it.trim() }.filterNot { it.isBlank() }
+    }, { it.joinToString(",") }).bindTo { it.studentIdList }
     val resourcePool = varchar("resource_pool").bindTo { it.resourcePool }
     val configuration = varchar("configuration").bindTo { it.configuration }
 }

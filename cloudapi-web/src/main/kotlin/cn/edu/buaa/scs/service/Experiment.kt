@@ -259,6 +259,8 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
             this.expId = expId
             this.resourcePool = resourcePoolName
             this.configuration = configuration
+            this.name = "作业提交与展示"
+            this.studentIdList = studentList.map { it.id }
         }
         mysql.useTransaction {
             mysql.experimentWorkflowConfigurations.add(conf)
