@@ -41,12 +41,12 @@ fun formatHeaders(headers: Map<String, List<String>>): String {
 
 fun String.ensureNamespace(client: KubernetesClient) {
     val nsName = this
-    if (!client.namespaces().list().items.map { it.metadata.name }.contains(this)) {
-        val namespace = Namespace().apply {
+    if (client.namespaces().withName(nsName).get() == null) {
+        val ns = Namespace().apply {
             metadata = ObjectMeta().apply {
-                this.name = nsName
+                name = nsName
             }
         }
-        client.namespaces().resource(namespace).create()
+        client.resource(ns).create()
     }
 }
