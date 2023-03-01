@@ -13,7 +13,6 @@ import cn.edu.buaa.scs.utils.schedule.waitForDone
 import cn.edu.buaa.scs.utils.setExpireKey
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.IVMClient
-import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -25,16 +24,16 @@ import io.ktor.serialization.jackson.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import org.ktorm.jackson.KtormModule
 import java.security.cert.X509Certificate
-import java.util.concurrent.locks.ReentrantLock
 import javax.net.ssl.X509TrustManager
 
 object SangforClient : IVMClient {
     val username = application.getConfigString("vm.sangfor.username")
     val password = application.getConfigString("vm.sangfor.password")
-    private val tokenLock = ReentrantLock()
-    private val createLock = ReentrantLock()
+    private val tokenLock = Mutex()
+    private val createLock = Mutex()
 
     internal val client by lazy {
         HttpClient(CIO) {
