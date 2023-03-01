@@ -42,7 +42,7 @@ fun VirtualMachine.applySangforExtraInfo(extraInfo: String) {
             this.teacherId = "default"
         }
         this.isTemplate = info[1].toBoolean()
-        this.isExperimental = info[2].toInt() != -1
+        this.isExperimental = info[2].toInt() != 0
         this.experimentId = info[2].toInt()
         this.applyId = info[3]
     } else {
@@ -51,10 +51,10 @@ fun VirtualMachine.applySangforExtraInfo(extraInfo: String) {
         this.teacherId = "default"
         this.isExperimental = false
         this.isTemplate = false
-        this.experimentId = -1
-        this.applyId = ""
+        this.experimentId = 0
+        this.applyId = "default"
     }
-    this.templateUuid = ""
+    this.templateUuid = "default"
     this.initial = false
 }
 
