@@ -150,10 +150,15 @@ class VmService(val call: ApplicationCall) : IService {
 
     fun addVmsToApply(id: String, studentIdList: List<String>): VmApply {
         val vmApply = mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
+        val templateVM = mysql.virtualMachines.find { it.uuid.eq(vmApply.templateUuid) }
+        var platform = "vcenter"
+        templateVM?.let {
+            platform = it.platform
+        }
         call.user().assertWrite(vmApply)
         if (!vmApply.isApproved()) throw BadRequestException("the VMApply(${vmApply.id} is not approved")
         vmApply.namespaceName().ensureNamespace(kubeClient)
-        vmApply.toVmCrdSpec(false, studentIdList).forEach { spec ->
+        vmApply.toVmCrdSpec(false, platform, studentIdList).forEach { spec ->
             vmKubeClient
                 .inNamespace(vmApply.namespaceName())
                 .resource(spec.toCrd())
@@ -171,9 +176,15 @@ class VmService(val call: ApplicationCall) : IService {
         vmApply.replyMsg = replyMsg
         vmApply.handleTime = System.currentTimeMillis()
 
+        val templateVM = mysql.virtualMachines.find { it.uuid.eq(vmApply.templateUuid) }
+        var platform = "vcenter"
+        templateVM?.let {
+            platform = it.platform
+        }
+
         if (approve) {
             vmApply.namespaceName().ensureNamespace(kubeClient)
-            vmApply.toVmCrdSpec(true).forEach { spec ->
+            vmApply.toVmCrdSpec(true, platform).forEach { spec ->
                 vmKubeClient
                     .inNamespace(vmApply.namespaceName())
                     .resource(spec.toCrd())
@@ -370,7 +381,7 @@ fun VmApply.namespaceName(): String {
     return this.id.lowercase()
 }
 
-fun VmApply.toVmCrdSpec(initial: Boolean = false, extraStudentList: List<String>? = null): List<VirtualMachineSpec> {
+fun VmApply.toVmCrdSpec(initial: Boolean = false, platform: String = "vcenter", extraStudentList: List<String>? = null): List<VirtualMachineSpec> {
     val vmApply = this
     val baseExtraInfo = VirtualMachineExtraInfo(
         applyId = vmApply.id,
@@ -384,7 +395,7 @@ fun VmApply.toVmCrdSpec(initial: Boolean = false, extraStudentList: List<String>
         diskNum = 1,
         diskSize = vmApply.diskSize,
         powerState = VirtualMachine.PowerState.PoweredOff,
-        platform = "vcenter",
+        platform = platform,
         template = false,
         extraInfo = jsonMapper.writeValueAsString(baseExtraInfo),
     )
