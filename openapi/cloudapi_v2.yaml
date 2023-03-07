@@ -65,11 +65,7 @@ paths:
       description: 获取一项实验（作业）详情
       security:
         - Authorization: []
-      parameters:
-        - schema:
-            type: boolean
-          in: query
-          name: getWorkflowConfiguration
+      parameters: []
     put:
       summary: 修改实验/作业信息
       operationId: put-experimnet-experimentId
@@ -1293,6 +1289,11 @@ paths:
           in: query
           name: name
           description: 项目名称
+        - schema:
+            type: string
+          in: query
+          name: ownerId
+          description: 项目所有者的ID
     post:
       summary: 创建新项目
       operationId: post-projects
@@ -1798,7 +1799,7 @@ paths:
         获取教师和学生列表。仅限管理员、教师调用。
         按照学生学号倒序排列（新注册的学生排序靠前）
       security:
-        - Authorization: [ ]
+        - Authorization: []
       parameters:
         - schema:
             type: string
@@ -2016,7 +2017,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExperimentWorkflowConfigurationResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentWorkflowConfigurationResponse'
       operationId: get-experiment-experimentId-workflowConfiguration
       description: 获取某项实验的Workflow配置
       security:
@@ -2111,7 +2114,7 @@ paths:
           in: query
           name: entityType
         - schema:
-            type: integer
+            type: string
             format: int64
           in: query
           name: entityId
@@ -2200,6 +2203,54 @@ paths:
           in: query
           name: experimentId
     parameters: []
+  '/experiment/{experimentId}/simpleWorkflowConfiguration':
+    parameters:
+      - schema:
+          type: integer
+          format: int32
+        name: experimentId
+        in: path
+        required: true
+    get:
+      summary: 获取某个实验中的所有工作流配置（简单回应）
+      tags:
+        - 项目
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimpleEntity'
+      operationId: get-experiment-experimentId-simpleWorkflowConfiguration
+      description: 获取某个实验中的所有工作流配置（简单回应）
+      security:
+        - Authorization: []
+  '/experimentWorkflowConfiguration/{id}':
+    parameters:
+      - schema:
+          type: integer
+          format: int64
+        name: id
+        in: path
+        required: true
+    get:
+      summary: 获取某项实验配置
+      tags:
+        - 项目
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentWorkflowConfigurationResponse'
+      operationId: get-workflowConfiguration-id
+      description: 根据ID获取某项实验配置
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -2517,8 +2568,6 @@ components:
           $ref: '#/components/schemas/CourseResponse'
         vm:
           $ref: '#/components/schemas/ExpVmInfo'
-        workflowExperimentConfiguration:
-          $ref: '#/components/schemas/ExperimentWorkflowConfigurationResponse'
       required:
         - id
         - name
@@ -3876,10 +3925,20 @@ components:
         configuration:
           type: string
           description: json string
+        name:
+          type: string
+        studentIdList:
+          type: array
+          items:
+            type: string
+        needSubmit:
+          type: boolean
       required:
         - expId
         - resource
         - configuration
+        - name
+        - needSubmit
     ExperimentWorkflowConfigurationResponse:
       title: ExperimentWorkflowConfigurationResponse
       type: object
@@ -3898,11 +3957,22 @@ components:
         configuration:
           type: string
           description: json string
+        studentList:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserModel'
+        name:
+          type: string
+        needSubmit:
+          type: boolean
       required:
         - id
         - expId
         - resourcePool
         - configuration
+        - studentList
+        - name
+        - needSubmit
     LogRecordSearchRequest:
       title: LogRecordSearchRequest
       x-stoplight:
@@ -4052,6 +4122,20 @@ components:
       required:
         - wanted
         - actual
+    SimpleEntity:
+      title: SimpleEntity
+      x-stoplight:
+        id: rgvatpnyhv4d8
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+      required:
+        - id
+        - name
   securitySchemes:
     Authorization:
       type: apiKey

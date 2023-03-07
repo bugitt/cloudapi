@@ -173,7 +173,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         return project
     }
 
-    fun getProjects(expID: Int? = null, name: String? = null): List<Project> {
+    fun getProjects(expID: Int? = null, name: String? = null, ownerId: String? = null): List<Project> {
         if (name != null) {
             val project = mysql.projects.find { it.name eq name } ?: throw NotFoundException("Project not found")
             call.user().assertRead(project)
@@ -183,7 +183,8 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         if (expID != null) {
             val experiment = Experiment.id(expID)
             return if (call.user().isCourseAdmin(experiment.course)) {
-                mysql.projects.filter { it.expID eq expID }.toList()
+                if (ownerId == null) mysql.projects.filter { it.expID eq expID }.toList()
+                else mysql.projects.filter { it.expID eq expID and it.owner.eq(ownerId) }.toList()
             } else {
                 mysql.projectMembers.find { it.expId.eq(expID) and it.userId.eq(call.userId()) }
                     ?.let { projectMember ->

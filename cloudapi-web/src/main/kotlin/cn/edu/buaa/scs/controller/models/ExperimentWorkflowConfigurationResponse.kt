@@ -11,6 +11,7 @@
 */
 package cn.edu.buaa.scs.controller.models
 
+import cn.edu.buaa.scs.controller.models.UserModel
 
 /**
  * 
@@ -18,6 +19,9 @@ package cn.edu.buaa.scs.controller.models
  * @param expId 
  * @param resourcePool name of resourcePool crd
  * @param configuration json string
+ * @param studentList 
+ * @param name 
+ * @param needSubmit 
  */
 data class ExperimentWorkflowConfigurationResponse(
     val id: kotlin.Long,
@@ -25,6 +29,9 @@ data class ExperimentWorkflowConfigurationResponse(
     /* name of resourcePool crd */
     val resourcePool: kotlin.String,
     /* json string */
-    val configuration: kotlin.String
+    val configuration: kotlin.String,
+    val studentList: kotlin.collections.List<UserModel>,
+    val name: kotlin.String,
+    val needSubmit: kotlin.Boolean
 ) 
 

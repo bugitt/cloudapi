@@ -136,9 +136,10 @@ class AuthService(val call: ApplicationCall) : IService {
         regex.find(resp)?.groupValues?.get(1)?.uppercase() ?: throw BadRequestException("BUAA SSO Token 验证失败")
     }
 
-    fun checkPermission(entityType: String, entityId: Long, action: String): Boolean {
+    fun checkPermission(entityType: String, entityId: String, action: String): Boolean {
         val entity: IEntity = when (entityType.lowercase()) {
-            "project" -> Project.id(entityId)
+            "project" -> Project.id(entityId.toLong())
+            "projectname" -> mysql.projects.find { it.name eq entityId } ?: throw BadRequestException("项目不存在")
             "course" -> Course.id(entityId.toInt())
             "assignment" -> Assignment.id(entityId.toInt())
             "experiment" -> Experiment.id(entityId.toInt())

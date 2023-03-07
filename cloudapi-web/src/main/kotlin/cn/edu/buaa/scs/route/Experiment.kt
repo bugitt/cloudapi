@@ -2,12 +2,8 @@ package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
-import cn.edu.buaa.scs.model.Assignment
-import cn.edu.buaa.scs.model.AssignmentReview
-import cn.edu.buaa.scs.model.Experiment
-import cn.edu.buaa.scs.model.ExperimentWorkflowConfiguration
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.*
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -49,14 +45,7 @@ fun Route.experimentRoute() {
 
             get {
                 val experiment = call.experiment.get(call.getExpIdFromPath())
-                val getWorkflowConfiguration =
-                    call.request.queryParameters["getWorkflowConfiguration"]?.toBoolean() ?: false
-                val wfConf = if (getWorkflowConfiguration) {
-                    call.experiment.getWorkflowConfiguration(call.getExpIdFromPath())
-                } else {
-                    null
-                }
-                call.respond(call.convertExperimentResponse(experiment, wfConf))
+                call.respond(call.convertExperimentResponse(experiment))
             }
 
             put {
@@ -126,12 +115,22 @@ fun Route.experimentRoute() {
                 }
             }
 
+            route("/simpleWorkflowConfiguration") {
+                get {
+                    call.respond(
+                        call.experiment.getSimpleWorkflowConfiguration(call.getExpIdFromPath())
+                    )
+                }
+            }
+
             route("/workflowConfiguration") {
                 get {
-                    call.experiment.getWorkflowConfiguration(call.getExpIdFromPath())?.let {
-                        call.respond(convertExperimentWorkflowConfigurationResponse(it))
-                    } ?: call.respond(HttpStatusCode.NotFound)
+                    call.respond(
+                        call.experiment.getWorkflowConfigurationListByExp(call.getExpIdFromPath())
+                            .map { convertExperimentWorkflowConfigurationResponse(it) }
+                    )
                 }
+
                 post {
                     val req = call.receive<ExperimentWorkflowConfigurationRequest>()
                     call.respond(
@@ -139,12 +138,31 @@ fun Route.experimentRoute() {
                             call.experiment.createOrUpdateWorkflowConfiguration(
                                 call.getExpIdFromPath(),
                                 req.resource,
-                                req.configuration
+                                req.configuration,
+                                req.name,
+                                req.studentIdList,
+                                req.needSubmit,
                             )
                         )
                     )
                 }
             }
+        }
+    }
+
+    route("/experimentWorkflowConfiguration/{id}") {
+        fun ApplicationCall.getExpWorkflowIdFromPath(): Long =
+            parameters["id"]?.toLong()
+                ?: throw BadRequestException("experiment workflow id is invalid")
+
+        get {
+            call.respond(
+                convertExperimentWorkflowConfigurationResponse(
+                    call.experiment.getWorkflowConfigurationById(
+                        call.getExpWorkflowIdFromPath()
+                    )
+                )
+            )
         }
     }
 
@@ -173,10 +191,7 @@ fun Route.experimentRoute() {
     }
 }
 
-internal fun ApplicationCall.convertExperimentResponse(
-    experiment: Experiment,
-    wfConf: ExperimentWorkflowConfiguration? = null
-): ExperimentResponse =
+internal fun ApplicationCall.convertExperimentResponse(experiment: Experiment): ExperimentResponse =
     ExperimentResponse(
         id = experiment.id,
         name = experiment.name,
@@ -195,7 +210,6 @@ internal fun ApplicationCall.convertExperimentResponse(
         sentEmail = experiment.sentEmail,
         course = this.convertCourseResponse(experiment.course, true),
         vm = experiment.getVmApply()?.let { convertExpVmInfo(it) },
-        workflowExperimentConfiguration = wfConf?.let { convertExperimentWorkflowConfigurationResponse(it) }
     )
 
 internal fun convertAssignmentList(assignmentList: List<Assignment>): AssignmentListResponse =
@@ -232,4 +246,7 @@ internal fun convertExperimentWorkflowConfigurationResponse(configuration: Exper
         expId = configuration.expId,
         resourcePool = configuration.resourcePool,
         configuration = configuration.configuration,
+        name = configuration.name,
+        studentList = User.getUerListByIdList(configuration.studentIdList).map { convertUserModel(it) },
+        needSubmit = configuration.needSubmit,
     )

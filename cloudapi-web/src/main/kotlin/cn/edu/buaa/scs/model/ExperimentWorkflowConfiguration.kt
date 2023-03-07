@@ -5,10 +5,7 @@ package cn.edu.buaa.scs.model
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.long
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 
 interface ExperimentWorkflowConfiguration : Entity<ExperimentWorkflowConfiguration>, IEntity {
     companion object : Entity.Factory<ExperimentWorkflowConfiguration>()
@@ -19,6 +16,7 @@ interface ExperimentWorkflowConfiguration : Entity<ExperimentWorkflowConfigurati
     var studentIdList: List<String>
     var resourcePool: String
     var configuration: String
+    var needSubmit: Boolean
 }
 
 object ExperimentWorkflowConfigurations : Table<ExperimentWorkflowConfiguration>("experiment_workflow_configuration") {
@@ -30,6 +28,7 @@ object ExperimentWorkflowConfigurations : Table<ExperimentWorkflowConfiguration>
     }, { it.joinToString(",") }).bindTo { it.studentIdList }
     val resourcePool = varchar("resource_pool").bindTo { it.resourcePool }
     val configuration = varchar("configuration").bindTo { it.configuration }
+    val needSubmit = boolean("need_submit").bindTo { it.needSubmit }
 }
 
 val Database.experimentWorkflowConfigurations get() = this.sequenceOf(ExperimentWorkflowConfigurations)

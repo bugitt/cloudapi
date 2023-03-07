@@ -6,6 +6,7 @@ import cn.edu.buaa.scs.auth.authRead
 import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
 import cn.edu.buaa.scs.controller.models.PutExperimentRequest
 import cn.edu.buaa.scs.controller.models.ResourceModel
+import cn.edu.buaa.scs.controller.models.SimpleEntity
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.kube.BusinessKubeClient
@@ -15,6 +16,7 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.util.*
@@ -215,27 +217,52 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
     }
 
-    fun getWorkflowConfiguration(expId: Int): ExperimentWorkflowConfiguration? {
+    fun getSimpleWorkflowConfiguration(expId: Int): List<SimpleEntity> {
         val experiment = Experiment.id(expId)
         call.user().assertRead(experiment)
-        return mysql.experimentWorkflowConfigurations.find { it.expId.eq(expId) }
+        return mysql.experimentWorkflowConfigurations.filter { it.expId.eq(expId) }.map { SimpleEntity(it.id, it.name) }
+            .toList()
+    }
+
+    fun getWorkflowConfigurationById(id: Long): ExperimentWorkflowConfiguration {
+        val conf = mysql.experimentWorkflowConfigurations.find { it.id eq id }
+            ?: throw NotFoundException("workflow configuration $id not found")
+        val experiment = Experiment.id(conf.expId)
+        call.user().assertRead(experiment)
+        return conf
+    }
+
+    fun getWorkflowConfigurationListByExp(expId: Int): List<ExperimentWorkflowConfiguration> {
+        val experiment = Experiment.id(expId)
+        call.user().assertRead(experiment)
+        return mysql.experimentWorkflowConfigurations.filter { it.expId.eq(expId) }.toList()
     }
 
     suspend fun createOrUpdateWorkflowConfiguration(
         expId: Int,
         resource: ResourceModel,
         configuration: String,
+        name: String,
+        reqStudentIdList: List<String>?,
+        needSubmit: Boolean,
     ): ExperimentWorkflowConfiguration {
-        if (mysql.experimentWorkflowConfigurations.exists { it.expId.eq(expId) }) {
-            throw BadRequestException("同一实验仅能配置一次工作流")
+        if (needSubmit && mysql.experimentWorkflowConfigurations.exists {
+                it.expId.eq(expId).and(it.needSubmit.eq(true))
+            }) {
+            throw BadRequestException("同一实验仅能配置一项用于作业提交与展示的工作流")
         }
 
         val experiment = Experiment.id(expId)
         call.user().assertWrite(experiment)
 
+        // check reqStudentIdList
+        val courseStudentList = call.course.getAllStudentsInternal(experiment.course.id).associateBy { it.id }
+        val studentList = reqStudentIdList?.mapNotNull { courseStudentList[it] } ?: courseStudentList.values.toList()
+
+        val workflowCnt = mysql.experimentWorkflowConfigurations.count { it.expId.eq(expId) }
+
         // create resourcePool
-        val resourcePoolName = "exp-$expId-workflow"
-        val studentList = call.course.getAllStudentsInternal(experiment.course.id)
+        val resourcePoolName = "exp-$expId-workflow-${workflowCnt + 1}"
         BusinessKubeClient
             .createResourcePool(resourcePoolName, resource.cpu * studentList.size, resource.memory * studentList.size)
             .getOrThrow()
@@ -259,8 +286,9 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
             this.expId = expId
             this.resourcePool = resourcePoolName
             this.configuration = configuration
-            this.name = "作业提交与展示"
+            this.name = name
             this.studentIdList = studentList.map { it.id }
+            this.needSubmit = needSubmit
         }
         mysql.useTransaction {
             mysql.experimentWorkflowConfigurations.add(conf)

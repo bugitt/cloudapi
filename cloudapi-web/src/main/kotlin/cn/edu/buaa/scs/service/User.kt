@@ -7,14 +7,17 @@ import cn.edu.buaa.scs.model.users
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.user
 import io.ktor.server.application.*
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.dsl.like
-import org.ktorm.dsl.or
+import org.ktorm.dsl.*
 import org.ktorm.entity.*
 
 fun User.Companion.id(id: String): User =
     mysql.users.find { it.id eq id } ?: throw BusinessException("find user($id) from mysql error")
+
+
+fun User.Companion.getUerListByIdList(idList: List<String>): List<User> {
+    return if (idList.isEmpty()) listOf()
+    else mysql.users.filter { it.id.inList(idList) }.toList()
+}
 
 val ApplicationCall.hr
     get() = UserService.getSvc(this) { UserService(this) }

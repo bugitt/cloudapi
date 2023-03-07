@@ -18,11 +18,17 @@ import cn.edu.buaa.scs.controller.models.ResourceModel
  * @param expId 
  * @param resource 
  * @param configuration json string
+ * @param name 
+ * @param needSubmit 
+ * @param studentIdList 
  */
 data class ExperimentWorkflowConfigurationRequest(
     val expId: kotlin.Int,
     val resource: ResourceModel,
     /* json string */
-    val configuration: kotlin.String
+    val configuration: kotlin.String,
+    val name: kotlin.String,
+    val needSubmit: kotlin.Boolean,
+    val studentIdList: kotlin.collections.List<kotlin.String>? = null
 ) 
 
