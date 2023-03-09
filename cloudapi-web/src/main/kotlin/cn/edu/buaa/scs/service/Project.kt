@@ -89,6 +89,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             displayName = "${user.id}的个人项目",
             description = "${user.id}的个人项目",
             isPersonal = true,
+            alreadyHasUser = true,
         )
         user.flushChanges()
     }
@@ -100,11 +101,14 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         displayName: String = "",
         description: String = "",
         isPersonal: Boolean = false,
+        alreadyHasUser: Boolean = false,
     ): Project {
         if (mysql.projects.exists { it.name.eq(name) }) {
             return mysql.projects.find { it.name eq name }!!
         }
-        createUser(user)
+        if (!alreadyHasUser) {
+            createUser(user)
+        }
 
         val experiment = if (expID != null) {
             val experiment = Experiment.id(expID)
@@ -164,7 +168,8 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         expID,
         displayName,
         description,
-        isPersonal
+        isPersonal,
+        alreadyHasUser = true,
     )
 
     fun getProject(projectID: Long): Project {
