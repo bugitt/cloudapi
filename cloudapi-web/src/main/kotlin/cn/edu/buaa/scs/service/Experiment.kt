@@ -17,6 +17,7 @@ import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
+import org.apache.commons.lang3.RandomStringUtils
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.util.*
@@ -232,6 +233,22 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         return conf
     }
 
+    fun deleteWorkflowConfigurationById(id: Long) {
+        val conf = mysql.experimentWorkflowConfigurations.find { it.id eq id }
+            ?: throw NotFoundException("workflow configuration $id not found")
+        val experiment = Experiment.id(conf.expId)
+        call.user().assertWrite(experiment)
+        mysql.useTransaction {
+            // delete conf
+            conf.delete()
+            // delete resourcePool
+            mysql.resourcePools.removeIf { it.name eq conf.resourcePool }
+            // delete resourcePoolCrd
+            BusinessKubeClient.deleteResourcePool(conf.resourcePool)
+        }
+        conf.delete()
+    }
+
     fun getWorkflowConfigurationListByExp(expId: Int): List<ExperimentWorkflowConfiguration> {
         val experiment = Experiment.id(expId)
         call.user().assertRead(experiment)
@@ -259,14 +276,6 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         val courseStudentList = call.course.getAllStudentsInternal(experiment.course.id).associateBy { it.id }
         val studentList = reqStudentIdList?.mapNotNull { courseStudentList[it] } ?: courseStudentList.values.toList()
 
-        val workflowCnt = mysql.experimentWorkflowConfigurations.count { it.expId.eq(expId) }
-
-        // create resourcePool
-        val resourcePoolName = "exp-$expId-workflow-${workflowCnt + 1}"
-        BusinessKubeClient
-            .createResourcePool(resourcePoolName, resource.cpu * studentList.size, resource.memory * studentList.size)
-            .getOrThrow()
-
         // create projects for every student
         CommonScheduler.multiCoroutinesProduceSync(
             studentList.map { student ->
@@ -282,6 +291,7 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
             }
         )
 
+        val resourcePoolName = "exp-$expId-workflow-${RandomStringUtils.randomAlphanumeric(10).lowercase()}"
         val conf = ExperimentWorkflowConfiguration {
             this.expId = expId
             this.resourcePool = resourcePoolName
@@ -290,10 +300,21 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
             this.studentIdList = studentList.map { it.id }
             this.needSubmit = needSubmit
         }
+
         mysql.useTransaction {
             mysql.experimentWorkflowConfigurations.add(conf)
             experiment.enableWorkflow = true
             mysql.experiments.update(experiment)
+
+            // create resourcePool
+            BusinessKubeClient
+                .createResourcePool(
+                    resourcePoolName,
+                    resource.cpu * studentList.size,
+                    resource.memory * studentList.size,
+                    conf.id,
+                )
+                .getOrThrow()
 
             val resourcePool = ResourcePool {
                 this.name = resourcePoolName

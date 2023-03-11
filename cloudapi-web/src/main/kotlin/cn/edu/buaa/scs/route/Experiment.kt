@@ -164,6 +164,11 @@ fun Route.experimentRoute() {
                 )
             )
         }
+
+        delete {
+            call.experiment.deleteWorkflowConfigurationById(call.getExpWorkflowIdFromPath())
+            call.respond("ok")
+        }
     }
 
     route("/assignmentReviews") {

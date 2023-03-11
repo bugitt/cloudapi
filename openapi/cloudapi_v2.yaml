@@ -2251,6 +2251,17 @@ paths:
       description: 根据ID获取某项实验配置
       security:
         - Authorization: []
+    delete:
+      summary: 删除某项实验工作流配置
+      operationId: delete-experimentWorkflowConfiguration-id
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 项目
+      description: 根据ID删除某项实验工作流配置
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:

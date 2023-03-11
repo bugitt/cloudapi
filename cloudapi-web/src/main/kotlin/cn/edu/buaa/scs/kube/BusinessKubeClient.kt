@@ -70,18 +70,30 @@ object BusinessKubeClient : IProjectManager {
         businessKubeClientBuilder().secrets().inNamespace(secret.metadata.namespace).resource(secret).createOrReplace()
     }
 
-    fun createResourcePool(name: String, cpu: Int, memory: Int) = runCatching {
+    fun createResourcePool(name: String, cpu: Int, memory: Int, wfConfigId: Long) = runCatching {
         val resourcePoolYamlStr = """
 apiVersion: cloudapi.scs.buaa.edu.cn/v1alpha1
 kind: ResourcePool
 metadata:
   name: $name
+  labels:
+    wfConfigId: $wfConfigId
 spec:
   capacity: 
     cpu: $cpu
     memory: $memory
 """
         businessKubeClientBuilder().load(resourcePoolYamlStr.byteInputStream()).createOrReplace()
+    }
+
+    fun deleteResourcePool(name: String) = runCatching {
+        val resourcePoolYamlStr = """
+apiVersion: cloudapi.scs.buaa.edu.cn/v1alpha1
+kind: ResourcePool
+metadata:
+  name: $name
+"""
+        businessKubeClientBuilder().load(resourcePoolYamlStr.byteInputStream()).delete()
     }
 
     fun deleteResource(namespace: String, resourceName: String) = runCatching {
