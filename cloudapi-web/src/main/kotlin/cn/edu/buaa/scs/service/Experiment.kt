@@ -3,10 +3,7 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.auth.authRead
-import cn.edu.buaa.scs.controller.models.CreateExperimentRequest
-import cn.edu.buaa.scs.controller.models.PutExperimentRequest
-import cn.edu.buaa.scs.controller.models.ResourceModel
-import cn.edu.buaa.scs.controller.models.SimpleEntity
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.kube.BusinessKubeClient
@@ -218,11 +215,15 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         return CourseService.StatCourseExps.ExpDetail(experiment, vmCnt, submittedAssignmentCnt)
     }
 
-    fun getSimpleWorkflowConfiguration(expId: Int): List<SimpleEntity> {
+    fun getSimpleWorkflowConfiguration(expId: Int): SimpleWorkflowConfigurationResponse {
         val experiment = Experiment.id(expId)
         call.user().assertRead(experiment)
-        return mysql.experimentWorkflowConfigurations.filter { it.expId.eq(expId) }.map { SimpleEntity(it.id, it.name) }
-            .toList()
+        val entityList =
+            mysql.experimentWorkflowConfigurations.filter { it.expId.eq(expId) }.map { SimpleEntity(it.id, it.name) }
+                .toList()
+        val hasSubmitType =
+            mysql.experimentWorkflowConfigurations.exists { it.expId.eq(expId).and(it.needSubmit.eq(true)) }
+        return SimpleWorkflowConfigurationResponse(entityList, hasSubmitType)
     }
 
     fun getWorkflowConfigurationById(id: Long): ExperimentWorkflowConfiguration {

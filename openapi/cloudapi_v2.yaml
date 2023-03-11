@@ -2221,9 +2221,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SimpleEntity'
+                $ref: '#/components/schemas/SimpleWorkflowConfigurationResponse'
       operationId: get-experiment-experimentId-simpleWorkflowConfiguration
       description: 获取某个实验中的所有工作流配置（简单回应）
       security:
@@ -4147,6 +4145,21 @@ components:
       required:
         - id
         - name
+    SimpleWorkflowConfigurationResponse:
+      title: SimpleWorkflowConfigurationResponse
+      x-stoplight:
+        id: nqr0j9ddqvvsp
+      type: object
+      properties:
+        entityList:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleEntity'
+        hasSubmitType:
+          type: boolean
+      required:
+        - entityList
+        - hasSubmitType
   securitySchemes:
     Authorization:
       type: apiKey
