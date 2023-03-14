@@ -22,7 +22,8 @@ import java.nio.file.Files
 fun Route.fileRoute() {
     route("/scsos") {
         post {
-            val fileUrl = call.file.scsosCreate()
+            val overrideName = call.request.queryParameters["overrideName"]?.toBoolean()
+            val fileUrl = call.file.scsosCreate(overrideName ?: false)
             call.respond(fileUrl)
         }
     }

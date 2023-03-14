@@ -12,11 +12,8 @@ import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.storage.file.FileManager
 import cn.edu.buaa.scs.storage.file.S3
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.getConfigString
+import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
-import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
-import cn.edu.buaa.scs.utils.value
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -77,7 +74,7 @@ class FileService(val call: ApplicationCall) : IService {
      * 简单的对象存储上传
      * @return String 可供访问的文件URL
      */
-    suspend fun scsosCreate(): String {
+    suspend fun scsosCreate(overrideName: Boolean): String {
         val multipart = call.receiveMultipart()
         var filePart: PartData.FileItem? = null
         multipart.forEachPart { part ->
@@ -94,7 +91,11 @@ class FileService(val call: ApplicationCall) : IService {
         }
         val originName = filePart?.originalFileName ?: ""
         val fileName = withContext(Dispatchers.IO) {
-            val fileName = URLEncoder.encode("${UUID.randomUUID()}-$originName", "UTF-8")
+            val fileName = if (overrideName) {
+                "${UUID.randomUUID()}.${originName.getFileExtension()}"
+            } else {
+                URLEncoder.encode("${UUID.randomUUID()}-$originName", "UTF-8")
+            }
             filePart?.streamProvider?.invoke()?.use { input ->
                 scsosS3.uploadFile(
                     "public/$fileName",
