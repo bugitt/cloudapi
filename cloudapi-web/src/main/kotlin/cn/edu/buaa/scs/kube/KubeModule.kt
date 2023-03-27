@@ -34,7 +34,7 @@ fun Application.kubeModule() {
     Serialization.jsonMapper().registerModules(kotlinModule(), KtormModule())
 
     logger("kube")().info { "connected to official kubernetes apiserver successfully: ${kubeClient.kubernetesVersion.gitVersion}" }
-//    registerVirtualMachineOperator()
+    registerVirtualMachineOperator()
 
     ImageBuildRoutine.run()
 }
