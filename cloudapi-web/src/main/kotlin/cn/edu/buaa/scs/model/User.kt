@@ -143,10 +143,10 @@ interface User : Entity<User>, IEntity {
         } else if (isTeacher()) {
             mysql.courses.filter { it.teacherId.eq(this.id) }.map { it.id }
         } else {
-            mysql.assistants.filter { it.studentId.eq(this.id) }.map { it.id }
-        }
+            mysql.assistants.filter { it.studentId.eq(this.id) }.map { it.courseId }.map { it.toInt() }
+        }.distinct()
         return if (courseIdList.isEmpty()) listOf()
-        else mysql.experiments.filter { it.courseId.inList(courseIdList.distinct()) }.map { it.id }.distinct()
+        else mysql.experiments.filter { it.courseId.inList(courseIdList) }.map { it.id }.distinct()
     }
 
     fun getAllAssistantIdList(): List<String> {
