@@ -102,92 +102,95 @@ class PeerService(val call: ApplicationCall) : IService {
     suspend fun enable(expId: Int) {
         val mutex = enableServiceMutexMap.getOrPut(expId) { Mutex() }
         mutex.lock()
-        val experiment = Experiment.id(expId)
-        call.user().authWrite(experiment)
-        // 检查是否开启互评了
-        if (experiment.peerAssessmentStart) {
-            return
-        }
-        // 检查是不是已经有8个标准作业了
-        val peerStandardList =
-            mysql.peerStands.filter { it.expId.eq(expId) and it.isCompleted.eq(true) }.toList()
-        if (peerStandardList.size < 8) {
-            throw BadRequestException("互评作业的标准作业数量小于8，无法开启互评")
-        }
-
-        val buildPeerTask: BatchInsertStatementBuilder<PeerTasks>.(User, Assignment, Boolean) -> Unit =
-            { assessor, assignment, isStandard ->
-                item {
-                    set(it.studentId, assignment.studentId)
-                    set(it.assignmentId, assignment.id)
-                    set(it.expId, assignment.experimentId)
-                    set(it.assessorId, assessor.id)
-                    set(it.assessorName, assessor.name)
-                    set(it.isStandard, isStandard)
-                    set(it.status, 0)
-                }
+        try {
+            val experiment = Experiment.id(expId)
+            call.user().authWrite(experiment)
+            // 检查是否开启互评了
+            if (experiment.peerAssessmentStart) {
+                return
+            }
+            // 检查是不是已经有8个标准作业了
+            val peerStandardList =
+                mysql.peerStands.filter { it.expId.eq(expId) and it.isCompleted.eq(true) }.toList()
+            if (peerStandardList.size < 8) {
+                throw BadRequestException("互评作业的标准作业数量小于8，无法开启互评")
             }
 
-        // 选择分数居中的四个, 设置为真正的标准作业
-        val middlePeerStands = peerStandardList.sortedBy { it.score }.slice(2..5)
-        val standardAssignments =
-            mysql.assignments.filter { it.id.inList(middlePeerStands.map { p -> p.assignmentId }) }.toList()
-
-        mysql.useTransaction {
-            // 删掉没用的标准作业
-            mysql.delete(PeerStandards) {
-                it.expId.eq(expId) and it.id.notInList(middlePeerStands.map { p -> p.id })
-            }
-
-            val assignments = mysql.assignments.filter {
-                it.expId.eq(expId) and
-                        it.fileId.isNotNull() and it.fileId.notEq(0)
-            }
-                .toList()
-                .filterNot { middlePeerStands.map { pa -> pa.assignmentId }.contains(it.id) }
-                .shuffled()
-
-            val userMap = call.course.getAllStudentsInternal(experiment.course.id).associateBy { it.id }
-
-            val len = assignments.size
-            val batchInsertActionList: MutableList<suspend () -> IntArray> = mutableListOf()
-            for (i in 0 until len) {
-                val action = suspend {
-                    mysql.batchInsert(PeerTasks) {
-                        // 每个学生选取其后的三个人的作业作为自己的互评任务
-                        val assessor = userMap[assignments[i].studentId] as User
-                        for (j in 1 until 4) {
-                            val target = (i + j) % len
-                            this.buildPeerTask(assessor, assignments[target], false)
-                        }
-                        // 除此之外，还应该为该学生添加一个标准作业
-                        this.buildPeerTask(assessor, standardAssignments.random(), true)
+            val buildPeerTask: BatchInsertStatementBuilder<PeerTasks>.(User, Assignment, Boolean) -> Unit =
+                { assessor, assignment, isStandard ->
+                    item {
+                        set(it.studentId, assignment.studentId)
+                        set(it.assignmentId, assignment.id)
+                        set(it.expId, assignment.experimentId)
+                        set(it.assessorId, assessor.id)
+                        set(it.assessorName, assessor.name)
+                        set(it.isStandard, isStandard)
+                        set(it.status, 0)
                     }
                 }
-                batchInsertActionList.add(action)
-            }
-            // 特别地，还需要为标准作业的学生分配互评任务
-            val standardLen = standardAssignments.size
-            for (i in 0 until standardLen) {
-                val assessor = userMap[standardAssignments[i].studentId] as User
-                val action = suspend {
-                    val targetAssignmentList = assignments.shuffled().take(3)
-                    mysql.batchInsert(PeerTasks) {
-                        targetAssignmentList.forEach { targetAssignment ->
-                            this.buildPeerTask(assessor, targetAssignment, false)
-                        }
-                        // 然后, 还需要分配一个标准作业
-                        this.buildPeerTask(assessor, standardAssignments[(i + 1) % standardLen], true)
-                    }
-                }
-                batchInsertActionList.add(action)
-            }
-            CommonScheduler.multiCoroutinesProduceSync(batchInsertActionList, Dispatchers.IO)
 
-            experiment.peerAssessmentStart = true
-            mysql.experiments.update(experiment)
+            // 选择分数居中的四个, 设置为真正的标准作业
+            val middlePeerStands = peerStandardList.sortedBy { it.score }.slice(2..5)
+            val standardAssignments =
+                mysql.assignments.filter { it.id.inList(middlePeerStands.map { p -> p.assignmentId }) }.toList()
+
+            mysql.useTransaction {
+                // 删掉没用的标准作业
+                mysql.delete(PeerStandards) {
+                    it.expId.eq(expId) and it.id.notInList(middlePeerStands.map { p -> p.id })
+                }
+
+                val assignments = mysql.assignments.filter {
+                    it.expId.eq(expId) and
+                            it.fileId.isNotNull() and it.fileId.notEq(0)
+                }
+                    .toList()
+                    .filterNot { middlePeerStands.map { pa -> pa.assignmentId }.contains(it.id) }
+                    .shuffled()
+
+                val userMap = call.course.getAllStudentsInternal(experiment.course.id).associateBy { it.id }
+
+                val len = assignments.size
+                val batchInsertActionList: MutableList<suspend () -> IntArray> = mutableListOf()
+                for (i in 0 until len) {
+                    val action = suspend {
+                        mysql.batchInsert(PeerTasks) {
+                            // 每个学生选取其后的三个人的作业作为自己的互评任务
+                            val assessor = userMap[assignments[i].studentId] as User
+                            for (j in 1 until 4) {
+                                val target = (i + j) % len
+                                this.buildPeerTask(assessor, assignments[target], false)
+                            }
+                            // 除此之外，还应该为该学生添加一个标准作业
+                            this.buildPeerTask(assessor, standardAssignments.random(), true)
+                        }
+                    }
+                    batchInsertActionList.add(action)
+                }
+                // 特别地，还需要为标准作业的学生分配互评任务
+                val standardLen = standardAssignments.size
+                for (i in 0 until standardLen) {
+                    val assessor = userMap[standardAssignments[i].studentId] as User
+                    val action = suspend {
+                        val targetAssignmentList = assignments.shuffled().take(3)
+                        mysql.batchInsert(PeerTasks) {
+                            targetAssignmentList.forEach { targetAssignment ->
+                                this.buildPeerTask(assessor, targetAssignment, false)
+                            }
+                            // 然后, 还需要分配一个标准作业
+                            this.buildPeerTask(assessor, standardAssignments[(i + 1) % standardLen], true)
+                        }
+                    }
+                    batchInsertActionList.add(action)
+                }
+                CommonScheduler.multiCoroutinesProduceSync(batchInsertActionList, Dispatchers.IO)
+
+                experiment.peerAssessmentStart = true
+                mysql.experiments.update(experiment)
+            }
+        } finally {
+            mutex.unlock()
         }
-        mutex.unlock()
     }
 
     private fun adminCreateOrUpdate(
