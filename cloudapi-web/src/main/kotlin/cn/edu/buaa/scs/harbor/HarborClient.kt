@@ -87,10 +87,6 @@ object HarborClient : IProjectManager {
         deleteProjectMember(projectName, memberID)
     }
 
-    fun deleteTag() {
-
-    }
-
     private fun existProject(projectName: String): Boolean {
         return try {
             projectClient.getProject(projectName)
@@ -109,6 +105,11 @@ object HarborClient : IProjectManager {
     private fun createProjectMember(projectName: String, userID: String) {
         val users = userClient.searchUsers(userID)
         if (users.isEmpty()) throw Exception("User $userID not found in harbor")
+        val members = memberClient.listProjectMembers(projectName)
+        val member = members.find { it.entityName?.lowercase()?.trim() == userID.lowercase().trim() }
+        if (member != null) {
+            return
+        }
         val userEntity = UserEntity(
             userId = users[0].userId,
             username = users[0].username,
