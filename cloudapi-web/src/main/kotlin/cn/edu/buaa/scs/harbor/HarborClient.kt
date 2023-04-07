@@ -87,6 +87,12 @@ object HarborClient : IProjectManager {
         deleteProjectMember(projectName, memberID)
     }
 
+    override suspend fun changePassword(username: String, password: String): Result<Unit> = runCatching {
+        val users = userClient.searchUsers(username.lowercase())
+        if (users.isEmpty()) throw Exception("User $username not found in harbor")
+        userClient.updateUserPassword(users[0].userId!!, PasswordReq(newPassword = password))
+    }
+
     private fun existProject(projectName: String): Boolean {
         return try {
             projectClient.getProject(projectName)

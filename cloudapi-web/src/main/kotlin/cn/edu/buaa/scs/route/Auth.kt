@@ -2,8 +2,10 @@ package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.GetCaptcha200Response
 import cn.edu.buaa.scs.controller.models.PostLoginRequest
+import cn.edu.buaa.scs.controller.models.PutPaasTokenRequest
 import cn.edu.buaa.scs.model.Authentication
 import cn.edu.buaa.scs.service.auth
+import cn.edu.buaa.scs.service.project
 import cn.edu.buaa.scs.utils.token
 import cn.edu.buaa.scs.utils.user
 import io.ktor.server.application.*
@@ -58,6 +60,14 @@ fun Route.authRoute() {
             val entityId = call.parameters["entityId"] ?: throw BadRequestException("entityId is required")
             val action = call.parameters["action"] ?: throw BadRequestException("action is required")
             call.respond(call.auth.checkPermission(entityType, entityId, action))
+        }
+    }
+
+    route("/paasToken") {
+        put {
+            val password = call.receive<PutPaasTokenRequest>().paasToken
+            call.project.changePassword(password)
+            call.respond("OK")
         }
     }
 }

@@ -149,6 +149,10 @@ metadata:
     override suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit> {
         return Result.success(Unit)
     }
+
+    override suspend fun changePassword(username: String, password: String): Result<Unit> {
+        return Result.success(Unit)
+    }
 }
 
 fun Route.podLogWsRoute() {

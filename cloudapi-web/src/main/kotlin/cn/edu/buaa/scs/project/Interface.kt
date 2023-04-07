@@ -24,6 +24,8 @@ interface IProjectManager {
     suspend fun addProjectMember(projectName: String, memberID: String): Result<Unit>
 
     suspend fun removeProjectMember(projectName: String, memberID: String): Result<Unit>
+
+    suspend fun changePassword(username: String, password: String): Result<Unit>
 }
 
 val managerList = listOf(

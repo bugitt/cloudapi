@@ -2260,6 +2260,28 @@ paths:
       description: 根据ID删除某项实验工作流配置
       security:
         - Authorization: []
+  /paasToken:
+    put:
+      summary: 修改PaaS平台通用token
+      operationId: put-paasToken
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 鉴权
+      description: 修改PaaS平台通用token
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paasToken:
+                  type: string
+              required:
+                - paasToken
 components:
   schemas:
     AssignmentResponse:

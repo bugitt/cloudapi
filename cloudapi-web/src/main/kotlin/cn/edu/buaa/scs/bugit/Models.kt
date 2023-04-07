@@ -108,3 +108,8 @@ data class CreateUserReq(
     val email: String,
     val password: String
 )
+
+data class ChangePasswordReq(
+    @JsonProperty("password")
+    val password: String
+)

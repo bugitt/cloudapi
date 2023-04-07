@@ -208,6 +208,15 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         }
     }
 
+    suspend fun changePassword(password: String) {
+        val user = call.user()
+        managerList.forEach {
+            it.changePassword(user.id, password).getOrThrow()
+        }
+        user.paasToken = password
+        user.flushChanges()
+    }
+
     suspend fun addProjectMember(projectID: Long, memberID: String, role: ProjectRole): ProjectMember {
         val project = Project.id(projectID)
         if (!call.user().isProjectAdmin(project)) {

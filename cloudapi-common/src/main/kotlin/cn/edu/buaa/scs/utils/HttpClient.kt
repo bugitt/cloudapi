@@ -32,6 +32,18 @@ class HttpClientWrapper(val client: HttpClient, val basePath: String) {
         return handleResponse(response)
     }
 
+    suspend inline fun <reified T> put(
+        path: String,
+        body: Any? = null,
+        contentType: ContentType = ContentType.Application.Json,
+    ): Result<T> {
+        val response = client.put(basePath + path) {
+            contentType(contentType)
+            setBody(body)
+        }
+        return handleResponse(response)
+    }
+
     suspend inline fun <reified T> delete(
         path: String,
         body: Any? = null,

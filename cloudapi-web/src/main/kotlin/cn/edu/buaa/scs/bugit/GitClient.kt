@@ -119,6 +119,10 @@ object GitClient : IProjectManager {
         return client.delete("/orgs/$projectName/memberships/$memberID")
     }
 
+    override suspend fun changePassword(username: String, password: String): Result<Unit> {
+        return client.put("/admin/users/${username.lowercase()}/password", ChangePasswordReq(password))
+    }
+
     suspend fun getRepoListOfProject(projectName: String): Result<List<GitRepo>> {
         return client.get("orgs/$projectName/repos")
     }
