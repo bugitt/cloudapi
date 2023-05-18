@@ -20,8 +20,7 @@ object VCenterClient : IVMClient {
         HttpClientWrapper(
             HttpClient(CIO) {
                 defaultRequest {
-//                    header(HttpHeaders.Authorization, "Bearer ${globalConfig.vcenter.serviceToken}")
-                    header(HttpHeaders.Authorization, "Bearer PxEYxR8mqJWZEtHwC2J2")
+                    header(HttpHeaders.Authorization, "Bearer ${globalConfig.vcenter.serviceToken}")
                 }
                 install(ContentNegotiation) {
                     jackson {
