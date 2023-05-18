@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.vm.vcenter
 
-import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.utils.HttpClientWrapper
@@ -21,7 +20,8 @@ object VCenterClient : IVMClient {
         HttpClientWrapper(
             HttpClient(CIO) {
                 defaultRequest {
-                    header(HttpHeaders.Authorization, "Bearer ${globalConfig.vcenter.serviceToken}")
+//                    header(HttpHeaders.Authorization, "Bearer ${globalConfig.vcenter.serviceToken}")
+                    header(HttpHeaders.Authorization, "Bearer PxEYxR8mqJWZEtHwC2J2")
                 }
                 install(ContentNegotiation) {
                     jackson {
@@ -32,7 +32,8 @@ object VCenterClient : IVMClient {
                     requestTimeoutMillis = 100000000L
                 }
             },
-            basePath = globalConfig.vcenter.serviceUrl
+//            basePath = globalConfig.vcenter.serviceUrl
+            basePath = "http://localhost:9977/api/v2/vcenter"
         )
     }
 
@@ -74,6 +75,10 @@ object VCenterClient : IVMClient {
         client.post<String>("/vm/$uuid/powerOff")
     }
 
+    suspend fun transferHost(uuid: String, hostRefDict: Map<String,String>) {
+        client.post<String>("/vm/$uuid/transHost", hostRefDict)
+    }
+
     override suspend fun configVM(
         uuid: String,
         experimentId: Int?,
@@ -112,4 +117,7 @@ object VCenterClient : IVMClient {
         getVM(uuid).getOrThrow()
     }
 
+    suspend fun getVcenterHostsUsage(): Result<List<PhysicalHost>> = runCatching {
+        client.get<List<PhysicalHost>>("/hosts").getOrThrow()
+    }
 }

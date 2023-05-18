@@ -13,6 +13,7 @@ import cn.edu.buaa.scs.utils.schedule.waitForDone
 import cn.edu.buaa.scs.utils.setExpireKey
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.IVMClient
+import cn.edu.buaa.scs.vm.PhysicalHost
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -80,6 +81,29 @@ object SangforClient : IVMClient {
         return jsonMapper.readTree(body).get("access").get("token").get("id").toString().split('"')[1]
     }
 
+    suspend fun connectAdmin(): String {
+        val response = client.post("openstack/identity/v2.0/tokens") {
+            contentType(ContentType.Application.Json)
+            val username = application.getConfigString("vm.sangfor_admin.username")
+            val password = application.getConfigString("vm.sangfor_admin.password")
+            setBody(
+                """
+                {
+                    "auth": {
+                        "tenantName": "$username",
+                        "passwordCredentials": {
+                            "username": "$username",
+                            "password": "$password"
+                        }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+        val body: String = response.body()
+        return jsonMapper.readTree(body).get("access").get("token").get("id").toString().split('"')[1]
+    }
+
     suspend fun fetchTicket(token: String): Token {
         val resBody: String = client.get("summary") {
             header("Cookie", "aCMPAuthToken=$token")
@@ -102,6 +126,24 @@ object SangforClient : IVMClient {
             sid = tokenBody.sid
             authRedis.setExpireKey("sangfor_ticket", ticket, 4000)
             authRedis.setExpireKey("sangfor_sid", sid, 4000)
+        }
+        tokenLock.unlock()
+        return Token(token, ticket, sid)
+    }
+
+    suspend fun getTokenAdmin(): Token {
+        tokenLock.lock()
+        var token = authRedis.getValueByKey("sangfor_token_admin")
+        var ticket = authRedis.getValueByKey("sangfor_ticket_admin") ?: ""
+        var sid = authRedis.getValueByKey("sangfor_sid_admin") ?: ""
+        if (token == null) {
+            token = connectAdmin()
+            authRedis.setExpireKey("sangfor_token_admin", token, 3500)
+            val tokenBody = fetchTicket(token)
+            ticket = tokenBody.ticket
+            sid = tokenBody.sid
+            authRedis.setExpireKey("sangfor_ticket_admin", ticket, 4000)
+            authRedis.setExpireKey("sangfor_sid_admin", sid, 4000)
         }
         tokenLock.unlock()
         return Token(token, ticket, sid)
@@ -304,6 +346,18 @@ object SangforClient : IVMClient {
                 header("X-Auth-Token", token.id)
             }.body()
             jsonMapper.readTree(vmRes)["server"]["OS-EXT-STS:task_state"].toString() == "\"\""
+        }
+        // 克隆完毕，接下来迁移到指定的host上去！(sangfor只能先克隆再迁移）
+        if (options.hostId != "") {
+            migrateVmToNewHost(options.name, uuid, options.hostId)
+            // Wait the migration to be done
+            waitForDone(20000L, 500L) {
+                token = getToken()
+                val vmRes: String = client.get("openstack/compute/v2/servers/$uuid") {
+                    header("X-Auth-Token", token.id)
+                }.body()
+                jsonMapper.readTree(vmRes)["server"]["hostId"].toString() == options.hostId
+            }
         }
         createLock.unlock()
         // Initialize settings of the new virtual machine.
@@ -537,6 +591,70 @@ object SangforClient : IVMClient {
                         "storage_location": "3600d0231000859694803abfa3b686284",
                         "cdroms": []
                     }
+                }
+                """.trimIndent()
+            )
+        }.status.value
+    }
+
+    suspend fun getSangforHostsUsage(): Result<MutableList<PhysicalHost>> {
+        /*
+        返回sangfor资源池中每个主机的实时cpu和内存占用情况
+         */
+        val token = getTokenAdmin()
+        val vmRes: String = client.get("admin/view/host-list") {
+            header("Cookie", "aCMPAuthToken=${token.id}")
+        }.body()
+        val vmJSON = jsonMapper.readTree(vmRes)
+        val vmInfos = mutableListOf<PhysicalHost>()
+        vmJSON["data"].forEach{
+            if (it["status"].toString().split('"')[1] == "running") {
+                val hostId = it["id"].toString().split('"')[1] // 字符串接收到的是“”双重引号“”，需要去除一层
+                val ip = it["ip"].toString().split('"')[1]
+                val cpuTotalMhz = it["cpu"]["total_mhz"].intValue()
+                val cpuUsedMhz = it["cpu"]["used_mhz"].intValue()
+                val cpuRatio = it["cpu_ratio"].doubleValue()
+                val memoryTotalMb = it["memory"]["total_mb"].intValue()
+                val memoryUsedMb = it["memory"]["used_mb"].intValue()
+                val memoryRatio = it["memory_ratio"].doubleValue()
+//                val vmInfo = mapOf(
+//                    "ip" to ip, "hostId" to hostId,
+//                    "cpu_total_mhz" to cpuTotalMhz, "cpu_used_mhz" to cpuUsedMhz, "cpu_ratio" to cpuRatio,
+//                    "memory_total_mb" to memoryTotalMb, "memory_used_mb" to memoryUsedMb, "memory_ratio" to memoryRatio
+//                )
+                val hostInfo = PhysicalHost(hostId, cpuTotalMhz, cpuUsedMhz, cpuRatio,
+                    memoryTotalMb, memoryUsedMb, memoryRatio, hostRefType = "sangforHost", hostRefValue = ip)
+                vmInfos.add(hostInfo)
+            }
+        }
+        return Result.success(vmInfos)
+    }
+
+    suspend fun migrateVmToNewHost(vmName: String,
+                                           vmUuid: String,
+                                           hostId: String
+    ) {
+        val token = getTokenAdmin()
+        val resCode = client.post("admin/servers/$vmUuid/migrate-server") {
+            contentType(ContentType.Application.Json)
+            header("Cookie", "aCMPAuthToken=${token.id}")
+            header("CSRFPreventionToken", token.ticket)
+            header("sid", token.sid)
+            setBody(
+                """
+                {
+                  "server_id": "$vmUuid",
+                  "migrate_server_info": {
+                    "name": "$vmName",
+                    "cluster_id": "e4c588df-48c4-4f48-9d94-011e36c82c73",
+                    "cluster_type": "hci",
+                    "storage_location": "3600d0231000859694803abfa3b686284",
+                    "compute_location": {
+                      "id": "$hostId"
+                    },
+                    "auto_shutdown": 1,
+                    "auto_poweron": 0
+                  }
                 }
                 """.trimIndent()
             )

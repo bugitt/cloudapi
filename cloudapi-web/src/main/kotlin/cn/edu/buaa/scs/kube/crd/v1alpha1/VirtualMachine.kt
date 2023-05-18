@@ -1,15 +1,16 @@
 package cn.edu.buaa.scs.kube.crd.v1alpha1
 
+import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.kube.vmKubeClient
 import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.VmApply
 import cn.edu.buaa.scs.model.vmApplyList
 import cn.edu.buaa.scs.service.namespaceName
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.jsonMapper
-import cn.edu.buaa.scs.utils.jsonReadValue
+import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.newVMClient
+import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -47,8 +48,8 @@ data class VirtualMachineSpec(
     @JsonProperty("powerState") @PrinterColumn(name = "spec_powerState") val powerState: VirtualMachineModel.PowerState?,
 
     @JsonProperty("deleted") val deleted: Boolean = false,
+    @JsonProperty("hostId") var hostId: String = "",
 ) : KubernetesResource {
-
     @JsonIgnore
     fun getVmExtraInfo(): VirtualMachineExtraInfo {
         return jsonReadValue(this.extraInfo)
@@ -62,6 +63,7 @@ data class VirtualMachineSpec(
         disNum = this.diskNum,
         diskSize = this.diskSize,
         powerOn = false,
+        hostId = authRedis.getValueByKey(name) ?: "",
     )
 
     fun toCrd(): VirtualMachine {
@@ -75,7 +77,6 @@ data class VirtualMachineSpec(
             this.spec = vmSpec
         }
     }
-
 }
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -102,6 +103,7 @@ fun VirtualMachineModel.toCrdSpec(): VirtualMachineSpec {
         diskNum = this.diskNum,
         diskSize = this.diskSize,
         powerState = null,
+        hostId = this.host
     )
 }
 
@@ -128,6 +130,7 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
         resource: VirtualMachine?,
         context: Context<VirtualMachine>?
     ): UpdateControl<VirtualMachine> {
+        val logger = logger("CRD reconcile")()
         val vm = resource ?: return UpdateControl.noUpdate()
         val vmClient = newVMClient(vm.spec.platform)
         if (vm.spec.deleted) {
@@ -205,6 +208,29 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                 vm.spec = vm.spec.copy(deleted = true)
             } else {
                 vm.status = vmModel.toCrdStatus()
+                if (vm.spec.platform == "vcenter") {
+                    val hostId = vm.status.host
+                    if (authRedis.getValueByKey(hostId) == null) {
+                        // 如果缓存中没有这个主机，那么就去查询一下这个主机
+                        authRedis.setExpireKey(hostId, "true", 600)
+                        val vCenterClient = vmClient as VCenterClient
+                        val hosts = vCenterClient.getVcenterHostsUsage().getOrNull()
+                        val hostUsage = hosts!!.find { it.hostId == hostId }
+                        logger.info { "动态调度发现虚拟机${vm.spec.name}对应的主机${hostUsage!!.hostId}，" +
+                                "其中CPU利用率是${hostUsage.cpu_ratio}，内存利用率是${hostUsage.memory_ratio}" }
+                        // 如果主机负载超标，需要调度
+                        if (hostUsage!!.cpu_ratio > 0.9 || hostUsage!!.memory_ratio > 0.9) {
+                            // 迁移！到CPU占用最小的上
+                            val targetHost = hosts.minBy { it.cpu_ratio }
+                            val hostRefDict = mapOf(
+                                "hostRefType" to targetHost.hostRefType!!,
+                                "hostRefValue" to targetHost.hostRefValue!!
+                            )
+                            vCenterClient.transferHost(vmUuid, hostRefDict)
+                            logger.info { "The vm ${vm.spec.name} has moved from ${hostId} to ${targetHost}!!!" }
+                        }
+                    }
+                }
             }
         }
 

@@ -26,6 +26,7 @@ interface VmApply : Entity<VmApply>, IEntity {
     var memory: Int // MB
     var diskSize: Long // bytes
     var templateUuid: String
+//    var templateName: String
     var description: String
     var applyTime: Long
     var status: Int // 0: 还未处理; 1: 允许; 2: 拒绝
@@ -58,6 +59,7 @@ object VmApplyList : Table<VmApply>("vm_apply") {
     val memory = int("memory").bindTo { it.memory }
     val diskSize = long("disk_size").bindTo { it.diskSize }
     val templateUuid = varchar("template_uuid").bindTo { it.templateUuid }
+//    val templateName = varchar("template_name").bindTo { it.templateName }
     val description = text("description").bindTo { it.description }
     val applyTime = long("apply_time").bindTo { it.applyTime }
     val status = int("status").bindTo { it.status }

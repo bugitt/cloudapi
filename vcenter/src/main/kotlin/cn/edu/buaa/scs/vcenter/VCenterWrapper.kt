@@ -198,6 +198,7 @@ object VCenterWrapper {
     suspend fun create(options: CreateVmOptions): Result<VirtualMachine> {
         return baseSyncTask { connection ->
             val task = clone(
+                // TODO: TASK-VCENTER - 修改clone的过程，指定host主机
                 connection,
                 options.name,
                 options.extraInfo.templateUuid,
@@ -206,6 +207,7 @@ object VCenterWrapper {
                 options.memory,
                 options.diskSize,
                 options.powerOn,
+                options.hostId
             )
             waitForTaskResult(connection, task).getOrThrow()
             getAllVmsFromVCenter(connection).find { vm ->
@@ -214,6 +216,11 @@ object VCenterWrapper {
         }
     }
 
+    /*
+    通过查询主机列表和数据存储的空闲空间等信息，找到一个合适的主机作为克隆的目标位置，
+    并配置虚拟机的元信息和位置信息，
+    最终调用vimPort.cloneVMTask来创建并克隆虚拟机。
+     */
     private fun clone(
         connection: Connection,
         name: String,
@@ -223,6 +230,7 @@ object VCenterWrapper {
         memoryMb: Int,
         diskSizeBytes: Long,
         powerOn: Boolean,
+        hostId: String,
     ): ManagedObjectReference {
         val datacenterRef = connection.getDatacenterRef()
         val getMoRef = connection.getMoRef()
@@ -239,20 +247,46 @@ object VCenterWrapper {
                 arrayOf("datastore", "summary", "name"),
                 RetrieveOptions()
             )
+
+        val logger = logger("clone-vm-to-host")()
+        logger.info { "try to clone a vm from template to a host......" }
+        logger.info { "We have ${hostList.size} hosts in total......" }
+
+        // TODO: 这一段原本是找到第一个磁盘空间够用的主机分配给虚拟机
         var host: ManagedObjectReference? = null
         var datastore: ManagedObjectReference? = null
+        var datastoreSummaryFinal: DatastoreSummary? = null
         val diskRequired = Long.MIN_VALUE
+        var maxFreeSpace: Long = 0
         hostList.forEach { (hostRef, hostProps) ->
             val hostSummary = hostProps["summary"]!! as HostListSummary
-            if (hostSummary.runtime.connectionState === HostSystemConnectionState.CONNECTED) {
+            val hostConfig = hostSummary.config
+            val hostName = hostConfig.name
+            if (hostId == "" || hostId == hostName) {
+/*
+HostSystem -> Datastore : A collection of references to the subset of datastore objects in the datacenter that are available in this HostSystem.
+每个主机都连接了若干datastore，可以把VM创建在任意连接的datastore上，同时每个datastore可以同时被许多主机连接。
+Represents a storage location for virtual machine files. A storage location can be a VMFS volume, a directory on Network Attached Storage, or a local file system path.
+A datastore is platform-independent and host-independent. Therefore, datastores do not change when the virtual machines they contain are moved between hosts. The scope of a datastore is a datacenter; the datastore is uniquely named within the datacenter.
+Datastores are configured per host. As part of host configuration, a HostSystem can be configured to mount a set of network drives. Multiple hosts may be configured to point to the same storage location. There exists only one Datastore object per Datacenter, for each such shared location. Each Datastore object keeps a reference to the set of hosts that have mounted the datastore. A Datastore object can be removed only if no hosts currently have the datastore mounted.
+Thus, managing datastores is done both at the host level and the datacenter level. Each host is configured explicitly with the set of datastores it can access. At the datacenter, a view of the datastores across the datacenter is shown.
+ */
+                // TODO: 分配给最空闲的datastore！
                 val dataStores = (hostProps["datastore"] as ArrayOfManagedObjectReference?)!!.managedObjectReference
+                logger.info { "This host has ${dataStores.size} dataStores, let's find which is okay......" }
                 for (ds in dataStores) {
                     val datastoreSummary = getMoRef.entityProps(ds, "summary")["summary"]!! as DatastoreSummary
                     if (datastoreSummary.isAccessible && datastoreSummary.freeSpace / (1024 * 1024) > 1024 * 1024 && datastoreSummary.freeSpace > diskRequired) {
-                        host = hostRef
-                        datastore = datastoreSummary.datastore
+                        if (datastoreSummary.freeSpace > maxFreeSpace) {
+                            maxFreeSpace = datastoreSummary.freeSpace
+                            datastore = datastoreSummary.datastore
+                            datastoreSummaryFinal = datastoreSummary
+                            host = hostRef
+                            logger.info { "Found a better datastore, vm requires ${diskRequired}, this ds has ${datastoreSummary.freeSpace}" }
+                        }
                     }
                 }
+                logger.info( "Host [${hostName}]'s datastore has connected to [${datastoreSummaryFinal!!.name}], which free space is [${datastoreSummaryFinal!!.freeSpace}]." )
             }
         }
         if (host == null) {
@@ -288,10 +322,11 @@ object VCenterWrapper {
         }
         configSpec.annotation = vmExtraInfo.toJson()
         val cloneSpec = VirtualMachineCloneSpec()
-        cloneSpec.location = relocateSpec
+        cloneSpec.location = relocateSpec // 指定host和datastore的位置信息
         cloneSpec.isPowerOn = powerOn
         cloneSpec.isTemplate = false
         cloneSpec.config = configSpec
+        logger.info { "Success config! We're creating the VM!" }
         return vimPort.cloneVMTask(templateRef, connection.getCreateVmSubFolder(), name, cloneSpec)
     }
 
@@ -307,7 +342,6 @@ object VCenterWrapper {
         baseSyncTask { connection ->
             val vmRef = connection.getVmRefByUuid(uuid)
             val vmProps = connection.getMoRef().entityProps(vmRef, "summary", "config.hardware.device", "guest.net")
-
             val vmSummary = vmProps["summary"]!! as VirtualMachineSummary
             val hostRef = vmSummary.runtime.host
             val hostProps = connection.getMoRef().entityProps(hostRef, "name")
@@ -352,6 +386,80 @@ object VCenterWrapper {
                 is LocalizedMethodFault -> Result.failure(RuntimeException(fault.localizedMessage))
                 else -> Result.failure(RuntimeException("unknown error"))
             }
+        }
+    }
+
+    fun getAllHostsFromVCenter(connection: Connection): List<PhysicalHost>? {
+        val logger = logger("get-all-hosts")()
+        logger.info { "try to fetch host list from vcenter......" }
+        val datacenterRef = connection.getDatacenterRef()
+        val getMoRef = connection.getMoRef()
+        val hostList =
+            getMoRef.inContainerByType(datacenterRef,
+                "HostSystem",
+                arrayOf("name", "summary"),
+                RetrieveOptions()
+            )
+        val finalHostUsageList = mutableListOf<PhysicalHost>()
+        hostList.forEach { (hostRef, hostProps) ->
+            try {
+                val hostName = hostProps["name"]!! as String // IP addr
+                val summary = hostProps["summary"] as HostListSummary
+                if (summary.runtime.connectionState === HostSystemConnectionState.CONNECTED) {
+                    val cpuUsage = summary.quickStats.overallCpuUsage as Int // in MHz
+                    val cpuMhz = summary.hardware.cpuMhz
+                    val numCpuCores = summary.hardware.numCpuCores
+                    val cpuTotalMhz = cpuMhz * numCpuCores
+                    val cpuUsagePercent = cpuUsage.toDouble() / cpuTotalMhz
+
+                    val memoryUsage = summary.quickStats.overallMemoryUsage as Int // in MB
+                    val totalMemoryMB = (summary.hardware.memorySize / 1000000).toInt() // memorySize is in bytes
+                    val memoryUsagePercent = memoryUsage.toDouble() / totalMemoryMB
+                    finalHostUsageList.add(
+                        PhysicalHost(
+                            hostName, cpuTotalMhz, cpuUsage, cpuUsagePercent,
+                            totalMemoryMB, memoryUsage, memoryUsagePercent,
+                            hostRefType=hostRef.type, hostRefValue=hostRef.value
+                        )
+                    )
+                }
+            } catch (e: Throwable) {
+                logger.error { e.stackTraceToString() }
+            }
+        }
+        logger.info { "done:) fetch host list from vcenter" }
+        // TODO 临时跳过10.251.254.23
+        finalHostUsageList.removeIf { it.hostId == "10.251.254.23" }
+        return finalHostUsageList.toList()
+    }
+    fun getAllHostsUsage(): Result<List<PhysicalHost>> {
+        if (getAllVmsConnection == null) {
+            getAllVmsConnection = vcenterConnect()
+        }
+        var hosts: List<PhysicalHost>? = null
+        try {
+            hosts = getAllHostsFromVCenter(getAllVmsConnection!!)
+        } catch (_: Throwable) {
+            getAllVmsConnection = vcenterConnect()
+            try {
+                getAllVmsConnection = vcenterConnect()
+                hosts = getAllHostsFromVCenter(getAllVmsConnection!!)
+            } catch (e: Throwable) {
+                logger("vm-worker-$getAllVmsConnection")().error { e.stackTraceToString() }
+            }
+        }
+        return Result.success(hosts ?: listOf())
+    }
+
+    suspend fun transferHost(uuid: String, hostRefDict: Map<String,String>): Result<Unit> {
+        val reloSpec = 	VirtualMachineRelocateSpec()
+        val hostRef = ManagedObjectReference()
+        hostRef.type = hostRefDict["hostRefType"]
+        hostRef.value = hostRefDict["hostRefValue"]
+        reloSpec.host = hostRef
+        return baseSyncTask { connection ->
+            val task = connection.vimPort.relocateVMTask(connection.getVmRefByUuid(uuid), reloSpec, VirtualMachineMovePriority.DEFAULT_PRIORITY)
+            waitForTaskResult(connection, task).getOrThrow()
         }
     }
 }

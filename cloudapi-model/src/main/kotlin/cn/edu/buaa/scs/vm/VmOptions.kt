@@ -13,9 +13,11 @@ data class CreateVmOptions(
     @JsonProperty("memory") val memory: Int, // MB
     @JsonProperty("cpu") val cpu: Int,
     @JsonProperty("diskNum") val disNum: Int = 1,
-    @JsonProperty("diskSize") val diskSize: Long, // bytes
+    @JsonProperty("diskSize") val diskSize: Long, // Bytes
 
     @JsonProperty("powerOn") val powerOn: Boolean = false,
+
+    @JsonProperty("hostId") val hostId: String = "",
 )
 
 data class ConfigVmOptions(

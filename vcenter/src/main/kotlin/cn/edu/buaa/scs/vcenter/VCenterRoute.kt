@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.vcenter
 
 import cn.edu.buaa.scs.vm.ConfigVmOptions
+import com.vmware.vim25.ManagedObjectReference
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -53,7 +54,20 @@ fun Application.vcenterRouting() {
                     VCenterWrapper.convertVMToTemplate(call.getVmUuid()).getOrThrow()
                     call.respond("OK")
                 }
+
+                post("/transHost") {
+                    val hostRefDict = call.receive<Map<String,String>>()
+                    VCenterWrapper.transferHost(call.getVmUuid(), hostRefDict).getOrThrow()
+                    call.respond("OK")
+                }
             }
+
+            route("/hosts") {
+                get() {
+                    call.respond(VCenterWrapper.getAllHostsUsage().getOrThrow())
+                }
+            }
+
         }
     }
 }
