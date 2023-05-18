@@ -18,6 +18,7 @@ package cn.edu.buaa.scs.controller.models
  * @param memory MB
  * @param diskSize bytes
  * @param templateUuid 创建虚拟机所使用的模板的UUID
+// * @param templateName 创建虚拟机所使用的模板的名称
  * @param description 申请理由
  * @param namePrefix 生成的虚拟机的名称的前缀
  * @param dueTime 使用截止时间
@@ -34,6 +35,8 @@ data class CreateVmApplyRequest(
     val diskSize: kotlin.Long,
     /* 创建虚拟机所使用的模板的UUID */
     val templateUuid: kotlin.String,
+//    /* 创建虚拟机所使用的模板名称 */
+//    val templateName: kotlin.String,
     /* 申请理由 */
     val description: kotlin.String,
     /* 生成的虚拟机的名称的前缀 */

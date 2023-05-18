@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.service
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.auth.authRead
+import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.controller.models.CreateVmApplyRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.kube.crd.v1alpha1.VirtualMachineSpec
@@ -13,6 +14,8 @@ import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.vm.*
+import cn.edu.buaa.scs.vm.sangfor.SangforClient.getSangforHostsUsage
+import cn.edu.buaa.scs.vm.vcenter.VCenterClient.getVcenterHostsUsage
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
@@ -22,6 +25,8 @@ import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import org.ktorm.schema.ColumnDeclaring
 import java.util.*
+import cn.edu.buaa.scs.utils.logger
+import cn.edu.buaa.scs.vm.sangfor.SangforClient
 
 val ApplicationCall.vm
     get() = VmService.getSvc(this) { VmService(this) }
@@ -141,7 +146,7 @@ class VmService(val call: ApplicationCall) : IService {
         return mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
     }
 
-    fun handleApply(id: String, approve: Boolean, replyMsg: String): VmApply {
+    suspend fun handleApply(id: String, approve: Boolean, replyMsg: String): VmApply {
         if (!call.user().isAdmin()) throw AuthorizationException()
 
         val vmApply = mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
@@ -158,6 +163,8 @@ class VmService(val call: ApplicationCall) : IService {
         call.user().assertWrite(vmApply)
         if (!vmApply.isApproved()) throw BadRequestException("the VMApply(${vmApply.id} is not approved")
         vmApply.namespaceName().ensureNamespace(kubeClient)
+        // TODO: 这个函数给已有的vmApply添加更多的学生虚拟机，通过studentIdList直接在k8s中添加crd spec
+        // vmApply.toVmCrdSpec返回一个包含若干等待创建的虚拟机spec的列表
         vmApply.toVmCrdSpec(false, platform, studentIdList).forEach { spec ->
             vmKubeClient
                 .inNamespace(vmApply.namespaceName())
@@ -167,7 +174,8 @@ class VmService(val call: ApplicationCall) : IService {
         return vmApply
     }
 
-    private fun approveApply(vmApply: VmApply, approve: Boolean, replyMsg: String): VmApply {
+    private suspend fun approveApply(vmApply: VmApply, approve: Boolean, replyMsg: String): VmApply {
+        val logger = logger("approveApply")()
         if (approve) {
             vmApply.status = 1
         } else {
@@ -176,25 +184,51 @@ class VmService(val call: ApplicationCall) : IService {
         vmApply.replyMsg = replyMsg
         vmApply.handleTime = System.currentTimeMillis()
 
+        //// 原来的版本
         val templateVM = mysql.virtualMachines.find { it.uuid.eq(vmApply.templateUuid) }
         var platform = "vcenter"
         templateVM?.let {
             platform = it.platform
         }
+        ////
 
         if (approve) {
+            logger.info { "This apply is approved! Platform is ${platform}......" }
+            val hostList = if (platform == "vcenter") {
+                getVcenterHostsUsage().getOrThrow()
+
+            } else {
+                getSangforHostsUsage().getOrThrow()
+            }
+             // 所有平台主机列表
+            val vmSpecList = vmApply.toVmCrdSpec(true, platform) // 一次性要创建的所有虚拟机列表！
+
+            logger.info { "We have ${hostList.size} hosts alive and ${vmSpecList.size} vms to be create......" }
+
+            // begin GA algo
+            logger.info { "Begin running GeneticAlgorithm......" }
+            val gA = GeneticAlgorithm(vmSpecList, hostList, 50, 0.3, 0.3, 5, 20)
+            gA.evolve()
+            val alloc = gA.getBestSolution().getAllocation()
+
+            logger.info { "GeneticAlgorithm complete, result is: " }
+            alloc.forEach { logger.info {hostList[it].hostId} }
+
             vmApply.namespaceName().ensureNamespace(kubeClient)
-            vmApply.toVmCrdSpec(true, platform).forEach { spec ->
+            vmSpecList.forEachIndexed { i, spec ->
+                // TODO: 这个vmApply创建了很多个虚拟机spec（如果是实验用的，就会根据studentIdList创建非常多的spec），对于每个即将被创建的虚拟机：
+                spec.hostId = hostList[alloc[i]].hostId // 给即将要被创建的vmSpec里写入分配到的hostID
+                authRedis.setExpireKey(spec.name, hostList[alloc[i]].hostId, 3500)
                 vmKubeClient
                     .inNamespace(vmApply.namespaceName())
                     .resource(spec.toCrd())
                     .createOrReplace()
             }
         }
+        logger.info { "VM Apply Process finish! ALL VM create INTO CRD!" }
         mysql.vmApplyList.update(vmApply)
         return vmApply
     }
-
     fun deleteFromApply(id: String, studentId: String?, teacherId: String?, studentIdList: List<String>?): VmApply {
         val vmApply = mysql.vmApplyList.find { it.id.eq(id) } ?: throw NotFoundException()
         call.user().assertWrite(vmApply)
@@ -247,6 +281,8 @@ class VmService(val call: ApplicationCall) : IService {
             this.memory = request.memory
             this.diskSize = request.diskSize
             this.templateUuid = request.templateUuid
+            // TODO: 要求这个接口前端传来的request里也是templateName
+//            this.templateName = request.templateName
             this.description = request.description
             this.applyTime = System.currentTimeMillis()
             this.status = 0
@@ -352,6 +388,21 @@ class VmService(val call: ApplicationCall) : IService {
             studentId = studentId,
         ).getOrThrow()
     }
+
+    fun recordTemplateName2Uuid(vcenter_uuid: String, sangfor_uuid: String, name: String) {
+        val sangforTemplate = TemplateUUID {
+            platform = "sangfor"
+            uuid = sangfor_uuid
+            templateName = name
+        }
+        val vcenterTemplate = TemplateUUID {
+            platform = "vcenter"
+            uuid = vcenter_uuid
+            templateName = name
+        }
+        mysql.templateUUIDs.add(sangforTemplate)
+        mysql.templateUUIDs.add(vcenterTemplate)
+    }
 }
 
 suspend fun DefaultWebSocketServerSession.sshWS(uuid: String) {
@@ -381,11 +432,15 @@ fun VmApply.namespaceName(): String {
     return this.id.lowercase()
 }
 
+
+
 fun VmApply.toVmCrdSpec(initial: Boolean = false, platform: String = "vcenter", extraStudentList: List<String>? = null): List<VirtualMachineSpec> {
     val vmApply = this
     val baseExtraInfo = VirtualMachineExtraInfo(
         applyId = vmApply.id,
         templateUuid = vmApply.templateUuid,
+//         查数据表，查出这个platform中 这个模板名对应的模板uuid
+//        templateUuid = mysql.templateUUIDs.find { it.platform.eq(platform) and it.templateName.eq(vmApply.templateName)}.uuid,
         initial = initial,
     )
     val baseSpec = VirtualMachineSpec(
@@ -399,6 +454,14 @@ fun VmApply.toVmCrdSpec(initial: Boolean = false, platform: String = "vcenter", 
         template = false,
         extraInfo = jsonMapper.writeValueAsString(baseExtraInfo),
     )
+/*
+根据传入的 extraStudentList 参数是否为空，分别处理不同的情况：
+如果 extraStudentList 不为空，则表示需要创建多个学生专用的虚拟机。在这种情况下，对于列表中的每一个学生，都需要创建一个新的 VirtualMachineSpec 对象，并将其加入到返回值列表中。
+如果 extraStudentList 为空，则根据传入的 VmApply 对象中的其他信息，创建一个或多个 VirtualMachineSpec 对象。具体来说，有以下几种情况：
+如果 VmApply 对象中的 studentId 不为空，且不等于 "default"，则表示需要创建一个学生专用的虚拟机。
+如果 VmApply 对象中的 teacherId 不为空，且不等于 "default"，则表示需要创建一个老师专用的虚拟机。
+如果 VmApply 对象中的 experimentId 不为 0，则表示需要创建多个学生专用的虚拟机，且这些虚拟机都属于同一个实验。
+ */
     return if (extraStudentList != null) {
         val experiment = Experiment.id(vmApply.experimentId)
         extraStudentList.map { studentId ->
@@ -440,6 +503,7 @@ fun VmApply.toVmCrdSpec(initial: Boolean = false, platform: String = "vcenter", 
             )
 
         vmApply.experimentId != 0 -> {
+            // 如果是实验用的虚拟机，就会根据studentIdList参数，创建很多个虚拟机spec，返回给K8S CRD！
             val experiment = Experiment.id(vmApply.experimentId)
             vmApply.studentIdList.map { studentId ->
                 baseSpec.copy(

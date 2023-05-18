@@ -142,6 +142,7 @@ interface VirtualMachine : Entity<VirtualMachine>, IEntity {
     var name: String
     var isTemplate: Boolean
     var host: String
+//    var hostId: String
 
     // course related
     var adminId: String
