@@ -184,8 +184,12 @@ object VCenterWrapper {
                     RetrieveOptions()
                 )
                 vmList?.forEach { (_, vmProps) ->
-                    val vm = convertVMModel(hostName, vmProps)
-                    finalVirtualMachineList.add(vm)
+                    try {
+                        val vm = convertVMModel(hostName, vmProps)
+                        finalVirtualMachineList.add(vm)
+                    } catch (e: NullPointerException) {
+                        logger.error { e }
+                    }
                 }
             } catch (e: Throwable) {
                 logger.error { e.stackTraceToString() }
