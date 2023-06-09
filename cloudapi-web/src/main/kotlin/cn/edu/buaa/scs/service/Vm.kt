@@ -62,7 +62,9 @@ class VmService(val call: ApplicationCall) : IService {
             }.filterNot { it.spec.deleted }
         }.associateBy { it.status.uuid }
 
-        val otherVms = vmKubeClient.inAnyNamespace().list().items.filterNot { it.spec.deleted }.filter { vmApplyVmMap[it.status.uuid] == null }
+        val otherVms = vmKubeClient.inNamespace("default").list().items.filterNot { it.spec.deleted }.filter {
+            it.spec.getVmExtraInfo().studentId == call.userId() || it.spec.getVmExtraInfo().teacherId == call.userId()
+        }.filter { vmApplyVmMap[it.status.uuid] == null }
         return otherVms + vmApplyVmMap.values
     }
 
