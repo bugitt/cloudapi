@@ -45,7 +45,7 @@ class VmService(val call: ApplicationCall) : IService {
     }
 
     fun deleteVm(id: String) {
-        var vm = getVmByUUID(id)
+        val vm = getVmByUUID(id)
         vm.spec = vm.spec.copy(deleted = true)
         vmKubeClient.resource(vm).patch()
     }
@@ -54,13 +54,16 @@ class VmService(val call: ApplicationCall) : IService {
         val vmApplyList =
             mysql.vmApplyList.filter { ((it.studentId eq call.userId()) or (it.teacherId eq call.userId())) and (it.experimentId eq 0) }
                 .toList()
-        return vmApplyList.flatMap { vmApply ->
+        val vmApplyVmMap = vmApplyList.flatMap { vmApply ->
             val vmList = vmKubeClient.inNamespace(vmApply.namespaceName()).list().items
             vmList.filter {
                 val extraInfo = it.spec.getVmExtraInfo()
                 extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
             }.filterNot { it.spec.deleted }
-        }
+        }.associateBy { it.status.uuid }
+
+        val otherVms = vmKubeClient.inAnyNamespace().list().items.filterNot { it.spec.deleted }.filter { vmApplyVmMap[it.status.uuid] == null }
+        return otherVms + vmApplyVmMap.values
     }
 
     fun getExperimentVms(experimentId: Int?, managed: Boolean): List<VirtualMachineCrd> {
