@@ -20,6 +20,10 @@ fun Route.courseRoute() {
         get {
             call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it) })
         }
+
+        get("/managed") {
+            call.respond(call.course.getAllManagedCourses().map { call.convertCourseResponse(it) })
+        }
     }
 
     route("course/{courseId}") {

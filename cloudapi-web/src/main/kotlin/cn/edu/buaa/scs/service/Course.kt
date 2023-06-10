@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.getOrPut
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
 import cn.edu.buaa.scs.utils.user
+import cn.edu.buaa.scs.utils.userId
 import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -54,6 +55,18 @@ class CourseService(val call: ApplicationCall) : IService {
             throw BusinessException("only admin can get all courses")
         }
         return mysql.courses.toList().sortedByDescending { it.id }
+    }
+
+    fun getAllManagedCourses(): List<Course> {
+        return if (call.user().isAdmin()) {
+             getAllCourses()
+        } else if (call.user().isTeacher()) {
+             mysql.courses.filter { it.teacherId.eq(call.userId()) }.toList()
+        } else {
+            val courseIdList = mysql.assistants.filter { it.studentId.eq(call.userId()) }.map { it.courseId.toInt() }
+            if (courseIdList.isEmpty()) listOf()
+            else mysql.courses.filter { it.id.inList(courseIdList) }.toList()
+        }
     }
 
     fun getAllStudentsInternal(courseId: Int): List<User> {

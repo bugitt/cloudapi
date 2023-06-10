@@ -2282,6 +2282,24 @@ paths:
                   type: string
               required:
                 - paasToken
+  /courses/managed:
+    get:
+      summary: 获取管理的课程列表
+      tags:
+        - 课程
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseResponse'
+      operationId: get-courses-managed
+      description: 助教和教师获取管理的课程列表
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
