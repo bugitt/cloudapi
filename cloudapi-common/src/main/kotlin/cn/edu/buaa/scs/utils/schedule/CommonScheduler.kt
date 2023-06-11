@@ -40,3 +40,7 @@ suspend fun waitForDone(timeout: Long, interval: Long = 100L, check: suspend () 
         Result.failure(e)
     }
 }
+
+suspend fun <T, R> List<T>.forEachAsync(action: suspend (T) -> R): List<R> {
+    return CommonScheduler.multiCoroutinesProduceSync(map { { action.invoke(it) } })
+}

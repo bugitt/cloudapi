@@ -3,6 +3,7 @@ package cn.edu.buaa.scs.route
 import cn.edu.buaa.scs.controller.models.CourseResourceResponse
 import cn.edu.buaa.scs.controller.models.CourseResponse
 import cn.edu.buaa.scs.controller.models.DeleteCourseResourcesRequest
+import cn.edu.buaa.scs.controller.models.PatchCourseCourseIdStudentsRequest
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
@@ -80,6 +81,12 @@ fun Route.courseRoute() {
         route("/students") {
             get {
                 call.respond(call.course.getAllStudents(call.getCourseIdFromPath()).map { convertUserModel(it) })
+            }
+
+            patch {
+                val studentIdList = call.receive<PatchCourseCourseIdStudentsRequest>().studentIdList
+                call.course.addNewStudents(call.getCourseIdFromPath(), studentIdList)
+                call.respond("OK")
             }
         }
     }

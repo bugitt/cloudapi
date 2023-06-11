@@ -19,6 +19,16 @@ fun User.Companion.getUerListByIdList(idList: List<String>): List<User> {
     else mysql.users.filter { it.id.inList(idList) }.toList()
 }
 
+fun User.Companion.createNewUnActiveUser(id: String, name: String?, role: UserRole): User {
+    val user = User {
+        this.id = id
+        this.name = name ?: "未激活用户"
+        this.role = role
+    }
+    mysql.users.add(user)
+    return user
+}
+
 val ApplicationCall.hr
     get() = UserService.getSvc(this) { UserService(this) }
 

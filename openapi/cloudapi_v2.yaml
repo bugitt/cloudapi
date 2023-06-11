@@ -2092,6 +2092,32 @@ paths:
       description: 获取一门课程的所有学生
       security:
         - Authorization: []
+    patch:
+      summary: 为课程新增学生
+      operationId: patch-course-courseId-students
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 课程
+      description: |-
+        助教或教师为课程新增学生
+        如果给出的学号未注册，将会自动为该学号创建一个未激活账号
+      parameters: []
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentIdList:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - studentIdList
   /checkPermission:
     get:
       summary: 检查是否有对某一实体的操作权限

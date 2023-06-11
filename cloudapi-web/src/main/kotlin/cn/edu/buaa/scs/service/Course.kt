@@ -1,13 +1,13 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
-import cn.edu.buaa.scs.utils.getOrPut
+import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.schedule.CommonScheduler
-import cn.edu.buaa.scs.utils.user
-import cn.edu.buaa.scs.utils.userId
+import cn.edu.buaa.scs.utils.schedule.forEachAsync
 import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -59,9 +59,9 @@ class CourseService(val call: ApplicationCall) : IService {
 
     fun getAllManagedCourses(): List<Course> {
         return if (call.user().isAdmin()) {
-             getAllCourses()
+            getAllCourses()
         } else if (call.user().isTeacher()) {
-             mysql.courses.filter { it.teacherId.eq(call.userId()) }.toList()
+            mysql.courses.filter { it.teacherId.eq(call.userId()) }.toList()
         } else {
             val courseIdList = mysql.assistants.filter { it.studentId.eq(call.userId()) }.map { it.courseId.toInt() }
             if (courseIdList.isEmpty()) listOf()
@@ -77,6 +77,45 @@ class CourseService(val call: ApplicationCall) : IService {
         val course = Course.id(courseId)
         call.user().isCourseAdmin(course)
         return getAllStudentsInternal(courseId)
+    }
+
+    suspend fun addNewStudents(courseId: Int, studentIdList: List<String>) {
+        if (studentIdList.isEmpty()) {
+            return
+        }
+        val course = Course.id(courseId)
+        if (!call.user().isCourseAdmin(course)) {
+            throw AuthorizationException("only course admin can add new students")
+        }
+
+        // make sure students exist
+        studentIdList.forEachAsync { studentId ->
+            if (!mysql.users.exists { it.id.inList(studentId.lowerUpperNormal()) }) {
+                User.createNewUnActiveUser(studentId, null, UserRole.STUDENT)
+            }
+        }
+
+        val alreadyExistStudentIdList =
+            mysql.courseStudents.filter { it.courseId.eq(courseId) and it.studentId.inList(studentIdList) }
+                .map { it.student }.toList().map { it.id }.toSet()
+
+        val newStudentList = mysql.users.filter {
+            it.id.inList(
+                studentIdList
+                    .filterNot { id -> alreadyExistStudentIdList.contains(id) }
+                    .flatMap { id -> id.lowerUpperNormal() }
+            )
+        }.toList()
+
+        // add students
+        mysql.batchInsert(CourseStudents) {
+            newStudentList.forEach { student ->
+                item {
+                    set(it.studentId, student.id)
+                    set(it.courseId, courseId)
+                }
+            }
+        }
     }
 
     suspend fun statCourseExps(courseId: Int): StatCourseExps = withContext(Dispatchers.Default) {

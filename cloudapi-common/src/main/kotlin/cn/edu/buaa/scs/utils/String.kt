@@ -50,3 +50,7 @@ fun String.ensureNamespace(client: KubernetesClient) {
         client.resource(ns).create()
     }
 }
+
+fun String.lowerUpperNormal(): List<String> {
+    return listOf(this.lowercase(), this.uppercase(), this)
+}
