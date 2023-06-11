@@ -16,7 +16,7 @@ package cn.edu.buaa.scs.controller.models
  * 
  * @param studentIdList 
  */
-data class PatchCourseCourseIdStudentsRequest(
+data class CourseStudentOpsRequest(
     val studentIdList: kotlin.collections.List<kotlin.String>
 ) 
 

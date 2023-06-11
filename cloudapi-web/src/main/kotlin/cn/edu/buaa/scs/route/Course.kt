@@ -1,9 +1,6 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.CourseResourceResponse
-import cn.edu.buaa.scs.controller.models.CourseResponse
-import cn.edu.buaa.scs.controller.models.DeleteCourseResourcesRequest
-import cn.edu.buaa.scs.controller.models.PatchCourseCourseIdStudentsRequest
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Course
 import cn.edu.buaa.scs.model.CourseResource
@@ -84,8 +81,13 @@ fun Route.courseRoute() {
             }
 
             patch {
-                val studentIdList = call.receive<PatchCourseCourseIdStudentsRequest>().studentIdList
+                val studentIdList = call.receive<CourseStudentOpsRequest>().studentIdList
                 call.course.addNewStudents(call.getCourseIdFromPath(), studentIdList)
+                call.respond("OK")
+            }
+
+            delete {
+                call.course.deleteStudents(call.getCourseIdFromPath(), call.receive<CourseStudentOpsRequest>().studentIdList)
                 call.respond("OK")
             }
         }

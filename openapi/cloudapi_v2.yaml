@@ -2110,14 +2110,23 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                studentIdList:
-                  type: array
-                  items:
-                    type: string
-              required:
-                - studentIdList
+              $ref: '#/components/schemas/CourseStudentOpsRequest'
+    delete:
+      summary: 从课程中删除学生
+      operationId: delete-course-courseId-students
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 课程
+      description: 助教或教师从课程中删除学生
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseStudentOpsRequest'
   /checkPermission:
     get:
       summary: 检查是否有对某一实体的操作权限
@@ -4226,6 +4235,18 @@ components:
       required:
         - entityList
         - hasSubmitType
+    CourseStudentOpsRequest:
+      title: CourseStudentOpsRequest
+      x-stoplight:
+        id: kwi4fxgwixavj
+      type: object
+      properties:
+        studentIdList:
+          type: array
+          items:
+            type: string
+      required:
+        - studentIdList
   securitySchemes:
     Authorization:
       type: apiKey

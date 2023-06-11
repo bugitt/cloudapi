@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.auth.assertRead
+import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.model.*
@@ -79,14 +80,23 @@ class CourseService(val call: ApplicationCall) : IService {
         return getAllStudentsInternal(courseId)
     }
 
+    fun deleteStudents(courseId: Int, studentIdList: List<String>) {
+        if (studentIdList.isEmpty()) {
+            return
+        }
+        call.user().assertWrite(Course.id(courseId))
+
+        mysql.delete(CourseStudents) {
+            it.courseId.eq(courseId) and it.studentId.inList(studentIdList)
+        }
+
+    }
+
     suspend fun addNewStudents(courseId: Int, studentIdList: List<String>) {
         if (studentIdList.isEmpty()) {
             return
         }
-        val course = Course.id(courseId)
-        if (!call.user().isCourseAdmin(course)) {
-            throw AuthorizationException("only course admin can add new students")
-        }
+        call.user().assertWrite(Course.id(courseId))
 
         // make sure students exist
         studentIdList.forEachAsync { studentId ->
