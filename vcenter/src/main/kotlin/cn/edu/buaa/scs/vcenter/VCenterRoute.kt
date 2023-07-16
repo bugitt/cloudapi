@@ -54,6 +54,12 @@ fun Application.vcenterRouting() {
                     call.respond("OK")
                 }
             }
+
+            route("/health") {
+                get() {
+                    call.respond("OK")
+                }
+            }
         }
     }
 }

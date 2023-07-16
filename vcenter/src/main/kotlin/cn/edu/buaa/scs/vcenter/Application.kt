@@ -8,6 +8,7 @@ import io.ktor.server.application.hooks.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import org.ktorm.jackson.KtormModule
 
@@ -32,9 +33,16 @@ fun Application.module() {
     vcenterRouting()
 }
 
+val escapeApiMap = mapOf(
+    "/api/v2/vcenter/health" to listOf(HttpMethod.Get)
+)
+
 fun Application.auth() {
     install(createApplicationPlugin("auth") {
         on(CallSetup) { call ->
+            if (escapeApiMap[call.request.path()]?.contains(call.request.httpMethod) == true) {
+                return@on
+            }
             val token = call.request.headers[HttpHeaders.Authorization].orEmpty().removePrefix("Bearer ")
             if (token != globalConfig.vcenter.serviceToken) {
                 call.respond(HttpStatusCode.Unauthorized)
