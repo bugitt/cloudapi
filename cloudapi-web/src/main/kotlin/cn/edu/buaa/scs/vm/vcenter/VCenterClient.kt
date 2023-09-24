@@ -29,7 +29,7 @@ object VCenterClient : IVMClient {
                     }
                 }
                 install(HttpTimeout) {
-                    requestTimeoutMillis = 100000000L
+                    requestTimeoutMillis = 10000L
                 }
             },
             basePath = globalConfig.vcenter.serviceUrl
