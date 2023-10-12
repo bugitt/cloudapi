@@ -18,6 +18,16 @@ fun RedisClient.setToken(token: String, userId: String) =
         Unit
     }
 
+fun RedisClient.setUsedStr(str: String) =
+    this.connect().use {
+        it.async().set(str, "true")
+    }
+
+fun RedisClient.checkStrUsed(str: String): Boolean =
+    this.connect().use {
+        it.async().get(str)?.get() != null
+    }
+
 fun RedisClient.getValueByKey(key: String): String? =
     this.connect().use {
         it.async().get(key)?.get()

@@ -52,6 +52,16 @@ class AuthService(val call: ApplicationCall) : IService {
         )
     }
 
+    private fun checkCaptcha(token: String, text: String): Boolean {
+        if (authRedis.checkStrUsed(token)) {
+            return false
+        }
+        authRedis.setUsedStr(token)
+
+        val shouldText = RSAEncrypt.decrypt(token).getOrNull() ?: return false
+        return text.lowercase() == shouldText.lowercase()
+    }
+
     suspend fun login(
         userId: String,
         passwordHash: String,
@@ -60,18 +70,17 @@ class AuthService(val call: ApplicationCall) : IService {
     ): LoginUserResponse {
         // check useId
         if (!mysql.users.exists { it.id.eq(userId) }) {
-            throw BadRequestException("学工号不存在")
+            throw BadRequestException("")
         }
         // check password
         val user = mysql.users.find { it.id.eq(userId) and it.password.eq(passwordHash) }
-            ?: throw BadRequestException("密码错误")
+            ?: throw BadRequestException("")
         // check active
         if (!user.isAccepted) {
             throw BadRequestException("账号未激活")
         }
         // check captcha
-        val shouldCaptchaText = RSAEncrypt.decrypt(captchaToken).getOrNull()
-        if (shouldCaptchaText?.lowercase() != captchaText.lowercase()) {
+        if (!checkCaptcha(captchaToken, captchaText)) {
             throw BadRequestException("验证码错误")
         }
 
