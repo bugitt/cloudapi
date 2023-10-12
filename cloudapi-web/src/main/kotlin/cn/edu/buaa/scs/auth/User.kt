@@ -12,6 +12,7 @@ import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.filter
 import org.ktorm.entity.map
+import org.litote.kmongo.util.idValue
 
 fun User.hasAccessToStudent(studentId: String): Boolean {
     if (this.id == studentId) return true
@@ -63,13 +64,13 @@ fun User.authRead(entity: IEntity): Boolean {
             mysql.projectMembers.exists { it.projectId.eq(entity.id) and it.userId.eq(this.id) }
                     || isProjectAdmin(entity)
 
-        else -> throw BadRequestException("unsupported auth entity: $entity")
+        else -> throw BadRequestException("unsupported auth entity")
     }
 }
 
 fun User.assertRead(entity: IEntity) {
     if (!this.authRead(entity)) {
-        throw AuthorizationException("${this.id}没有权限访问$entity")
+        throw AuthorizationException("${this.id}没有权限访问")
     }
 }
 
@@ -123,13 +124,13 @@ fun User.authWrite(entity: IEntity): Boolean {
                     || this.isAssistantForStudent(entity.ownerId)
 
 
-        else -> throw BadRequestException("unsupported auth entity: $entity")
+        else -> throw BadRequestException("unsupported auth entity")
     }
 }
 
 fun User.assertWrite(entity: IEntity) {
     if (!this.authWrite(entity)) {
-        throw AuthorizationException("${this.id} has no write access to $entity")
+        throw AuthorizationException("${this.id} has no write access")
     }
 }
 
@@ -172,12 +173,12 @@ fun User.authAdmin(entity: IEntity): Boolean {
             this.isTeacher()
                     || this.isAssistantForStudent(entity.ownerId)
 
-        else -> throw BadRequestException("unsupported auth entity: $entity")
+        else -> throw BadRequestException("unsupported auth entity")
     }
 }
 
 fun User.assertAdmin(entity: IEntity) {
     if (!this.authAdmin(entity)) {
-        throw AuthorizationException("${this.id} has no admin access to $entity")
+        throw AuthorizationException("${this.id} has no admin access")
     }
 }
