@@ -14,10 +14,16 @@ val globalConfig by lazy {
     }
 }
 
+object Constant {
+    val baseUrl = globalConfig.baseUrl
+}
+
 data class Config(
     @BsonId val _id: Id<Config> = newId(),
     val envType: String,
     val vcenter: VCenter,
+    val baseUrl: String,
+    val email: Email,
 ) {
     data class VCenter(
         val port: Int,
@@ -26,5 +32,15 @@ data class Config(
         val password: String,
         val serviceUrl: String,
         val serviceToken: String,
+    )
+
+    data class Email(
+        val fromAddress: String,
+        val username: String,
+        val password: String,
+        val personal: String,
+        val smtpServer: String,
+        val smtpPort: String,
+        val titlePicture: String,
     )
 }

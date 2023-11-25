@@ -39,6 +39,12 @@ dependencies {
     api("io.fabric8:kubernetes-model:$kubernetes_client_version")
     api("io.fabric8:kubernetes-client:$kubernetes_client_version")
 
+    // email
+    implementation("com.sun.mail:javax.mail:1.6.2")
+
+    // ulid
+    api("com.github.f4b6a3:ulid-creator:5.2.0")
+
     // coroutine
     val coroutine_version = "1.6.4"
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")

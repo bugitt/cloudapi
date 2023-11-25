@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.bugit
 
 import cn.edu.buaa.scs.application
+import cn.edu.buaa.scs.config.Constant
 import cn.edu.buaa.scs.error.RemoteServiceException
 import cn.edu.buaa.scs.project.IProjectManager
 import cn.edu.buaa.scs.utils.HttpClientWrapper
@@ -16,7 +17,7 @@ import org.ktorm.jackson.KtormModule
 
 object GitClient : IProjectManager {
 
-    const val gitRepoUrlPrefix = "https://scs.buaa.edu.cn/git"
+    val gitRepoUrlPrefix = "${Constant.baseUrl}/git"
 
     internal val client by lazy {
         HttpClientWrapper(

@@ -1,9 +1,11 @@
 package cn.edu.buaa.scs.service
 
+import cn.edu.buaa.scs.auth.assertAdmin
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BusinessException
+import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
@@ -14,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
+import java.text.SimpleDateFormat
 import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.course
@@ -43,19 +46,67 @@ class CourseService(val call: ApplicationCall) : IService {
         )
     }
 
+    fun addCourse(teacherId: String, courseName: String, termId: Int): Course {
+        if (teacherId != call.userId() && !call.user().isAdmin()) {
+            throw AuthorizationException("only admin or teacher can add course")
+        }
+        val teacher = User.id(teacherId)
+        val term = Term.id(termId)
+        val course = Course {
+            this.teacher = teacher
+            this.name = courseName
+            this.term = term
+            this.departmentId = "21"
+            this.createTime = System.currentTimeMillis().toString()
+            this.resourceFolder = ""
+        }
+
+        mysql.courses.add(course)
+
+        return course
+    }
+
     fun get(id: Int): Course {
         val course = Course.id(id)
         call.user().assertRead(course)
         return course
     }
 
-    fun getAllCourses(): List<Course> {
-        // just for admin by now
+    fun patch(id: Int, termId: Int, name: String): Course {
+        val course = Course.id(id)
+        call.user().assertWrite(course)
 
-        if (!call.user().isAdmin()) {
-            throw BusinessException("only admin can get all courses")
+        val term = Term.id(termId)
+        course.term = term
+        course.name = name
+
+        course.flushChanges()
+        return course
+    }
+
+    fun delete(id: Int): Course {
+        val course = Course.id(id)
+        call.user().assertAdmin(course)
+
+        course.delete()
+        return course
+    }
+
+    fun getAllCourses(termId: Int? = null): List<Course> {
+        if (call.user().isTeacher()) return getAllManagedCourses()
+
+        var query = mysql.courses
+        if (call.user().isStudent()) {
+            val courseIdList = mysql.courseStudents.filter { it.studentId.eq(call.userId()) }.map { it.courseId }
+            if (courseIdList.isEmpty()) return listOf()
+            query = query.filter { it.id.inList(courseIdList) }
         }
-        return mysql.courses.toList().sortedByDescending { it.id }
+
+        if (termId != null) {
+            query = query.filter { it.termId.eq(termId) }
+        }
+
+        return query.toList().sortedByDescending { it.id }
     }
 
     fun getAllManagedCourses(): List<Course> {
@@ -90,6 +141,34 @@ class CourseService(val call: ApplicationCall) : IService {
             it.courseId.eq(courseId) and it.studentId.inList(studentIdList)
         }
 
+    }
+
+    fun addAssistant(courseId: Int, studentId: String) {
+        val course = Course.id(courseId)
+        call.user().assertWrite(course)
+
+        val student = User.id(studentId)
+        if (mysql.assistants.filter { it.courseId.eq(courseId.toString()).and(it.studentId eq studentId) }
+                .count() > 0) {
+            throw BusinessException("student $studentId already is assistant of course $courseId")
+        }
+
+        val currentTime = SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(System.currentTimeMillis())
+        val assistant = Assistant {
+            this.courseId = courseId.toString()
+            this.studentId = studentId
+            this.createTime = currentTime
+        }
+
+        mysql.assistants.add(assistant)
+    }
+
+    fun deleteAssistant(assistantId: Int) {
+        val assistant = mysql.assistants.find { it.id.eq(assistantId) } ?: throw NotFoundException()
+        val course = Course.id(assistant.courseId.toInt())
+        call.user().assertAdmin(course)
+
+        assistant.delete()
     }
 
     suspend fun addNewStudents(courseId: Int, studentIdList: List<String>) {

@@ -16,17 +16,20 @@ package cn.edu.buaa.scs.controller.models
  * 
  * @param id 
  * @param name 
- * @param department 
- * @param email 
- * @param role 
- * @param departmentName 
+ * @param courseName 
+ * @param termName 
+ * @param createdTime format: yyyy/MM/dd HH:mm:ss
+ * @param courseId 
+ * @param rawId 
  */
-data class UserModel(
+data class AssistantModel(
     val id: kotlin.String,
     val name: kotlin.String,
-    val department: kotlin.Int,
-    val email: kotlin.String,
-    val role: kotlin.String,
-    val departmentName: kotlin.String
+    val courseName: kotlin.String,
+    val termName: kotlin.String,
+    /* format: yyyy/MM/dd HH:mm:ss */
+    val createdTime: kotlin.String,
+    val courseId: kotlin.Int,
+    val rawId: kotlin.Int
 ) 
 

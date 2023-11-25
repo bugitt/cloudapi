@@ -6,12 +6,15 @@ import cn.edu.buaa.scs.auth.authRead
 import cn.edu.buaa.scs.auth.authWrite
 import cn.edu.buaa.scs.auth.generateRSAToken
 import cn.edu.buaa.scs.cache.authRedis
+import cn.edu.buaa.scs.config.Constant
 import cn.edu.buaa.scs.controller.models.LoginUserResponse
 import cn.edu.buaa.scs.controller.models.SimpleCourse
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
 import cn.edu.buaa.scs.utils.encrypt.RSAEncrypt
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.f4b6a3.ulid.UlidCreator
 import com.yufeixuan.captcha.Captcha
 import com.yufeixuan.captcha.SpecCaptcha
 import io.ktor.client.*
@@ -132,7 +135,9 @@ class AuthService(val call: ApplicationCall) : IService {
             role = if (user.isStudent()) "student" else if (user.isTeacher()) "teacher" else "superAdmin",
             paasToken = user.paasToken,
             isAssistant = mysql.assistants.exists { it.studentId.eq(user.id) },
-            adminCourses = user.getAdminCourses().map { SimpleCourse(it.first, it.second) }
+            adminCourses = user.getAdminCourses().map { SimpleCourse(it.first, it.second) },
+            nickname = user.nickName,
+            email = user.email,
         )
     }
 
@@ -161,4 +166,130 @@ class AuthService(val call: ApplicationCall) : IService {
             else -> throw BadRequestException("未知的操作类型")
         }
     }
+
+    data class ActiveMessage(
+        val id: String,
+        val name: String,
+        val email: String,
+    )
+
+    data class ResetPassword(
+        val id: String,
+    )
+
+    fun sendActiveEmail(id: String, name: String, email: String) {
+        val user = User.id(id)
+        if (user.isAccepted) {
+            throw cn.edu.buaa.scs.error.BadRequestException("the user is already active")
+        }
+        val token = "${user.id}${user.password}${System.currentTimeMillis()}".md5() + UlidCreator.getUlid().toString()
+
+        val activeUrl = "${Constant.baseUrl}/#/security/activateAccount?token=$token"
+
+        val activeMsg = ActiveMessage(id, name, email)
+
+        authRedis.setExpireKey(token, jsonMapper.writeValueAsString(activeMsg), 60 * 60)
+
+        val content = """
+            <tr>
+                <td width="24">&nbsp;</td>
+                <td style="color:#858585; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; padding-top:18px;"
+                    colspan="2">请点击以下网址来激活用户
+                </td>
+                <td width="24">&nbsp;</td>
+            </tr>
+            <tr>
+                <td width="24">&nbsp;</td>
+                <td style="color:#858585; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; padding-top:18px;"
+                    colspan="2"><a style="color:#50b7f1;text-decoration:none;font-weight:bold" rel="noopener noreferrer"
+                                   href="$activeUrl">账户激活</a>
+                </td>
+                <td width="24">&nbsp;</td>
+            </tr>
+            <tr>
+                <td width="24">&nbsp;</td>
+                <td style="color:#858585; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; padding-top:24px;"
+                    colspan="2">如果上述链接无法点击，请复制以下链接<a rel="noopener noreferrer"
+                                                                      href="$activeUrl">$activeUrl</a>
+                </td>
+                <td width="24">&nbsp;</td>
+            </tr>
+        """.trimIndent()
+
+        Email.sendSpecEmail(name, id, content, email, "北航软件学院账号激活").getOrThrow()
+
+        user.email = email
+        user.name = name
+        user.flushChanges()
+    }
+
+    fun sendResetPasswordEmail(id: String, email: String) {
+        val user = User.id(id)
+        if (user.email != email) {
+            throw cn.edu.buaa.scs.error.BadRequestException("Email地址错误")
+        }
+
+        val token = "${user.id}${email}${System.currentTimeMillis()}".md5() + UlidCreator.getUlid().toString()
+
+        authRedis.setExpireKey(token, jsonMapper.writeValueAsString(ResetPassword(id)), 60 * 60)
+
+        val resetPasswordUrl = "${Constant.baseUrl}/#/security/findPwd?token=$token"
+
+        val content = """
+            <tr>
+                <td width="24">&nbsp;</td>
+                <td style="color:#858585; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; padding-top:18px;"
+                    colspan="2">请点击以下网址来重置密码
+                </td>
+                <td width="24">&nbsp;</td>
+            </tr>
+            <tr>
+                <td width="24">&nbsp;</td>
+                <td style="color:#858585; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; padding-top:18px;"
+                    colspan="2"><a style="color:#50b7f1;text-decoration:none;font-weight:bold" rel="noopener noreferrer"
+                                   href="$resetPasswordUrl">重置密码</a>
+                </td>
+                <td width="24">&nbsp;</td>
+            </tr>
+            <tr>
+                <td width="24">&nbsp;</td>
+                <td style="color:#858585; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; padding-top:24px;"
+                    colspan="2">如果上述链接无法点击，请复制以下链接<a rel="noopener noreferrer"
+                                                                      href="$resetPasswordUrl">$resetPasswordUrl</a>
+                </td>
+                <td width="24">&nbsp;</td>
+            </tr>
+        """.trimIndent()
+
+        Email.sendSpecEmail(user.name, user.id, content, email, "北航软件学院云平台密码重置").getOrThrow()
+    }
+
+    suspend fun activeUser(token: String, password: String): LoginUserResponse {
+        val activeMsgStr =
+            authRedis.getValueByKey(token) ?: throw cn.edu.buaa.scs.error.BadRequestException("invalid token")
+        val activeMsg = jsonMapper.readValue<ActiveMessage>(activeMsgStr)
+        val user = User.id(activeMsg.id)
+
+        user.email = activeMsg.email
+        user.name = activeMsg.name
+        user.password = password
+        user.isAccepted = true
+        user.acceptTime = System.currentTimeMillis().toString()
+        user.flushChanges()
+
+        call.project.createUser(user)
+
+        return afterLogin(generateRSAToken(user.id), user)
+    }
+
+    fun resetPassword(token: String, password: String) {
+        val activeMsgStr =
+            authRedis.getValueByKey(token) ?: throw cn.edu.buaa.scs.error.BadRequestException("invalid token")
+        val resetPassword = jsonMapper.readValue<ResetPassword>(activeMsgStr)
+
+        val user = User.id(resetPassword.id)
+        user.password = password
+        user.flushChanges()
+    }
+
 }

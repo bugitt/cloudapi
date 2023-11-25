@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.client.KubernetesClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 
 // 项目名称需符合 RFC 1035 中的 DNS 标签规范
 fun String.isValidProjectName(): Boolean {
@@ -21,6 +22,11 @@ fun String.tryToInt(): Int? {
     } catch (e: NumberFormatException) {
         null
     }
+}
+
+fun String.md5(): String {
+    return MessageDigest.getInstance("MD5").digest(this.toByteArray())
+        .joinToString(separator = "") { String.format("%02X", it) }
 }
 
 suspend fun String.runCommand() = withContext(Dispatchers.IO) {

@@ -1,13 +1,16 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.*
+import cn.edu.buaa.scs.config.Constant
+import cn.edu.buaa.scs.controller.models.FilePackageRequest
+import cn.edu.buaa.scs.controller.models.FileResponse
+import cn.edu.buaa.scs.controller.models.S3Config
+import cn.edu.buaa.scs.controller.models.UploadFileResponse
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.File
 import cn.edu.buaa.scs.model.FileType
 import cn.edu.buaa.scs.service.S3Uploader
 import cn.edu.buaa.scs.service.file
 import cn.edu.buaa.scs.service.id
-import cn.edu.buaa.scs.utils.BASE_URL
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -148,7 +151,7 @@ internal fun convertFileResponse(file: File): FileResponse {
         fileSize = file.size,
         uploader = file.uploader,
         owner = file.owner,
-        downloadLink = URI("$BASE_URL/api/v2/file/${file.id}/content"),
+        downloadLink = URI("${Constant.baseUrl}/api/v2/file/${file.id}/content"),
         createdAt = file.createdAt,
         updatedAt = file.updatedAt,
         contentType = file.contentType,

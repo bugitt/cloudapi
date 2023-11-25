@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.auth.assertAdmin
 import cn.edu.buaa.scs.auth.assertRead
 import cn.edu.buaa.scs.auth.assertWrite
+import cn.edu.buaa.scs.config.Constant
 import cn.edu.buaa.scs.controller.models.FilePackageResponse
 import cn.edu.buaa.scs.error.BusinessException
 import cn.edu.buaa.scs.error.NotFoundException
@@ -106,7 +107,7 @@ class FileService(val call: ApplicationCall) : IService {
             fileName
         }
         // TODO 落库
-        return "https://scs.buaa.edu.cn/scsos/public/$fileName"
+        return "${Constant.baseUrl}/scsos/public/$fileName"
     }
 
     suspend fun convertS3ToLocal() {

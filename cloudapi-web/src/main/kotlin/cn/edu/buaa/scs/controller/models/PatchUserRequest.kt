@@ -14,19 +14,13 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param id 
  * @param name 
- * @param department 
  * @param email 
- * @param role 
- * @param departmentName 
+ * @param nickname 
  */
-data class UserModel(
-    val id: kotlin.String,
-    val name: kotlin.String,
-    val department: kotlin.Int,
-    val email: kotlin.String,
-    val role: kotlin.String,
-    val departmentName: kotlin.String
+data class PatchUserRequest(
+    val name: kotlin.String? = null,
+    val email: kotlin.String? = null,
+    val nickname: kotlin.String? = null
 ) 
 

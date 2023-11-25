@@ -32,6 +32,10 @@ val escapeApiMap = mapOf(
     "/api/v2/captcha" to listOf(HttpMethod.Get),
     "/api/v2/login" to listOf(HttpMethod.Post),
     "/api/v2/buaaSSOLogin" to listOf(HttpMethod.Post),
+    "/api/v2/auth/sendActiveEmail" to listOf(HttpMethod.Post),
+    "/api/v2/activeUser" to listOf(HttpMethod.Post),
+    "/api/v2/auth/sendResetPasswordEmail" to listOf(HttpMethod.Post),
+    "/api/v2/resetPassword" to listOf(HttpMethod.Post),
     "/test" to listOf(HttpMethod.Get),
 )
 

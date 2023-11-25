@@ -40,6 +40,10 @@ tags:
     description: 容器服务相关接口
   - name: 日志管理
     description: 日志管理相关接口
+  - name: 管理员
+    description: 管理员相关接口
+  - name: 学期
+    description: 学期相关接口
 servers:
   - url: 'https://scs.buaa.edu.cn/api/v2'
 paths:
@@ -442,9 +446,38 @@ paths:
       description: 获取课程信息
       security:
         - Authorization: []
+    patch:
+      summary: 修改课程信息
+      operationId: patch-course-courseId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+      tags:
+        - 课程
+      description: 修改课程信息
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCourseRequest'
+    delete:
+      summary: 删除课程
+      operationId: delete-course-courseId
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 课程
+      description: 删除课程
   /courses:
     get:
-      summary: 管理员获取所有课程
+      summary: 获取所有课程
       tags:
         - 课程
       responses:
@@ -459,7 +492,31 @@ paths:
       operationId: get-course-list
       security:
         - Authorization: []
-      description: 管理员获取所有课程
+      description: |-
+        管理员：获取所有课程
+        教师：获取所管理的课程
+        学生：获取自己上的课
+      parameters:
+        - schema:
+            type: integer
+          in: query
+          name: termId
+    post:
+      summary: 添加课程
+      operationId: post-courses
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 课程
+      description: 管理员或教师添加课程
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCoruseRequest'
   '/stat/exp/{expId}/assignments':
     parameters:
       - schema:
@@ -2335,6 +2392,201 @@ paths:
       description: 助教和教师获取管理的课程列表
       security:
         - Authorization: []
+  /admin/user:
+    post:
+      summary: 创建用户
+      operationId: post-admin-user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModel'
+      tags:
+        - 管理员
+      description: 管理员创建用户
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+  /activeUser:
+    post:
+      summary: 激活用户
+      operationId: post-activeUser
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+      tags:
+        - 鉴权
+      description: 激活用户
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActiveUserRequest'
+        description: ''
+  /auth/sendActiveEmail:
+    post:
+      summary: 发送激活邮件
+      operationId: post-auth-sendActiveEmail
+      responses:
+        '200':
+          description: OK
+      description: 发送激活邮件
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendActiveEmailRequest'
+      tags:
+        - 鉴权
+  /auth/sendResetPasswordEmail:
+    post:
+      summary: 发送重置密码邮件
+      operationId: post-auth-sendResetPasswordEmail
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 鉴权
+      description: 发送重置密码邮件
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendResetPasswordEmailRequest'
+  /resetPassword:
+    post:
+      summary: 重置密码
+      operationId: post-resetPassword
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordrRequest'
+      tags:
+        - 鉴权
+      description: 重置密码
+  '/users/{userId}':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+    patch:
+      summary: 修改用户信息
+      operationId: patch-users-userId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModel'
+      tags:
+        - 人员
+      description: 修改用户信息
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUserRequest'
+      security:
+        - Authorization: []
+  '/users/{userId}/changePassword':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+    patch:
+      summary: 修改密码
+      operationId: patch-users-userId-changePassword
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 人员
+      description: 修改密码
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+  /terms:
+    get:
+      summary: 获取所有学期
+      tags:
+        - 学期
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TermModel'
+      operationId: get-terms
+      description: 获取所有学期
+      security:
+        - Authorization: []
+  '/course/{courseId}/assistants':
+    parameters:
+      - schema:
+          type: string
+        name: courseId
+        in: path
+        required: true
+    post:
+      summary: 添加助教
+      operationId: post-course-courseId-assistants
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 课程
+      description: 添加助教
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddAssistantRequest'
+  /myAssistants:
+    get:
+      summary: 教师获取全部助教
+      tags:
+        - 课程
+        - 人员
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssistantModel'
+      operationId: get-myAssistants
+      description: 教师获取自己的全部助教
+      security:
+        - Authorization: []
 components:
   schemas:
     AssignmentResponse:
@@ -2732,7 +2984,6 @@ components:
         - sentEmail
         - submittedAssignmentsCnt
     CourseResponse:
-      description: ''
       type: object
       x-examples: {}
       properties:
@@ -2755,6 +3006,8 @@ components:
         studentCnt:
           type: integer
           description: 本门课的学生人数
+        departmentName:
+          type: string
       required:
         - id
         - name
@@ -2762,6 +3015,7 @@ components:
         - term
         - createTime
         - departmentId
+        - departmentName
     AssignmentListResponse:
       title: AssignmentListResponse
       type: object
@@ -2819,12 +3073,15 @@ components:
         role:
           type: string
           example: 枚举值，teacher or student
+        departmentName:
+          type: string
       required:
         - id
         - name
         - department
         - email
         - role
+        - departmentName
     TermModel:
       title: TermModel
       type: object
@@ -3854,6 +4111,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SimpleCourse'
+        nickname:
+          type: string
+        email:
+          type: string
       required:
         - userId
         - username
@@ -3862,6 +4123,7 @@ components:
         - token
         - paasToken
         - adminCourses
+        - email
     ContainerServiceTemplate:
       title: ContainerServiceTemplate
       x-stoplight:
@@ -4247,6 +4509,177 @@ components:
             type: string
       required:
         - studentIdList
+    CreateUserRequest:
+      title: CreateUserRequest
+      x-stoplight:
+        id: imjarh3zi0ymu
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          type: integer
+          format: int32
+          enum:
+            - 1
+            - 2
+            - 4
+          description: '1 for student, 2 for teacher, 4 for admin'
+      required:
+        - id
+        - role
+    ActiveUserRequest:
+      title: ActiveUserRequest
+      x-stoplight:
+        id: 5tlxijm4hbgp8
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+      required:
+        - token
+        - password
+    SendActiveEmailRequest:
+      title: SendActiveEmailRequest
+      x-stoplight:
+        id: bccjz4987c7i6
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - name
+        - email
+    SendResetPasswordEmailRequest:
+      title: SendResetPasswordEmailRequest
+      x-stoplight:
+        id: 3x7a5nsys1ols
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - email
+    ResetPasswordrRequest:
+      title: ResetPasswordrRequest
+      x-stoplight:
+        id: wgu370ea2vmpe
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+      required:
+        - token
+        - password
+    PatchUserRequest:
+      title: PatchUserRequest
+      x-stoplight:
+        id: 00om48qbis7h0
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        nickname:
+          type: string
+    ChangePasswordRequest:
+      title: ChangePasswordRequest
+      x-stoplight:
+        id: bd7ss92wcml7j
+      type: object
+      properties:
+        old:
+          type: string
+        new:
+          type: string
+      required:
+        - old
+        - new
+    AddCoruseRequest:
+      title: AddCoruseRequest
+      x-stoplight:
+        id: qe15rdhfvyu2d
+      type: object
+      properties:
+        teacherId:
+          type: string
+        courseName:
+          type: string
+        termId:
+          type: integer
+          format: int32
+      required:
+        - teacherId
+        - courseName
+        - termId
+    PatchCourseRequest:
+      title: PatchCourseRequest
+      x-stoplight:
+        id: v3k00lx1a8xhs
+      type: object
+      properties:
+        termId:
+          type: integer
+          format: int32
+        name:
+          type: string
+      required:
+        - termId
+        - name
+    AssistantModel:
+      title: AssistantModel
+      x-stoplight:
+        id: 0qdkhzofrrp7i
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        courseName:
+          type: string
+        termName:
+          type: string
+        createdTime:
+          type: string
+          description: 'format: yyyy/MM/dd HH:mm:ss'
+        courseId:
+          type: integer
+          format: int32
+        rawId:
+          type: integer
+          format: int32
+      required:
+        - id
+        - name
+        - courseName
+        - termName
+        - createdTime
+        - courseId
+        - rawId
+    AddAssistantRequest:
+      title: AddAssistantRequest
+      x-stoplight:
+        id: yrf493bsgpgdm
+      type: object
+      properties:
+        studentId:
+          type: string
+      required:
+        - studentId
   securitySchemes:
     Authorization:
       type: apiKey

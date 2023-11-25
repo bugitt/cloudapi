@@ -14,19 +14,9 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param id 
- * @param name 
- * @param department 
- * @param email 
- * @param role 
- * @param departmentName 
+ * @param studentId 
  */
-data class UserModel(
-    val id: kotlin.String,
-    val name: kotlin.String,
-    val department: kotlin.Int,
-    val email: kotlin.String,
-    val role: kotlin.String,
-    val departmentName: kotlin.String
+data class AddAssistantRequest(
+    val studentId: kotlin.String
 ) 
 

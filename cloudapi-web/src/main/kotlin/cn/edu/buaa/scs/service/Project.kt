@@ -71,7 +71,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         createUser(User.id(userID))
     }
 
-    private suspend fun createUser(user: User) {
+    suspend fun createUser(user: User) {
         if (user.paasToken != "") return
         val paasToken = RandomStringUtils.randomAlphanumeric(13)
         managerList.forEach {

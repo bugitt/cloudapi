@@ -20,6 +20,8 @@ fun Application.configureRouting() {
             vmRoute()
             routineRoute()
             logRoute()
+            adminRoute()
+            termRoute()
             // 添加其他的 route
 
 

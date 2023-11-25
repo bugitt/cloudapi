@@ -15,18 +15,22 @@ package cn.edu.buaa.scs.controller.models
 /**
  * 
  * @param id 
- * @param name 
- * @param department 
- * @param email 
- * @param role 
- * @param departmentName 
+ * @param role 1 for student, 2 for teacher, 4 for admin
  */
-data class UserModel(
+data class CreateUserRequest(
     val id: kotlin.String,
-    val name: kotlin.String,
-    val department: kotlin.Int,
-    val email: kotlin.String,
-    val role: kotlin.String,
-    val departmentName: kotlin.String
+    /* 1 for student, 2 for teacher, 4 for admin */
+    val role: CreateUserRequest.Role
 ) 
+{
+    /**
+    * 1 for student, 2 for teacher, 4 for admin
+    * Values: _1,_2,_4
+    */
+    enum class Role(val value: kotlin.Int){
+        _1(1),
+        _2(2),
+        _4(4);
+    }
+}
 

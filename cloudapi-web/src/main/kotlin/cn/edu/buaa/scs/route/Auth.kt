@@ -1,8 +1,6 @@
 package cn.edu.buaa.scs.route
 
-import cn.edu.buaa.scs.controller.models.GetCaptcha200Response
-import cn.edu.buaa.scs.controller.models.PostLoginRequest
-import cn.edu.buaa.scs.controller.models.PutPaasTokenRequest
+import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.model.Authentication
 import cn.edu.buaa.scs.service.auth
 import cn.edu.buaa.scs.service.project
@@ -67,6 +65,37 @@ fun Route.authRoute() {
         put {
             val password = call.receive<PutPaasTokenRequest>().paasToken
             call.project.changePassword(password)
+            call.respond("OK")
+        }
+    }
+
+    route("/auth/sendActiveEmail") {
+        post {
+            val req = call.receive<SendActiveEmailRequest>()
+            call.auth.sendActiveEmail(req.id, req.name, req.email)
+            call.respond("OK")
+        }
+    }
+
+    route("/auth/sendResetPasswordEmail") {
+        post {
+            val req = call.receive<SendResetPasswordEmailRequest>()
+            call.auth.sendResetPasswordEmail(req.id, req.email)
+            call.respond("OK")
+        }
+    }
+
+    route("/activeUser") {
+        post {
+            val req = call.receive<ActiveUserRequest>()
+            call.respond(call.auth.activeUser(req.token, req.password))
+        }
+    }
+
+    route("/resetPassword") {
+        post {
+            val req = call.receive<ResetPasswordrRequest>()
+            call.auth.resetPassword(req.token, req.password)
             call.respond("OK")
         }
     }

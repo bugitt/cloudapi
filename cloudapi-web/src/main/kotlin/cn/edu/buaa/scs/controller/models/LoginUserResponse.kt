@@ -22,7 +22,9 @@ import cn.edu.buaa.scs.controller.models.SimpleCourse
  * @param token 
  * @param paasToken 
  * @param adminCourses 
+ * @param email 
  * @param projects 
+ * @param nickname 
  */
 data class LoginUserResponse(
     val userId: kotlin.String,
@@ -32,6 +34,8 @@ data class LoginUserResponse(
     val token: kotlin.String,
     val paasToken: kotlin.String,
     val adminCourses: kotlin.collections.List<SimpleCourse>,
-    val projects: kotlin.collections.List<kotlin.String>? = null
+    val email: kotlin.String,
+    val projects: kotlin.collections.List<kotlin.String>? = null,
+    val nickname: kotlin.String? = null
 ) 
 

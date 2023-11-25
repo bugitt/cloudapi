@@ -2,9 +2,7 @@ package cn.edu.buaa.scs.route
 
 import cn.edu.buaa.scs.controller.models.*
 import cn.edu.buaa.scs.error.BadRequestException
-import cn.edu.buaa.scs.model.Course
-import cn.edu.buaa.scs.model.CourseResource
-import cn.edu.buaa.scs.model.FileType
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.course
 import cn.edu.buaa.scs.service.courseResource
 import io.ktor.server.application.*
@@ -16,7 +14,13 @@ fun Route.courseRoute() {
 
     route("/courses") {
         get {
-            call.respond(call.course.getAllCourses().map { call.convertCourseResponse(it) })
+            call.respond(
+                call.course.getAllCourses(call.parameters["termId"]?.toInt()).map { call.convertCourseResponse(it) })
+        }
+
+        post {
+            val req = call.receive<AddCoruseRequest>()
+            call.respond(call.convertCourseResponse(call.course.addCourse(req.teacherId, req.courseName, req.termId)))
         }
 
         get("/managed") {
@@ -24,7 +28,7 @@ fun Route.courseRoute() {
         }
     }
 
-    route("course/{courseId}") {
+    route("/course/{courseId}") {
         fun ApplicationCall.getCourseIdFromPath(): Int =
             parameters["courseId"]?.toInt()
                 ?: throw BadRequestException("course id is invalid")
@@ -33,6 +37,28 @@ fun Route.courseRoute() {
             val courseId = call.getCourseIdFromPath()
             val course = call.course.get(courseId)
             call.respond(call.convertCourseResponse(course, true))
+        }
+
+        patch {
+            val courseId = call.getCourseIdFromPath()
+            val req = call.receive<PatchCourseRequest>()
+            call.respond(
+                call.convertCourseResponse(
+                    call.course.patch(
+                        call.getCourseIdFromPath(),
+                        req.termId,
+                        req.name
+                    )
+                )
+            )
+        }
+
+        delete {
+            call.respond(
+                call.convertCourseResponse(
+                    call.course.delete(call.getCourseIdFromPath())
+                )
+            )
         }
 
         route("/resource") {
@@ -87,10 +113,28 @@ fun Route.courseRoute() {
             }
 
             delete {
-                call.course.deleteStudents(call.getCourseIdFromPath(), call.receive<CourseStudentOpsRequest>().studentIdList)
+                call.course.deleteStudents(
+                    call.getCourseIdFromPath(),
+                    call.receive<CourseStudentOpsRequest>().studentIdList
+                )
                 call.respond("OK")
             }
         }
+
+        route("/assistants") {
+            post {
+                val req = call.receive<AddAssistantRequest>()
+                call.course.addAssistant(call.getCourseIdFromPath(), req.studentId)
+                call.respond("OK")
+            }
+        }
+    }
+
+    delete("/assistant/{assistantId}") {
+        call.course.deleteAssistant(
+            call.parameters["assistantId"]?.toInt() ?: throw BadRequestException("assistantId is not valid")
+        )
+        call.respond("OK")
     }
 
 }
@@ -103,7 +147,8 @@ internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boo
         term = convertTermModel(course.term),
         createTime = course.createTime,
         departmentId = course.departmentId,
-        studentCnt = if (hasCount) this.course.studentCnt(course.id) else null
+        studentCnt = if (hasCount) this.course.studentCnt(course.id) else null,
+        departmentName = Department.id(course.departmentId).name
     )
 }
 
