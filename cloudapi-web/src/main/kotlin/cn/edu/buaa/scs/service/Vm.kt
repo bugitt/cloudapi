@@ -50,6 +50,10 @@ class VmService(val call: ApplicationCall) : IService {
         vmKubeClient.resource(vm).patch()
     }
 
+    suspend fun getHosts(): List<Host> {
+        return sfClient.getHosts().getOrThrow()
+    }
+
     fun getPersonalVms(): List<VirtualMachineCrd> {
         val vmApplyList =
             mysql.vmApplyList.filter { ((it.studentId eq call.userId()) or (it.teacherId eq call.userId())) and (it.experimentId eq 0) }

@@ -25,7 +25,8 @@ fun Route.userRoute() {
     route("/stuffs") {
         get {
             val search = call.parameters["search"]
-            call.respond(call.userService.getTeachersAndStudents(search).map { convertUserModel(it) })
+            val limit = call.parameters["limit"]?.toIntOrNull() ?: 10
+            call.respond(call.userService.getTeachersAndStudents(search, limit).map { convertUserModel(it) })
         }
     }
 
@@ -53,6 +54,12 @@ fun Route.userRoute() {
             }
         }
 
+    }
+
+    route("/departments") {
+        get {
+            call.respond(call.userService.getAllDepartments())
+        }
     }
 }
 

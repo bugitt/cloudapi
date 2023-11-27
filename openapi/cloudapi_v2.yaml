@@ -1291,6 +1291,24 @@ paths:
       security:
         - Authorization: []
     parameters: []
+  /hosts:
+    get:
+      summary: 获取全部物理主机
+      tags:
+        - 虚拟机
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Host'
+      operationId: get-hosts
+      description: 获取全部物理主机
+      security:
+        - Authorization: []
   /paasUser:
     post:
       summary: 在各个PaaS相关后端中创建用户
@@ -1868,6 +1886,24 @@ paths:
           in: query
           name: limit
           description: '-1表示无限制。默认为10'
+  /departments:
+    get:
+      summary: 获取单位列表
+      tags:
+        - 人员
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartmentModel'
+      operationId: get-departments
+      description: 获取单位列表
+      security:
+        - Authorization: [ ]
   /resourcePools:
     parameters: []
     get:
@@ -2545,6 +2581,38 @@ paths:
       description: 获取所有学期
       security:
         - Authorization: []
+    post:
+      summary: 添加学期
+      tags:
+        - 学期
+      description: 添加新的学期
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 学期名称
+      responses:
+        '200':
+          description: 添加学期成功
+  '/terms/{id}':
+    delete:
+      summary: 删除学期
+      description: 删除特定学期
+      parameters:
+        - name: id
+          in: path
+          description: 要删除的学期 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 学期删除成功
   '/course/{courseId}/assistants':
     parameters:
       - schema:
@@ -3082,6 +3150,17 @@ components:
         - email
         - role
         - departmentName
+    DepartmentModel:
+      title: DepartmentModel
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
     TermModel:
       title: TermModel
       type: object
@@ -3091,6 +3170,12 @@ components:
           format: int32
         name:
           type: string
+        courseCount:
+          type: integer
+          format: int32
+        expCount:
+          type: integer
+          format: int32
     ExpVmInfo:
       title: ExpVmInfo
       type: object
@@ -3524,6 +3609,45 @@ components:
         - diskNum
         - diskSize
         - overallStatus
+    Host:
+      title: Host
+      type: object
+      properties:
+        ip:
+          type: string
+        status:
+          type: string
+        totalMem:
+          type: number
+          format: double
+        usedMem:
+          type: number
+          format: double
+        totalCPU:
+          type: number
+          format: double
+        usedCPU:
+          type: number
+          format: double
+        totalStorage:
+          type: integer
+          format: int64
+        usedStorage:
+          type: integer
+          format: int64
+        count:
+          type: integer
+          format: int32
+      required:
+        - ip
+        - status
+        - totalMem
+        - usedMem
+        - totalCPU
+        - usedCPU
+        - totalStorage
+        - usedStorage
+        - count
     StatExpAssignmentResponseAssignments:
       title: StatExpAssignmentResponseAssignments
       type: object
@@ -4517,6 +4641,14 @@ components:
       properties:
         id:
           type: string
+          description: '学工号'
+        name:
+          type: string
+          description: '姓名'
+        departmentId:
+          type: integer
+          format: int32
+          description: '所在单位'
         role:
           type: integer
           format: int32
@@ -4528,6 +4660,7 @@ components:
       required:
         - id
         - role
+        - departmentId
     ActiveUserRequest:
       title: ActiveUserRequest
       x-stoplight:

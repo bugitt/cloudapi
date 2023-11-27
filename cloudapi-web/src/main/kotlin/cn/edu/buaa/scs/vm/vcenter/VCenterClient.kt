@@ -2,6 +2,7 @@ package cn.edu.buaa.scs.vm.vcenter
 
 import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.error.NotFoundException
+import cn.edu.buaa.scs.model.Host
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.utils.HttpClientWrapper
 import cn.edu.buaa.scs.utils.schedule.waitForDone
@@ -37,6 +38,10 @@ object VCenterClient : IVMClient {
     }
 
     private fun vmNotFound(uuid: String): NotFoundException = NotFoundException("virtualMachine($uuid) not found")
+
+    override suspend fun getHosts(): Result<List<Host>> {
+        TODO("Not yet implemented")
+    }
 
     override suspend fun getAllVMs(): Result<List<VirtualMachine>> = runCatching {
         client.get<List<VirtualMachine>>("/vms").getOrThrow()

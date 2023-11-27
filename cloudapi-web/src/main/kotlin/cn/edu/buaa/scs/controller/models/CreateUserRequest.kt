@@ -14,13 +14,20 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param id 
+ * @param id 学工号
+ * @param departmentId 所在单位
  * @param role 1 for student, 2 for teacher, 4 for admin
+ * @param name 姓名
  */
 data class CreateUserRequest(
+    /* 学工号 */
     val id: kotlin.String,
+    /* 所在单位 */
+    val departmentId: kotlin.Int,
     /* 1 for student, 2 for teacher, 4 for admin */
-    val role: CreateUserRequest.Role
+    val role: CreateUserRequest.Role,
+    /* 姓名 */
+    val name: kotlin.String? = null
 ) 
 {
     /**
