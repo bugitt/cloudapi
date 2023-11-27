@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.application
 import cn.edu.buaa.scs.cache.authRedis
 
 import cn.edu.buaa.scs.error.NotFoundException
+import cn.edu.buaa.scs.model.Host
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.applySangforExtraInfo
 import cn.edu.buaa.scs.utils.getConfigString
@@ -32,6 +33,7 @@ import javax.net.ssl.X509TrustManager
 object SangforClient : IVMClient {
     val username = application.getConfigString("vm.sangfor.username")
     val password = application.getConfigString("vm.sangfor.password")
+    val adminPassword = application.getConfigString("vm.sangfor.adminPassword")
     private val tokenLock = Mutex()
     private val createLock = Mutex()
 
@@ -59,16 +61,16 @@ object SangforClient : IVMClient {
         }
     }
 
-    suspend fun connect(): String {
+    private suspend fun connect(user: String, password: String): String {
         val response = client.post("openstack/identity/v2.0/tokens") {
             contentType(ContentType.Application.Json)
             setBody(
                 """
                 {
                     "auth": {
-                        "tenantName": "$username",
+                        "tenantName": "$user",
                         "passwordCredentials": {
-                            "username": "$username",
+                            "username": "$user",
                             "password": "$password"
                         }
                     }
@@ -80,7 +82,7 @@ object SangforClient : IVMClient {
         return jsonMapper.readTree(body).get("access").get("token").get("id").toString().split('"')[1]
     }
 
-    suspend fun fetchTicket(token: String): Token {
+    private suspend fun fetchTicket(token: String): Token {
         val resBody: String = client.get("summary") {
             header("Cookie", "aCMPAuthToken=$token")
         }.body()
@@ -89,13 +91,13 @@ object SangforClient : IVMClient {
         return Token(token, ticket, sid)
     }
 
-    suspend fun getToken(): Token {
+    private suspend fun getToken(): Token {
         tokenLock.lock()
         var token = authRedis.getValueByKey("sangfor_token")
         var ticket = authRedis.getValueByKey("sangfor_ticket") ?: ""
         var sid = authRedis.getValueByKey("sangfor_sid") ?: ""
         if (token == null) {
-            token = connect()
+            token = connect(username, password)
             authRedis.setExpireKey("sangfor_token", token, 3500)
             val tokenBody = fetchTicket(token)
             ticket = tokenBody.ticket
@@ -105,6 +107,59 @@ object SangforClient : IVMClient {
         }
         tokenLock.unlock()
         return Token(token, ticket, sid)
+    }
+
+    suspend fun getAdminToken(): Token {
+        tokenLock.lock()
+        var token = authRedis.getValueByKey("sangfor_admin_token")
+        var ticket = authRedis.getValueByKey("sangfor_admin_ticket") ?: ""
+        var sid = authRedis.getValueByKey("sangfor_admin_sid") ?: ""
+        if (token == null) {
+            token = connect("admin", adminPassword)
+            authRedis.setExpireKey("sangfor_admin_token", token, 3500)
+            val tokenBody = fetchTicket(token)
+            ticket = tokenBody.ticket
+            sid = tokenBody.sid
+            authRedis.setExpireKey("sangfor_admin_ticket", ticket, 4000)
+            authRedis.setExpireKey("sangfor_admin_sid", sid, 4000)
+        }
+        tokenLock.unlock()
+        return Token(token, ticket, sid)
+    }
+
+    override suspend fun getHosts(): Result<List<Host>> {
+        val token = getAdminToken().id
+        val clusterRes: String = client.get("admin/view/cluster-list") {
+            header("Cookie", "aCMPAuthToken=${token}")
+        }.body()
+        val clusters = jsonMapper.readTree(clusterRes)["data"]
+        val hostList = mutableListOf<Host>()
+        for (cluster in clusters) {
+            val cid = cluster["id"].toString().split('"')[1]
+            val hostRes: String = client.get("admin/view/host-list?cluster_id=$cid") {
+                header("Cookie", "aCMPAuthToken=${token}")
+            }.body()
+            val hosts = jsonMapper.readTree(hostRes)["data"]
+            for (hostJSON in hosts) {
+                val host = Host(
+                    ip = hostJSON["ip"].toString().split('"')[1],
+                    status = hostJSON["status"].toString().split('"')[1],
+                    totalMem = hostJSON["memory"]["total_mb"].doubleValue(),
+                    usedMem = hostJSON["memory"]["used_mb"].doubleValue(),
+                    totalCPU = hostJSON["cpu"]["total_mhz"].doubleValue(),
+                    usedCPU = hostJSON["cpu"]["used_mhz"].doubleValue(),
+                    totalStorage = if (hostJSON["disks"].size() != 0) {
+                        hostJSON["disks"].map {
+                            it["disk_size_byte"].longValue()
+                        }.reduce { s, s1 -> s + s1 }
+                    } else { 0 },
+                    usedStorage = 0L,
+                    count = hostJSON["count"].intValue(),
+                )
+                hostList.add(host)
+            }
+        }
+        return Result.success(hostList)
     }
 
     override suspend fun getAllVMs(): Result<List<VirtualMachine>> {

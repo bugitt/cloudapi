@@ -13,12 +13,13 @@ import io.ktor.server.routing.*
 
 fun Route.adminRoute() {
     route("/admin") {
-
         route("/user") {
             post {
                 val req = call.receive<CreateUserRequest>()
                 val role = UserRole.fromLevel(req.role.value)
-                call.respond(convertUserModel(call.admin.addUser(req.id, role)))
+                val name = req.name
+                val departmentId = req.departmentId
+                call.respond(convertUserModel(call.admin.addUser(req.id, name, role, departmentId)))
             }
         }
     }

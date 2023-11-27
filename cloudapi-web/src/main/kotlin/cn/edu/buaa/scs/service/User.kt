@@ -1,6 +1,7 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.controller.models.AssistantModel
+import cn.edu.buaa.scs.controller.models.DepartmentModel
 import cn.edu.buaa.scs.controller.models.PatchUserRequest
 import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.error.BadRequestException
@@ -22,11 +23,12 @@ fun User.Companion.getUerListByIdList(idList: List<String>): List<User> {
     else mysql.users.filter { it.id.inList(idList) }.toList()
 }
 
-fun User.Companion.createNewUnActiveUser(id: String, name: String?, role: UserRole): User {
+fun User.Companion.createNewUnActiveUser(id: String, name: String?, role: UserRole, departmentId: Int): User {
     val user = User {
         this.id = id
         this.name = name ?: "未激活用户"
         this.role = role
+        this.departmentId = departmentId
     }
     mysql.users.add(user)
     return user
@@ -58,18 +60,30 @@ class UserService(val call: ApplicationCall) : IService {
     fun getTeachersAndStudents(search: String?, limit: Int = 10): List<User> {
         if (call.user().isStudent()) return listOf()
 
-        if (search.isNullOrBlank()) return listOf()
-
-        var query = mysql.users
-            .filter {
-                (it.id.like("%$search%").or(it.name.like("%$search%")))
-                    .and((it.role eq UserRole.STUDENT).or(it.role eq UserRole.TEACHER))
+        val ret: List<User>
+        if (search.isNullOrBlank()) {
+            var query = mysql.users
+                .filter {
+                    (it.role eq UserRole.STUDENT).or(it.role eq UserRole.TEACHER)
+                }
+                .sortedBy { it.id }
+            if (limit != -1) {
+                query = query.take(limit)
             }
-            .sortedBy { it.id }
-        if (limit != -1) {
-            query = query.take(limit)
+            ret = query.toList()
+        } else {
+            var query = mysql.users
+                .filter {
+                    (it.id.like("%$search%").or(it.name.like("%$search%")))
+                        .and((it.role eq UserRole.STUDENT).or(it.role eq UserRole.TEACHER))
+                }
+                .sortedBy { it.id }
+            if (limit != -1) {
+                query = query.take(limit)
+            }
+            ret = query.toList()
         }
-        return query.toList()
+        return ret
     }
 
     fun patchUser(userId: String, req: PatchUserRequest) {
@@ -97,7 +111,8 @@ class UserService(val call: ApplicationCall) : IService {
         }
 
         val user = User.id(userId)
-        if (user.password != old) {
+        // 如果是管理员修改密码，无需检查旧密码
+        if (!call.user().isAdmin() && user.password != old) {
             throw BadRequestException("旧密码错误")
         }
         user.password = new
@@ -131,5 +146,14 @@ class UserService(val call: ApplicationCall) : IService {
             .values
             .flatten()
             .sortedByDescending { it.rawId }
+    }
+
+    fun getAllDepartments(): List<DepartmentModel> {
+        return mysql.departments.map { department ->
+            DepartmentModel(
+                id = department.id,
+                name = department.name,
+            )
+        }
     }
 }

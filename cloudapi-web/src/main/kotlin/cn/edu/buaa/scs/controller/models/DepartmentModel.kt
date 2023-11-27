@@ -16,13 +16,9 @@ package cn.edu.buaa.scs.controller.models
  * 
  * @param id 
  * @param name 
- * @param courseCount 
- * @param expCount 
  */
-data class TermModel(
-    val id: kotlin.Int? = null,
-    val name: kotlin.String? = null,
-    val courseCount: kotlin.Int? = null,
-    val expCount: kotlin.Int? = null
+data class DepartmentModel(
+    val id: kotlin.String,
+    val name: kotlin.String
 ) 
 

@@ -8,6 +8,7 @@ import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.ConfigVmOptions
 import cn.edu.buaa.scs.vm.CreateVmOptions
+import cn.edu.buaa.scs.model.Host
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.BasicConnection
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Connection
@@ -116,6 +117,41 @@ object VCenterWrapper {
             val task = connection.vimPort.powerOffVMTask(connection.getVmRefByUuid(uuid))
             waitForTaskResult(connection, task).getOrThrow()
         }
+    }
+
+    suspend fun getHosts(): List<Host> {
+        return baseSyncTask { connection ->
+            val datacenterRef = connection.getDatacenterRef()
+            val getMoRef = connection.getMoRef()
+            val hostList =
+                getMoRef.inContainerByType(datacenterRef, "HostSystem", arrayOf("name", "summary", "datastore", "vm"), RetrieveOptions())
+            hostList.map { (hostRef, hostProps) ->
+                val hostSummary = hostProps["summary"]!! as HostListSummary
+                val hostHardwareSummary = hostSummary.hardware
+                var usedMem = 0.0
+                var usedCPU = 0.0
+                if (hostSummary.runtime.connectionState === HostSystemConnectionState.CONNECTED) {
+                    usedMem = 1.0 * hostSummary.quickStats.overallMemoryUsage
+                    usedCPU = 1.0 * hostSummary.quickStats.overallCpuUsage
+                }
+                val dataStores = (hostProps["datastore"] as ArrayOfManagedObjectReference?)!!.managedObjectReference
+                val (usedStorage, totalStorage) = dataStores.map { getMoRef.entityProps(it, "summary")["summary"]!! as DatastoreSummary }
+                    .filter { it.isAccessible }
+                    .map { Pair(it.capacity - it.freeSpace, it.capacity) }
+                    .reduceOrNull { (a, b), (a1, b1) -> Pair(a + a1, b + b1) } ?: Pair(0L, 0L)
+                Host(
+                    ip = hostProps["name"]!! as String,
+                    status = hostSummary.runtime.connectionState.value(),
+                    totalMem = 1.0 * hostHardwareSummary.memorySize,
+                    usedMem = usedMem,
+                    totalCPU = 1.0 * hostHardwareSummary.cpuMhz * hostHardwareSummary.numCpuCores,
+                    usedCPU = usedCPU,
+                    totalStorage = totalStorage,
+                    usedStorage = usedStorage,
+                    count = (hostProps["vm"]!! as ArrayOfManagedObjectReference).managedObjectReference.size,
+                )
+            }
+        }.getOrThrow()
     }
 
     suspend fun configVM(

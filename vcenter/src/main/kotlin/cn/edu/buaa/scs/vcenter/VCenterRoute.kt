@@ -21,6 +21,12 @@ fun Application.vcenterRouting() {
 
             }
 
+            route("/hosts") {
+                get {
+                    call.respond(VCenterWrapper.getHosts())
+                }
+            }
+
             route("/vm/{uuid}") {
                 fun ApplicationCall.getVmUuid() = parameters["uuid"]!!
 

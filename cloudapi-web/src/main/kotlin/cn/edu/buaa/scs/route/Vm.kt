@@ -79,6 +79,12 @@ fun Route.vmRoute() {
         }
     }
 
+    route("/hosts") {
+        get {
+            call.respond(call.vm.getHosts())
+        }
+    }
+
     route("/vms") {
         get {
             call.respond(call.vm.adminGetAllVms().map { convertVirtualMachineResponse(it) })

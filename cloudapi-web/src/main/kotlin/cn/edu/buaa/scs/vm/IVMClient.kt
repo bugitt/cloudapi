@@ -1,10 +1,13 @@
 package cn.edu.buaa.scs.vm
 
+import cn.edu.buaa.scs.model.Host
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.vm.sangfor.SangforClient
 import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 
 interface IVMClient {
+    suspend fun getHosts(): Result<List<Host>>
+
     suspend fun getAllVMs(): Result<List<VirtualMachine>>
 
     suspend fun getVM(uuid: String): Result<VirtualMachine>
