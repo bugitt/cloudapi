@@ -132,10 +132,14 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
         val vmClient = newVMClient(vm.spec.platform)
         if (vm.spec.deleted) {
             val exist = runBlocking {
-                if (vmClient.getVM(vm.status.uuid).isSuccess) {
-                    vmClient.deleteVM(vm.status.uuid).getOrThrow()
-                    true
-                } else {
+                try {
+                    if (vmClient.getVM(vm.status.uuid).isSuccess) {
+                        vmClient.deleteVM(vm.status.uuid).getOrThrow()
+                        true
+                    } else {
+                        false
+                    }
+                } catch (e: NullPointerException) {
                     false
                 }
             }
