@@ -90,6 +90,17 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
             isPersonal = true,
             alreadyHasUser = true,
         )
+
+        val resourcePoolName = "personal-${user.id}"
+        BusinessKubeClient.createResourcePoolForUser(user.id, 2000, 4096)
+        val resourcePool = ResourcePool {
+            this.name = resourcePoolName
+            this.ownerId = user.id
+        }
+        if (!mysql.resourcePools.exists { it.name.eq(resourcePoolName) }) {
+            mysql.resourcePools.add(resourcePool)
+        }
+
         user.flushChanges()
     }
 
