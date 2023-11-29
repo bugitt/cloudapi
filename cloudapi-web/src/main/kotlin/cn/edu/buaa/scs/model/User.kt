@@ -35,7 +35,7 @@ enum class UserRole {
             return when (level) {
                 0, 1 -> STUDENT
                 2 -> TEACHER
-                4 -> SYS
+                3, 4 -> SYS
                 else -> throw IllegalArgumentException("Invalid user level: $level")
             }
         }

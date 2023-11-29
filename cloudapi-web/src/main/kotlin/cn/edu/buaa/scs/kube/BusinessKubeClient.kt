@@ -86,6 +86,22 @@ spec:
         businessKubeClientBuilder().load(resourcePoolYamlStr.byteInputStream()).createOrReplace()
     }
 
+    fun createResourcePoolForUser(userId: String, cpu: Int, memory: Int) = runCatching {
+        val resourcePoolYamlStr = """
+apiVersion: cloudapi.scs.buaa.edu.cn/v1alpha1
+kind: ResourcePool
+metadata:
+  name: personal-$userId
+  labels:
+    owner: $userId
+spec:
+  capacity: 
+    cpu: $cpu
+    memory: $memory
+"""
+        businessKubeClientBuilder().load(resourcePoolYamlStr.byteInputStream()).createOrReplace()
+    }
+
     fun deleteResourcePool(name: String) = runCatching {
         val resourcePoolYamlStr = """
 apiVersion: cloudapi.scs.buaa.edu.cn/v1alpha1
