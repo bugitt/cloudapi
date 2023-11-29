@@ -333,7 +333,7 @@ class VmService(val call: ApplicationCall) : IService {
     }
 
     suspend fun convertVMToTemplate(uuid: String, name: String): VirtualMachine {
-        var vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
+        val vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
         call.user().assertWrite(vm)
         // 检查是否已经关机
         if (vm.powerState.value.lowercase() != "poweredoff") {
@@ -347,19 +347,20 @@ class VmService(val call: ApplicationCall) : IService {
             throw BadRequestException("template name already exists")
         }
         // convert machine into template
-        vm = vmClient.convertVMToTemplate(uuid).getOrThrow()
+//        vm = vmClient.convertVMToTemplate(uuid).getOrThrow()
         // config vm template
-        val (adminId, teacherId, studentId) = when {
-            call.user().isAdmin() -> Triple("default", "default", "default")
-            call.user().isTeacher() -> Triple("default", call.userId(), "default")
-            else -> Triple("default", "default", call.userId())
-        }
-        return vmClient.configVM(
-            vm.uuid,
-            adminId = adminId,
-            teacherId = teacherId,
-            studentId = studentId,
-        ).getOrThrow()
+//        val (adminId, teacherId, studentId) = when {
+//            call.user().isAdmin() -> Triple("default", "default", "default")
+//            call.user().isTeacher() -> Triple("default", call.userId(), "default")
+//            else -> Triple("default", "default", call.userId())
+//        }
+//        return vmClient.configVM(
+//            vm.uuid,
+//            adminId = adminId,
+//            teacherId = teacherId,
+//            studentId = studentId,
+//        ).getOrThrow()
+        return vm
     }
 }
 

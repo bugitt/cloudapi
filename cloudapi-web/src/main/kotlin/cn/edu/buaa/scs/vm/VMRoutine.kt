@@ -22,7 +22,7 @@ object VMRoutine : Routine {
 
     private val updateVmCrd = Routine.alwaysDo("vm-worker-update-crd") {
         val vmList = mutableListOf<VirtualMachine>()
-        vmList.addAll(vmClient.getAllVMs().getOrThrow())
+//        vmList.addAll(vmClient.getAllVMs().getOrThrow())
         vmList.addAll(sfClient.getAllVMs().getOrThrow())
         vmList.forEach { vmModel ->
             val ns = vmModel.applyId.lowercase()
@@ -41,7 +41,7 @@ object VMRoutine : Routine {
 
     private val updateVMsToDatabase = Routine.alwaysDo("vm-worker-update-db") {
         val vmList = mutableListOf<VirtualMachine>()
-        vmList.addAll(vmClient.getAllVMs().getOrThrow())
+//        vmList.addAll(vmClient.getAllVMs().getOrThrow())
         vmList.addAll(sfClient.getAllVMs().getOrThrow())
         val existedVmUUIDList = mysql.virtualMachines.map { it.uuid }.toSet()
         mysql.useTransaction {
@@ -120,8 +120,8 @@ object VMRoutine : Routine {
             .toList()
             .forEach {
                 val vm = it
-                vmClient.deleteVM(vm.uuid)
-                    .onSuccess { vm.delete() }
+//                vmClient.deleteVM(vm.uuid)
+//                    .onSuccess { vm.delete() }
             }
     }
 

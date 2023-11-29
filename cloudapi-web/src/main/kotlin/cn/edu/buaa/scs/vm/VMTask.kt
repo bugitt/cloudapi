@@ -31,16 +31,17 @@ class VMTask(taskData: TaskData) : Task(taskData) {
 
     override suspend fun internalProcess(): Result<Unit> {
         val content = jsonMapper.readValue<Content>(taskData.data)
-        return when (content.type) {
-            Type.Create -> {
-                val options = jsonMapper.readValue<CreateVmOptions>(content.data)
-                vmClient.createVM(options).map { }
-            }
-
-            Type.Delete -> {
-                vmClient.deleteVM(content.data)
-            }
-        }
+//        return when (content.type) {
+//            Type.Create -> {
+//                val options = jsonMapper.readValue<CreateVmOptions>(content.data)
+//                vmClient.createVM(options).map { }
+//            }
+//
+//            Type.Delete -> {
+//                vmClient.deleteVM(content.data)
+//            }
+//        }
+        return Result.success(Unit)
     }
 
 }
