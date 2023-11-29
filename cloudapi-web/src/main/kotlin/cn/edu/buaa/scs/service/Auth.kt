@@ -80,7 +80,7 @@ class AuthService(val call: ApplicationCall) : IService {
             ?: throw BadRequestException("")
         // check active
         if (!user.isAccepted) {
-            throw BadRequestException("账号未激活")
+            throw BadRequestException("账号未激活，或信息不完整，请重新激活账户")
         }
         // check captcha
         if (!checkCaptcha(captchaToken, captchaText)) {
