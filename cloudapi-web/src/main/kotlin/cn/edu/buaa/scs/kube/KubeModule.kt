@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.kube
 
-import cn.edu.buaa.scs.image.ImageBuildRoutine
 import cn.edu.buaa.scs.utils.getConfigString
 import cn.edu.buaa.scs.utils.logger
 import com.fasterxml.jackson.module.kotlin.kotlinModule
@@ -24,6 +23,7 @@ fun Application.kubeModule() {
             .withMasterUrl(masterUrl)
             .withApiVersion("v1")
             .withOauthToken(token)
+            .withTrustCerts()
             .build()
         return KubernetesClientBuilder().withConfig(config).build()
     }
