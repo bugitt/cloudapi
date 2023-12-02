@@ -1,6 +1,5 @@
 package cn.edu.buaa.scs.project
 
-import cn.edu.buaa.scs.bugit.GitClient
 import cn.edu.buaa.scs.harbor.HarborClient
 import cn.edu.buaa.scs.kube.BusinessKubeClient
 
@@ -30,6 +29,6 @@ interface IProjectManager {
 
 val managerList = listOf<IProjectManager>(
 //    GitClient,
-//    HarborClient,
-//    BusinessKubeClient,
+    HarborClient,
+    BusinessKubeClient,
 )
