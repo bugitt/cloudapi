@@ -5,14 +5,41 @@ import cn.edu.buaa.scs.sdk.harbor.apis.*
 import cn.edu.buaa.scs.sdk.harbor.infrastructure.ClientException
 import cn.edu.buaa.scs.sdk.harbor.models.*
 import io.ktor.http.*
+import okhttp3.OkHttpClient
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSession
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 object HarborClient : IProjectManager {
 
-    private val projectClient by lazy { ProjectApi() }
-    private val userClient by lazy { UserApi() }
-    private val memberClient by lazy { MemberApi() }
-    private val repoClient by lazy { RepositoryApi() }
-    private val artifactClient by lazy { ArtifactApi() }
+    private val clientBuilder by lazy {
+        val trustAllCerts = arrayOf<TrustManager>(
+            object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun getAcceptedIssuers(): Array<X509Certificate> {
+                    return arrayOf()
+                }
+            }
+        )
+
+        val sslContext = SSLContext.getInstance("SSL")
+        sslContext.init(null, trustAllCerts, SecureRandom())
+
+        val builder = OkHttpClient.Builder()
+        builder.sslSocketFactory(sslContext.socketFactory, (trustAllCerts[0] as X509TrustManager)!!)
+        builder.hostnameVerifier { _: String?, _: SSLSession? -> true }
+        builder
+    }
+
+    private val projectClient by lazy { ProjectApi(client = clientBuilder.build()) }
+    private val userClient by lazy { UserApi(client = clientBuilder.build()) }
+    private val memberClient by lazy { MemberApi(client = clientBuilder.build()) }
+    private val repoClient by lazy { RepositoryApi(client = clientBuilder.build()) }
+    private val artifactClient by lazy { ArtifactApi(client = clientBuilder.build()) }
 
     fun getImagesByProject(projectName: String): Result<Map<Repository, List<Artifact>>> = runCatching {
         val project = projectClient.getProject(projectName)

@@ -92,7 +92,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
         )
 
         val resourcePoolName = "personal-${user.id}"
-        BusinessKubeClient.createResourcePoolForUser(user.id, 2000, 4096)
+        BusinessKubeClient.createResourcePoolForUser(user.id, 2000, 4096).getOrThrow()
         val resourcePool = ResourcePool {
             this.name = resourcePoolName
             this.ownerId = user.id
