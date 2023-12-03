@@ -5,6 +5,7 @@ import cn.edu.buaa.scs.sdk.harbor.apis.*
 import cn.edu.buaa.scs.sdk.harbor.infrastructure.ClientException
 import cn.edu.buaa.scs.sdk.harbor.models.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -57,27 +58,30 @@ object HarborClient : IProjectManager {
 
     override suspend fun createUser(userID: String, realName: String, email: String, password: String): Result<String> =
         runCatching {
-            if (userClient.searchUsers(userID).isNotEmpty()) return Result.success(userID)
-            try {
-                val userReq = UserCreationReq(
-                    email = email,
-                    realname = realName,
-                    password = password,
-                    username = userID,
-                )
-                userClient.createUser(userReq)
-            } catch (e: ClientException) {
-                if (e.statusCode == HttpStatusCode.Conflict.value) {
+            while (true) {
+                if (userClient.searchUsers(userID).isNotEmpty()) return Result.success(userID)
+                try {
                     val userReq = UserCreationReq(
-                        email = email.replace("@", "+$userID@"),
+                        email = email,
                         realname = realName,
                         password = password,
                         username = userID,
                     )
                     userClient.createUser(userReq)
-                } else {
-                    throw e
+                } catch (e: ClientException) {
+                    if (e.statusCode == HttpStatusCode.Conflict.value) {
+                        val userReq = UserCreationReq(
+                            email = email.replace("@", "+$userID@"),
+                            realname = realName,
+                            password = password,
+                            username = userID,
+                        )
+                        userClient.createUser(userReq)
+                    } else {
+                        throw e
+                    }
                 }
+                delay(100)
             }
         }.map { userID }
 

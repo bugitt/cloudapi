@@ -24,6 +24,7 @@ data class Config(
     val vcenter: VCenter,
     val baseUrl: String,
     val email: Email,
+    val storage: Storage,
 ) {
     data class VCenter(
         val port: Int,
@@ -42,5 +43,9 @@ data class Config(
         val smtpServer: String,
         val smtpPort: String,
         val titlePicture: String,
+    )
+
+    data class Storage(
+        val localSubPath: String,
     )
 }

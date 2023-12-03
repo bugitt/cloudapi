@@ -1,5 +1,6 @@
 package cn.edu.buaa.scs.storage.file
 
+import cn.edu.buaa.scs.config.globalConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
@@ -7,7 +8,8 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class LocalFileManager(basePath: String) : FileManager(basePath) {
+class LocalFileManager(basePath: String) :
+    FileManager(Paths.get(globalConfig.storage.localSubPath, basePath).toString()) {
     val filePath: (storeName: String) -> String = { "$storePath/$it" }
 
     init {
