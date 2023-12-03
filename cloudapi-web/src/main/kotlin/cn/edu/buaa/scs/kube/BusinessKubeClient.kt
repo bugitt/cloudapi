@@ -137,7 +137,7 @@ metadata:
         projectDescription: String
     ): Result<String> = runCatching {
         val ns = runCatching { businessKubeClientBuilder().namespaces().withName(projectName).get() }
-        if (ns.isFailure) {
+        if (ns.isFailure || ns.getOrNull() == null) {
             businessKubeClientBuilder().namespaces().resource(
                 newNamespace {
                     metadata {
