@@ -3,6 +3,8 @@ package cn.edu.buaa.scs.utils
 import cn.edu.buaa.scs.config.Constant
 import cn.edu.buaa.scs.config.globalConfig
 import java.util.*
+import javax.activation.CommandMap
+import javax.activation.MailcapCommandMap
 import javax.mail.Message
 import javax.mail.PasswordAuthentication
 import javax.mail.Session
@@ -12,6 +14,11 @@ import javax.mail.internet.MimeMessage
 
 object Email {
     fun sendEmail(to: String, subject: String, content: String): Result<Unit> = runCatching {
+        val mc: MailcapCommandMap = CommandMap.getDefaultCommandMap() as MailcapCommandMap
+        mc.addMailcap("text/html;; x-java-content-handler=com.sun.mail.handlers.text_html")
+        CommandMap.setDefaultCommandMap(mc)
+        Thread.currentThread().contextClassLoader = javaClass.classLoader
+
         val config = globalConfig.email
 
         val properties = Properties().apply {
@@ -34,8 +41,6 @@ object Email {
             setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
             setSubject(subject)
             setContent(content, "text/html; charset=utf-8")
-
-
         }
         Transport.send(message)
     }
