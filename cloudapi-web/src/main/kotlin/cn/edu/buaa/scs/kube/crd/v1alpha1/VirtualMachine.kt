@@ -216,13 +216,13 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
         if (vm.spec.powerState == VirtualMachineModel.PowerState.PoweredOn) {
             if (vm.status.powerState != VirtualMachineModel.PowerState.PoweredOn) {
                 runBlocking {
-                    vmClient.powerOnSync(vmUuid).getOrThrow()
+                    vmClient.powerOnSync(vmUuid)
                 }
             }
         } else if (vm.spec.powerState == VirtualMachineModel.PowerState.PoweredOff) {
             if (vm.status.powerState != VirtualMachineModel.PowerState.PoweredOff) {
                 runBlocking {
-                    vmClient.powerOffSync(vmUuid).getOrThrow()
+                    vmClient.powerOffSync(vmUuid)
                 }
             }
         }
