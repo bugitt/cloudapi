@@ -1006,6 +1006,31 @@ paths:
           in: query
           name: sync
           description: 表示该请求是否同步返回，默认为false，即默认异步。client需要在后续查询具体的执行情况
+  '/vm/{vmId}/vnc':
+    parameters:
+      - schema:
+          type: string
+        name: vmId
+        in: path
+        required: true
+        description: vm uuid
+    post:
+      summary: 创建一个 VNC 控制台
+      operationId: create-vnc-console
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VNCConsole'
+      description: 创建一个虚拟机 VNC 控制台
+      tags:
+        - 虚拟机
+      security:
+        - Authorization: [ ]
   /vms:
     get:
       summary: get Virtual Machine list
@@ -3479,6 +3504,12 @@ components:
       required:
         - macAddress
         - ipList
+    VNCConsole:
+      title: VNCConsole
+      type: object
+      properties:
+        url:
+          type: string
     VirtualMachine:
       title: VirtualMachine
       type: object

@@ -274,6 +274,26 @@ object SangforClient : IVMClient {
         }
     }
 
+    suspend fun createVNCConsole(uuid: String): Result<String> {
+        val token = getToken().id
+        /* 成功：202，失败：409 */
+        val res: String = client.post("openstack/compute/v2/servers/$uuid/action") {
+            contentType(ContentType.Application.Json)
+            header("X-Auth-Token", token)
+            setBody(
+                """
+                {
+                    "os-getVNCConsole": {
+                        "type": "novnc"
+                    }
+                }
+                """.trimIndent()
+            )
+        }.body()
+        val json = jsonMapper.readTree(res)
+        return Result.success(json["console"]["url"].toString())
+    }
+
     override suspend fun configVM(
         uuid: String,
         experimentId: Int?,

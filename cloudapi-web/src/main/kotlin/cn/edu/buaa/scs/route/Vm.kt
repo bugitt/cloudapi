@@ -8,6 +8,7 @@ import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VmApply
 import cn.edu.buaa.scs.service.namespaceName
 import cn.edu.buaa.scs.service.vm
+import cn.edu.buaa.scs.vm.sfClient
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -24,6 +25,12 @@ fun Route.vmRoute() {
             get {
                 val vmId = call.getVmIdFromPath()
                 call.respond(convertVirtualMachineResponse(call.vm.getVmByUUID(vmId)))
+            }
+
+            post("/vnc") {
+                val vmId = call.getVmIdFromPath()
+                val url = sfClient.createVNCConsole(vmId).getOrThrow()
+                call.respond(VNCConsole(url = url))
             }
 
             delete {
