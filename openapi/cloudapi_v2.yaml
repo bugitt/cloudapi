@@ -1030,7 +1030,7 @@ paths:
       tags:
         - 虚拟机
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /vms:
     get:
       summary: get Virtual Machine list
@@ -1928,7 +1928,7 @@ paths:
       operationId: get-departments
       description: 获取单位列表
       security:
-        - Authorization: [ ]
+        - Authorization: []
   /resourcePools:
     parameters: []
     get:
@@ -4672,26 +4672,23 @@ components:
       properties:
         id:
           type: string
-          description: '学工号'
+          description: 学工号
         name:
           type: string
-          description: '姓名'
+          description: 姓名
         departmentId:
           type: integer
           format: int32
-          description: '所在单位'
+          description: 所在单位
         role:
           type: integer
           format: int32
-          enum:
-            - 1
-            - 2
-            - 4
           description: '1 for student, 2 for teacher, 4 for admin'
+          readOnly: true
       required:
         - id
-        - role
         - departmentId
+        - role
     ActiveUserRequest:
       title: ActiveUserRequest
       x-stoplight:
