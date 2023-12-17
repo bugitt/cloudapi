@@ -57,7 +57,7 @@ class CourseService(val call: ApplicationCall) : IService {
             this.name = courseName
             this.term = term
             this.departmentId = "21"
-            this.createTime = System.currentTimeMillis().toString()
+            this.createTime = System.currentTimeMillis().formatDateTime()
             this.resourceFolder = ""
         }
 
