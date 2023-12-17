@@ -139,7 +139,7 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
             experiments.filter { submittedExperiments.contains(it.id) }
         } else {
             experiments.filterNot { submittedExperiments.contains(it.id) }
-        }
+        }.sortedByDescending { it.id }
     }
 
     fun selectStandardAssignments(expId: Int): List<Pair<Assignment, PeerStandard?>> {

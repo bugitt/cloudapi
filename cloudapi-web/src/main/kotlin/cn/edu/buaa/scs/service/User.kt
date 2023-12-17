@@ -152,7 +152,7 @@ class UserService(val call: ApplicationCall) : IService {
     fun getAllDepartments(): List<DepartmentModel> {
         return mysql.departments.map { department ->
             DepartmentModel(
-                id = department.id,
+                id = department.id.toString(),
                 name = department.name,
             )
         }
@@ -160,7 +160,7 @@ class UserService(val call: ApplicationCall) : IService {
 
     fun batchInsertUser(users: List<User>) {
         mysql.batchInsert(Users) {
-            users.forEach{ user ->
+            users.forEach { user ->
                 item {
                     set(it.id, user.id)
                     set(it.name, user.name)
