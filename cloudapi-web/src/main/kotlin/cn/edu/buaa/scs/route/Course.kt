@@ -148,7 +148,7 @@ internal fun ApplicationCall.convertCourseResponse(course: Course, hasCount: Boo
         createTime = course.createTime,
         departmentId = course.departmentId,
         studentCnt = if (hasCount) this.course.studentCnt(course.id) else null,
-        departmentName = Department.id(course.departmentId).name
+        departmentName = Department.id(course.departmentId.toInt()).name
     )
 }
 

@@ -7,6 +7,7 @@ import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.userService
+import cn.edu.buaa.scs.storage.mysql
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -14,6 +15,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import java.io.InputStream
 
 fun Route.userRoute() {
@@ -65,6 +68,7 @@ fun Route.userRoute() {
                     is PartData.FileItem -> {
                         excelFile = part.streamProvider()
                     }
+
                     is PartData.FormItem ->
                         when (part.name) {
                             "role" -> role = when (part.value) {
@@ -72,6 +76,7 @@ fun Route.userRoute() {
                                 else -> UserRole.STUDENT
                             }
                         }
+
                     else -> part.dispose()
                 }
             }
@@ -94,10 +99,12 @@ fun Route.userRoute() {
                                 cellValue = cell.stringCellValue
                                 println("String Cell Value: $cellValue")
                             }
+
                             CellType.NUMERIC -> {
                                 cellValue = cell.numericCellValue.toLong().toString()
                                 println("Numeric Cell Value: $cellValue")
                             }
+
                             else -> {
                                 if (cell.columnIndex in 0..3) isValid = false
                                 break
@@ -107,14 +114,18 @@ fun Route.userRoute() {
                             0 -> {
                                 user.id = cellValue
                             }
+
                             1 -> {
                                 user.name = cellValue
                             }
+
                             2 -> {
                                 user.email = cellValue
                             }
+
                             3 -> {
-                                user.departmentId = cellValue.toInt()
+                                user.departmentId = mysql.departments.find { it.name eq cellValue }?.id
+                                    ?: throw BadRequestException("院系信息非法，请修改后重试")
                             }
                         }
                     }
