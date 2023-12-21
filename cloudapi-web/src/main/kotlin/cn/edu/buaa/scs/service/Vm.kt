@@ -347,20 +347,7 @@ class VmService(val call: ApplicationCall) : IService {
             throw BadRequestException("template name already exists")
         }
         // convert machine into template
-//        vm = vmClient.convertVMToTemplate(uuid).getOrThrow()
-        // config vm template
-//        val (adminId, teacherId, studentId) = when {
-//            call.user().isAdmin() -> Triple("default", "default", "default")
-//            call.user().isTeacher() -> Triple("default", call.userId(), "default")
-//            else -> Triple("default", "default", call.userId())
-//        }
-//        return vmClient.configVM(
-//            vm.uuid,
-//            adminId = adminId,
-//            teacherId = teacherId,
-//            studentId = studentId,
-//        ).getOrThrow()
-        return vm
+        return sfClient.convertVMToTemplate(uuid).getOrThrow()
     }
 }
 
