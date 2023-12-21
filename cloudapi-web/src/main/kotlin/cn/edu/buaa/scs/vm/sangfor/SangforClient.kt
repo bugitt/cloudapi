@@ -109,26 +109,8 @@ object SangforClient : IVMClient {
         return Token(token, ticket, sid)
     }
 
-    suspend fun getAdminToken(): Token {
-        tokenLock.lock()
-        var token = authRedis.getValueByKey("sangfor_admin_token")
-        var ticket = authRedis.getValueByKey("sangfor_admin_ticket") ?: ""
-        var sid = authRedis.getValueByKey("sangfor_admin_sid") ?: ""
-        if (token == null) {
-            token = connect("admin", adminPassword)
-            authRedis.setExpireKey("sangfor_admin_token", token, 3500)
-            val tokenBody = fetchTicket(token)
-            ticket = tokenBody.ticket
-            sid = tokenBody.sid
-            authRedis.setExpireKey("sangfor_admin_ticket", ticket, 4000)
-            authRedis.setExpireKey("sangfor_admin_sid", sid, 4000)
-        }
-        tokenLock.unlock()
-        return Token(token, ticket, sid)
-    }
-
     override suspend fun getHosts(): Result<List<Host>> {
-        val token = getAdminToken().id
+        val token = getToken().id
         val clusterRes: String = client.get("admin/view/cluster-list") {
             header("Cookie", "aCMPAuthToken=${token}")
         }.body()
@@ -233,16 +215,9 @@ object SangforClient : IVMClient {
     override suspend fun powerOnAsync(uuid: String) {
         val token = getToken().id
         /* 成功：202，失败：409 */
-        client.post("openstack/compute/v2/servers/$uuid/action") {
+        client.post("janus/20180725/servers/$uuid/start") {
             contentType(ContentType.Application.Json)
-            header("X-Auth-Token", token)
-            setBody(
-                """
-                {
-                    "os-start": null
-                }
-                """.trimIndent()
-            )
+            header("Authorization", "Token $token")
         }
     }
 
@@ -261,34 +236,18 @@ object SangforClient : IVMClient {
     override suspend fun powerOffAsync(uuid: String) {
         val token = getToken().id
         /* 成功：202，失败：409 */
-        client.post("openstack/compute/v2/servers/$uuid/action") {
+        client.post("janus/20180725/servers/$uuid/stop") {
             contentType(ContentType.Application.Json)
-            header("X-Auth-Token", token)
-            setBody(
-                """
-                {
-                    "os-stop": null
-                }
-                """.trimIndent()
-            )
+            header("Authorization", "Token $token")
         }
     }
 
     suspend fun createVNCConsole(uuid: String): Result<String> {
         val token = getToken().id
         /* 成功：202，失败：409 */
-        val res: String = client.post("openstack/compute/v2/servers/$uuid/action") {
+        val res: String = client.post("janus/20180725/servers/$uuid/remote-consoles") {
             contentType(ContentType.Application.Json)
-            header("X-Auth-Token", token)
-            setBody(
-                """
-                {
-                    "os-getVNCConsole": {
-                        "type": "novnc"
-                    }
-                }
-                """.trimIndent()
-            )
+            header("Authorization", "Token $token")
         }.body()
         val json = jsonMapper.readTree(res)
         return Result.success(json["console"]["url"].toString())
@@ -347,7 +306,6 @@ object SangforClient : IVMClient {
     override suspend fun createVM(options: CreateVmOptions): Result<VirtualMachine> {
         createLock.lock()
         // Send clone vm request.
-
         val owner = if (options.extraInfo.teacherId != "default") options.extraInfo.teacherId
                     else if (options.extraInfo.studentId != "default") options.extraInfo.studentId
                     else "default"
@@ -375,10 +333,20 @@ object SangforClient : IVMClient {
         }
         waitForDone(300000L, 1000L) {
             token = getToken()
-            val vmRes: String = client.get("openstack/compute/v2/servers/$uuid") {
+            val vmsRes: String = client.get("openstack/compute/v2/servers/detail") {
                 header("X-Auth-Token", token.id)
             }.body()
-            jsonMapper.readTree(vmRes)["server"]["OS-EXT-STS:task_state"].toString() == "\"\""
+            val vms = jsonMapper.readTree(vmsRes)["servers"]
+            var done = false
+            for (vmJSON in vms) {
+                if (vmJSON["id"].toString() == "\"$uuid\"") {
+                    if (vmJSON["OS-EXT-STS:task_state"].toString() == "\"\"") {
+                        done = true
+                    }
+                    break
+                }
+            }
+            done
         }
         createLock.unlock()
         // Initialize settings of the new virtual machine.
@@ -414,11 +382,18 @@ object SangforClient : IVMClient {
 
     /* The virtual machine must be powered off. */
     override suspend fun deleteVM(uuid: String): Result<Unit> {
-        /* 成功：204，失败：409 */
+        /* 成功：200，失败：409 */
         val token = getToken()
-        val resCode = client.delete("openstack/compute/v2/servers/$uuid") {
+        val resCode = client.delete("janus/20180725/servers/$uuid") {
             contentType(ContentType.Application.Json)
-            header("X-Auth-Token", token.id)
+            header("Authorization", "Token ${token.id}")
+            setBody(
+                """
+                {
+                    "force": 1
+                }
+                """.trimIndent()
+            )
         }.status.value
         return Result.success(Unit)
     }
