@@ -39,7 +39,7 @@ class VmService(val call: ApplicationCall) : IService {
     }
 
     fun getVmByUUID(uuid: String): VirtualMachineCrd {
-        return vmKubeClient.inAnyNamespace().withField("metadata.name", uuid).list().items.filterNot { it.spec.deleted }
+        return vmKubeClient.inAnyNamespace().withField("metadata.name", uuid).list().items.filterNot { it.spec.deleted || it.spec.template }
             .firstOrNull()
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
     }
@@ -63,10 +63,10 @@ class VmService(val call: ApplicationCall) : IService {
             vmList.filter {
                 val extraInfo = it.spec.getVmExtraInfo()
                 extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
-            }.filterNot { it.spec.deleted }
+            }.filterNot { it.spec.deleted || it.spec.template }
         }.associateBy { it.status.uuid }
 
-        val otherVms = vmKubeClient.inNamespace("default").list().items.filterNot { it.spec.deleted }.filter {
+        val otherVms = vmKubeClient.inNamespace("default").list().items.filterNot { it.spec.deleted || it.spec.template }.filter {
             it.spec.getVmExtraInfo().studentId == call.userId() || it.spec.getVmExtraInfo().teacherId == call.userId()
         }.filter { vmApplyVmMap[it.status.uuid] == null }
         return otherVms + vmApplyVmMap.values
@@ -94,14 +94,14 @@ class VmService(val call: ApplicationCall) : IService {
                 val extraInfo = it.spec.getVmExtraInfo()
                 extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
             }
-        }.filterNot { it.spec.deleted }
+        }.filterNot { it.spec.deleted || it.spec.template }
     }
 
     fun adminGetAllVms(): List<VirtualMachineCrd> {
         if (!call.user().isAdmin()) {
             throw AuthorizationException()
         }
-        return vmKubeClient.inAnyNamespace().list().items.filterNot { it.spec.deleted }
+        return vmKubeClient.inAnyNamespace().list().items.filterNot { it.spec.deleted || it.spec.template }
     }
 
     fun getVmApplyList(expId: Int?): List<VmApply> {
@@ -346,10 +346,11 @@ class VmService(val call: ApplicationCall) : IService {
         if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
             throw BadRequestException("template name already exists")
         }
-        // set owner to default
-        sfClient.configVM(uuid)
-        // convert machine into template
-        return sfClient.convertVMToTemplate(uuid).getOrThrow()
+        val vmCrd = getVmByUUID(uuid)
+        vmCrd.spec = vmCrd.spec.copy(template = true)
+        vmKubeClient.resource(vmCrd).patch()
+        val owner = call.user()
+        return sfClient.convertVMToTemplateWithOwner(uuid, owner.id).getOrThrow()
     }
 }
 

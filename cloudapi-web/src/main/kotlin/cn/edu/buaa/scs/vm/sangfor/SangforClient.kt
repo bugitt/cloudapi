@@ -33,6 +33,8 @@ import javax.net.ssl.X509TrustManager
 object SangforClient : IVMClient {
     val username = application.getConfigString("vm.sangfor.username")
     val password = application.getConfigString("vm.sangfor.password")
+    val storageId = application.getConfigString("vm.sangfor.storage_id")
+    val netDevice = application.getConfigString("vm.sangfor.net_device")
     private val tokenLock = Mutex()
     private val createLock = Mutex()
 
@@ -264,17 +266,7 @@ object SangforClient : IVMClient {
             header("Cookie", "aCMPAuthToken=${token.id}")
         }.body()
         val vmJSON = jsonMapper.readTree(vmRes)["data"]
-        val oldSetting = OldSetting(
-            vmJSON["name"].toString().split('"')[1],
-            vmJSON["description"].toString().split('"')[1],
-            vmJSON["memory_mb"].intValue(),
-            vmJSON["cores"].intValue(),
-            vmJSON["disks"].map {
-                it["size_mb"].longValue()
-            }.reduce { s, s1 -> s + s1 },
-            vmJSON["networks"][0]["mac"].toString().split('"')[1].lowercase(),
-            vmJSON["os_type"].toString().split('"')[1],
-        )
+        val oldDescription = vmJSON["description"].toString().split('"')[1]
         var owner = "default"
         teacherId?.let {
             if (it != "default") owner = it
@@ -282,7 +274,7 @@ object SangforClient : IVMClient {
         studentId?.let {
             if (it != "default") owner = it
         }
-        val info = oldSetting.description.split(',')
+        val info = oldDescription.split(',')
         var eid = experimentId
         if (eid == null) {
             eid = if (info.size == 4) info[2].toInt() else -1
@@ -290,15 +282,18 @@ object SangforClient : IVMClient {
         var applyId = ""
         if (info.size == 4) applyId = info[3]
         val description = "$owner,false,$eid,$applyId"
-        initSettings(
-            uuid,
-            oldSetting.name,
-            description,
-            oldSetting.memory,
-            oldSetting.cores,
-            oldSetting.disk,
-            oldSetting
-        )
+        client.put("janus/20180725/servers/$uuid") {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Token ${token.id}")
+            setBody(
+                """
+                {
+                    "server_id": "$uuid",
+                    "description": "$description"
+                }
+                """.trimIndent()
+            )
+        }
         return getVM(uuid)
     }
 
@@ -349,31 +344,13 @@ object SangforClient : IVMClient {
         }
         createLock.unlock()
         // Initialize settings of the new virtual machine.
-        token = getToken()
-        val vmRes: String = client.get("admin/view/server-info?id=$uuid") {
-            header("Cookie", "aCMPAuthToken=${token.id}")
-        }.body()
-        val vmJSON = jsonMapper.readTree(vmRes)["data"]
-        println(vmJSON.toString())
-        val oldSetting = OldSetting(
-            vmJSON["name"].toString().split('"')[1],
-            vmJSON["description"].toString().split('"')[1],
-            vmJSON["memory_mb"].intValue(),
-            vmJSON["cores"].intValue(),
-            vmJSON["disks"].map {
-                it["size_mb"].longValue()
-            }.reduce { s, s1 -> s + s1 },
-            vmJSON["networks"][0]["mac"].toString().split('"')[1].lowercase(),
-            vmJSON["os_type"].toString().split('"')[1],
-        )
-        initSettings(
+        changeSettings(
             uuid,
-            oldSetting.name,
-            oldSetting.description,
+            options.name,
+            description,
             options.memory,
             options.cpu,
             options.diskSize / 1048576L,
-            oldSetting
         )
         if(options.powerOn) powerOnAsync(uuid)
         return getVM(uuid)
@@ -404,29 +381,45 @@ object SangforClient : IVMClient {
             header("Cookie", "aCMPAuthToken=${token.id}")
         }.body()
         val vmJSON = jsonMapper.readTree(vmRes)["data"]
-        val oldSetting = OldSetting(
-            vmJSON["name"].toString().split('"')[1],
-            vmJSON["description"].toString().split('"')[1],
-            vmJSON["memory_mb"].intValue(),
-            vmJSON["cores"].intValue(),
-            vmJSON["disks"].map {
-                it["size_mb"].longValue()
-            }.reduce { s, s1 -> s + s1 },
-            vmJSON["networks"][0]["mac"].toString().split('"')[1].lowercase(),
-            vmJSON["os_type"].toString().split('"')[1],
-        )
         val info = vmJSON["description"].toString().split('"')[1].split(',')
         var description = "default,true,-1,"
         if (info.size == 4) description = "${info[0]},true,${info[2]},${info[3]}"
-        initSettings(
-            uuid,
-            oldSetting.name,
-            description,
-            oldSetting.memory,
-            oldSetting.cores,
-            oldSetting.disk,
-            oldSetting
-        )
+        client.put("janus/20180725/servers/$uuid") {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Token ${token.id}")
+            setBody(
+                """
+                {
+                    "server_id": "$uuid",
+                    "description": "$description"
+                }
+                """.trimIndent()
+            )
+        }
+        return getVM(uuid)
+    }
+
+    suspend fun convertVMToTemplateWithOwner(uuid: String, owner: String): Result<VirtualMachine> {
+        val token = getToken()
+        val vmRes: String = client.get("admin/view/server-info?id=$uuid") {
+            header("Cookie", "aCMPAuthToken=${token.id}")
+        }.body()
+        val vmJSON = jsonMapper.readTree(vmRes)["data"]
+        val info = vmJSON["description"].toString().split('"')[1].split(',')
+        var description = "default,true,-1,"
+        if (info.size == 4) description = "$owner,true,${info[2]},${info[3]}"
+        client.put("janus/20180725/servers/$uuid") {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Token ${token.id}")
+            setBody(
+                """
+                {
+                    "server_id": "$uuid",
+                    "description": "$description"
+                }
+                """.trimIndent()
+            )
+        }
         return getVM(uuid)
     }
 
@@ -590,6 +583,51 @@ object SangforClient : IVMClient {
                 """.trimIndent()
             )
         }.status.value
+    }
+
+    suspend fun changeSettings(uuid: String,
+                               name: String,
+                               description: String,
+                               memory: Int,
+                               cores: Int,
+                               disk: Long
+    ) {
+        val token = getToken()
+        val resCode = client.put("janus/20180725/servers/$uuid") {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Token ${token.id}")
+            setBody(
+                """
+                {
+                    "server_id": "$uuid",
+                    "name": "$name",
+                    "description": "$description",
+                    "cores": $cores,
+                    "memory_mb": $memory,
+                    "disks": [
+                        {
+                            "id": "ide0",
+                            "type": "derive_disk",
+                            "is_old_disk": 1,
+                            "storage_file": "$storageId:vm-disk-1.qcow2",
+                            "preallocate": 0,
+                            "size_mb": $disk
+                        }
+                    ],
+                    "networks": [
+                        {
+                            "vif_id": "net0",
+                            "connect": 1,
+                            "device_id": "$netDevice",
+                            "name": "默认经典网络出口1-出口交换机",
+                            "model": "virtio",
+                            "port_id": "12345678"
+                        }
+                    ]
+                }
+                """.trimIndent()
+            )
+        }
     }
 }
 
