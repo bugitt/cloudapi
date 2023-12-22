@@ -269,7 +269,7 @@ object SangforClient : IVMClient {
             vmJSON["description"].toString().split('"')[1],
             vmJSON["memory_mb"].intValue(),
             vmJSON["cores"].intValue(),
-            vmJSON["data"]["disks"].map {
+            vmJSON["disks"].map {
                 it["size_mb"].longValue()
             }.reduce { s, s1 -> s + s1 },
             vmJSON["networks"][0]["mac"].toString().split('"')[1].lowercase(),
@@ -409,7 +409,7 @@ object SangforClient : IVMClient {
             vmJSON["description"].toString().split('"')[1],
             vmJSON["memory_mb"].intValue(),
             vmJSON["cores"].intValue(),
-            vmJSON["data"]["disks"].map {
+            vmJSON["disks"].map {
                 it["size_mb"].longValue()
             }.reduce { s, s1 -> s + s1 },
             vmJSON["networks"][0]["mac"].toString().split('"')[1].lowercase(),
