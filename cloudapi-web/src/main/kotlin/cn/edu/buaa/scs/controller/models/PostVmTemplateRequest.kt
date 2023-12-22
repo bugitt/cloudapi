@@ -16,11 +16,14 @@ package cn.edu.buaa.scs.controller.models
  * 
  * @param uuid 需要转换的虚拟机的UUID
  * @param name 转换出来的模板的名称
+ * @param crdId 虚拟机 CRD 的 id
  */
 data class PostVmTemplateRequest(
     /* 需要转换的虚拟机的UUID */
     val uuid: kotlin.String,
     /* 转换出来的模板的名称 */
-    val name: kotlin.String
+    val name: kotlin.String,
+    /* 虚拟机 CRD 的 id */
+    val crdId: kotlin.String
 ) 
 

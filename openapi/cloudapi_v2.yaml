@@ -1283,9 +1283,13 @@ paths:
                 name:
                   type: string
                   description: 转换出来的模板的名称
+                crd_id:
+                  type: string
+                  description: 虚拟机 CRD 的 id
               required:
                 - uuid
                 - name
+                - crd_id
   /vm/templates:
     get:
       summary: 获取当前用户可用的所有虚拟机模板

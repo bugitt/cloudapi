@@ -16,7 +16,7 @@ package cn.edu.buaa.scs.controller.models
  * 
  * @param name 学期名称
  */
-data class TermsPostRequest(
+data class TermsGetRequest(
     /* 学期名称 */
     val name: kotlin.String? = null
 ) 
