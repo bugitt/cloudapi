@@ -350,7 +350,12 @@ class VmService(val call: ApplicationCall) : IService {
         vmCrd.spec = vmCrd.spec.copy(template = true)
         vmKubeClient.resource(vmCrd).patch()
         val owner = call.user()
-        return sfClient.convertVMToTemplateWithOwner(uuid, owner.id).getOrThrow()
+        val ownerId = if (owner.id == "admin") {
+            "default"
+        } else {
+            owner.id
+        }
+        return sfClient.convertVMToTemplateWithOwner(uuid, ownerId).getOrThrow()
     }
 }
 
