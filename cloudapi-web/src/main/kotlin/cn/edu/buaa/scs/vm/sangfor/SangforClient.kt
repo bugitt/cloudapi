@@ -33,7 +33,6 @@ import javax.net.ssl.X509TrustManager
 object SangforClient : IVMClient {
     val username = application.getConfigString("vm.sangfor.username")
     val password = application.getConfigString("vm.sangfor.password")
-    val adminPassword = application.getConfigString("vm.sangfor.adminPassword")
     private val tokenLock = Mutex()
     private val createLock = Mutex()
 

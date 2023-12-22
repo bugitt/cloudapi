@@ -346,6 +346,8 @@ class VmService(val call: ApplicationCall) : IService {
         if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
             throw BadRequestException("template name already exists")
         }
+        // set owner to default
+        sfClient.configVM(uuid)
         // convert machine into template
         return sfClient.convertVMToTemplate(uuid).getOrThrow()
     }
