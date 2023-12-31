@@ -249,9 +249,19 @@ object SangforClient : IVMClient {
         val res: String = client.post("janus/20180725/servers/$uuid/remote-consoles") {
             contentType(ContentType.Application.Json)
             header("Authorization", "Token $token")
+            setBody(
+                """
+                {
+                    "remote_console": {
+                        "protocol": "vnc",
+                        "type": "novnc"
+                    }
+                }
+                """.trimIndent()
+            )
         }.body()
         val json = jsonMapper.readTree(res)
-        return Result.success(json["console"]["url"].toString())
+        return Result.success(json["remote_console"]["url"].toString())
     }
 
     override suspend fun configVM(
@@ -399,15 +409,15 @@ object SangforClient : IVMClient {
         return getVM(uuid)
     }
 
-    suspend fun convertVMToTemplateWithOwner(uuid: String, owner: String): Result<VirtualMachine> {
+    suspend fun convertVMTemplateWithOwner(uuid: String, owner: String, isTemplate: Boolean): Result<VirtualMachine> {
         val token = getToken()
         val vmRes: String = client.get("admin/view/server-info?id=$uuid") {
             header("Cookie", "aCMPAuthToken=${token.id}")
         }.body()
         val vmJSON = jsonMapper.readTree(vmRes)["data"]
         val info = vmJSON["description"].toString().split('"')[1].split(',')
-        var description = "default,true,-1,"
-        if (info.size == 4) description = "$owner,true,${info[2]},${info[3]}"
+        var description = "default,$isTemplate,-1,"
+        if (info.size == 4) description = "$owner,$isTemplate,${info[2]},${info[3]}"
         client.put("janus/20180725/servers/$uuid") {
             contentType(ContentType.Application.Json)
             header("Authorization", "Token ${token.id}")

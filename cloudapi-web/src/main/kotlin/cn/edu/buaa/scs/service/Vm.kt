@@ -332,7 +332,7 @@ class VmService(val call: ApplicationCall) : IService {
         return mysql.virtualMachines.filter { condition }.toList()
     }
 
-    suspend fun convertVMToTemplate(uuid: String, name: String, crdId: String): VirtualMachine {
+    suspend fun convertVMTemplate(uuid: String, isTemplate: Boolean, crdId: String): VirtualMachine {
         val vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
         call.user().assertWrite(vm)
         // 检查是否已经关机
@@ -343,9 +343,9 @@ class VmService(val call: ApplicationCall) : IService {
             throw BadRequestException("VM is already a template")
         }
         // 检查template名称是否重复
-        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
-            throw BadRequestException("template name already exists")
-        }
+//        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
+//            throw BadRequestException("template name already exists")
+//        }
         val vmCrd = getVmByUUID(crdId)
         vmCrd.spec = vmCrd.spec.copy(template = true)
         vmKubeClient.resource(vmCrd).patch()
@@ -355,7 +355,7 @@ class VmService(val call: ApplicationCall) : IService {
         } else {
             owner.id
         }
-        return sfClient.convertVMToTemplateWithOwner(uuid, ownerId).getOrThrow()
+        return sfClient.convertVMTemplateWithOwner(uuid, ownerId, isTemplate).getOrThrow()
     }
 }
 
