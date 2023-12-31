@@ -44,6 +44,12 @@ class VmService(val call: ApplicationCall) : IService {
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
     }
 
+    fun getVmByUUid(uuid: String): VirtualMachineCrd {
+        return vmKubeClient.inAnyNamespace().withField("status.uuid", uuid).list().items.filterNot { it.spec.deleted }
+            .firstOrNull()
+            ?: throw NotFoundException("VirtualMachine($uuid) is not found")
+    }
+
     fun deleteVm(id: String) {
         val vm = getVmByUUID(id)
         vm.spec = vm.spec.copy(deleted = true)
@@ -346,7 +352,7 @@ class VmService(val call: ApplicationCall) : IService {
 //        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
 //            throw BadRequestException("template name already exists")
 //        }
-        val vmCrd = getVmByUUID(crdId)
+        val vmCrd = getVmByUUid(uuid)
         vmCrd.spec = vmCrd.spec.copy(template = true)
         vmKubeClient.resource(vmCrd).patch()
         val owner = call.user()
