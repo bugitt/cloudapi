@@ -44,10 +44,10 @@ class VmService(val call: ApplicationCall) : IService {
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
     }
 
-    fun getVmByUUid(uuid: String): VirtualMachineCrd {
-        return vmKubeClient.inAnyNamespace().withField("status.uuid", uuid).list().items.filterNot { it.spec.deleted }
+    fun getTemplateByUUID(uuid: String): VirtualMachineCrd {
+        return vmKubeClient.inAnyNamespace().list().items.filter { it.status.uuid == uuid }.filterNot { it.spec.deleted }
             .firstOrNull()
-            ?: throw NotFoundException("VirtualMachine($uuid) is not found")
+            ?: throw NotFoundException("Template($uuid) is not found")
     }
 
     fun deleteVm(id: String) {
@@ -345,15 +345,19 @@ class VmService(val call: ApplicationCall) : IService {
         if (vm.powerState.value.lowercase() != "poweredoff") {
             throw BadRequestException("VM is not powered off")
         }
-        if (vm.isTemplate) {
+        if (isTemplate && vm.isTemplate) {
             throw BadRequestException("VM is already a template")
         }
         // 检查template名称是否重复
 //        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
 //            throw BadRequestException("template name already exists")
 //        }
-        val vmCrd = getVmByUUid(uuid)
-        vmCrd.spec = vmCrd.spec.copy(template = true)
+        val vmCrd = if (isTemplate) {
+            getVmByUUID(crdId)
+        } else {
+            getTemplateByUUID(uuid)
+        }
+        vmCrd.spec = vmCrd.spec.copy(template = isTemplate)
         vmKubeClient.resource(vmCrd).patch()
         val owner = call.user()
         val ownerId = if (owner.id == "admin") {
