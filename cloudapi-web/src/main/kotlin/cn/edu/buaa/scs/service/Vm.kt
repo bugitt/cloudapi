@@ -39,7 +39,7 @@ class VmService(val call: ApplicationCall) : IService {
     }
 
     fun getVmByUUID(uuid: String): VirtualMachineCrd {
-        return vmKubeClient.inAnyNamespace().withField("metadata.name", uuid).list().items.filterNot { it.spec.deleted || it.spec.template }
+        return vmKubeClient.inAnyNamespace().withField("metadata.name", uuid).list().items.filterNot { it.spec.deleted }
             .firstOrNull()
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
     }
@@ -332,7 +332,7 @@ class VmService(val call: ApplicationCall) : IService {
         return mysql.virtualMachines.filter { condition }.toList()
     }
 
-    suspend fun convertVMToTemplate(uuid: String, name: String): VirtualMachine {
+    suspend fun convertVMToTemplate(uuid: String, name: String, crdId: String): VirtualMachine {
         val vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
         call.user().assertWrite(vm)
         // 检查是否已经关机
@@ -346,11 +346,16 @@ class VmService(val call: ApplicationCall) : IService {
         if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
             throw BadRequestException("template name already exists")
         }
-        val vmCrd = getVmByUUID(uuid)
+        val vmCrd = getVmByUUID(crdId)
         vmCrd.spec = vmCrd.spec.copy(template = true)
         vmKubeClient.resource(vmCrd).patch()
         val owner = call.user()
-        return sfClient.convertVMToTemplateWithOwner(uuid, owner.id).getOrThrow()
+        val ownerId = if (owner.id == "admin") {
+            "default"
+        } else {
+            owner.id
+        }
+        return sfClient.convertVMToTemplateWithOwner(uuid, ownerId).getOrThrow()
     }
 }
 
