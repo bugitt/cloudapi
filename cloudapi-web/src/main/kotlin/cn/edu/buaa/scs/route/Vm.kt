@@ -60,7 +60,7 @@ fun Route.vmRoute() {
 
             post {
                 val req = call.receive<PostVmTemplateRequest>()
-                call.respond(convertVirtualMachineTemplateResponse(call.vm.convertVMToTemplate(req.uuid, req.name, req.crdId)))
+                call.respond(convertVirtualMachineTemplateResponse(call.vm.convertVMTemplate(req.uuid, req.isTemplate, req.crdId)))
             }
         }
 

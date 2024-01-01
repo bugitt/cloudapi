@@ -44,6 +44,12 @@ class VmService(val call: ApplicationCall) : IService {
             ?: throw NotFoundException("VirtualMachine($uuid) is not found")
     }
 
+    fun getTemplateByUUID(uuid: String): VirtualMachineCrd {
+        return vmKubeClient.inAnyNamespace().list().items.filter { it.status.uuid == uuid }.filterNot { it.spec.deleted }
+            .firstOrNull()
+            ?: throw NotFoundException("Template($uuid) is not found")
+    }
+
     fun deleteVm(id: String) {
         val vm = getVmByUUID(id)
         vm.spec = vm.spec.copy(deleted = true)
@@ -332,22 +338,26 @@ class VmService(val call: ApplicationCall) : IService {
         return mysql.virtualMachines.filter { condition }.toList()
     }
 
-    suspend fun convertVMToTemplate(uuid: String, name: String, crdId: String): VirtualMachine {
+    suspend fun convertVMTemplate(uuid: String, isTemplate: Boolean, crdId: String): VirtualMachine {
         val vm = mysql.virtualMachines.find { it.uuid.eq(uuid) } ?: throw NotFoundException("VM not found")
         call.user().assertWrite(vm)
         // 检查是否已经关机
         if (vm.powerState.value.lowercase() != "poweredoff") {
             throw BadRequestException("VM is not powered off")
         }
-        if (vm.isTemplate) {
+        if (isTemplate && vm.isTemplate) {
             throw BadRequestException("VM is already a template")
         }
         // 检查template名称是否重复
-        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
-            throw BadRequestException("template name already exists")
+//        if (mysql.virtualMachines.exists { it.isTemplate.eq(true) and it.name.eq(name) }) {
+//            throw BadRequestException("template name already exists")
+//        }
+        val vmCrd = if (isTemplate) {
+            getVmByUUID(crdId)
+        } else {
+            getTemplateByUUID(uuid)
         }
-        val vmCrd = getVmByUUID(crdId)
-        vmCrd.spec = vmCrd.spec.copy(template = true)
+        vmCrd.spec = vmCrd.spec.copy(template = isTemplate)
         vmKubeClient.resource(vmCrd).patch()
         val owner = call.user()
         val ownerId = if (owner.id == "admin") {
@@ -355,7 +365,7 @@ class VmService(val call: ApplicationCall) : IService {
         } else {
             owner.id
         }
-        return sfClient.convertVMToTemplateWithOwner(uuid, ownerId).getOrThrow()
+        return sfClient.convertVMTemplateWithOwner(uuid, ownerId, isTemplate).getOrThrow()
     }
 }
 

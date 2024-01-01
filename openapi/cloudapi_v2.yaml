@@ -1280,16 +1280,16 @@ paths:
                 uuid:
                   type: string
                   description: 需要转换的虚拟机的UUID
-                name:
-                  type: string
-                  description: 转换出来的模板的名称
-                crd_id:
+                isTemplate:
+                  type: boolean
+                  description: 转换为模板还是虚拟机
+                crdId:
                   type: string
                   description: 虚拟机 CRD 的 id
               required:
                 - uuid
-                - name
-                - crd_id
+                - isTemplate
+                - crdId
   /vm/templates:
     get:
       summary: 获取当前用户可用的所有虚拟机模板
