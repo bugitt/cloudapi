@@ -130,17 +130,21 @@ class UserService(val call: ApplicationCall) : IService {
         return mysql.assistants.filter { it.courseId.inList(courseIdList) }.toList().groupBy { it.courseId }
             .mapValues { (courseId, assistantList) ->
                 val course = Course.id(courseId.toInt())
-                assistantList.map { assistant ->
-                    val user = User.id(assistant.studentId)
-                    AssistantModel(
-                        id = user.id,
-                        name = course.name,
-                        courseName = course.name,
-                        termName = course.term.name,
-                        createdTime = assistant.createTime,
-                        courseId = course.id,
-                        rawId = assistant.id,
-                    )
+                assistantList.mapNotNull { assistant ->
+                    try {
+                        val user = User.id(assistant.studentId)
+                        AssistantModel(
+                            id = user.id,
+                            name = course.name,
+                            courseName = course.name,
+                            termName = course.term.name,
+                            createdTime = assistant.createTime,
+                            courseId = course.id,
+                            rawId = assistant.id,
+                        )
+                    } catch (e: BusinessException) {
+                        null
+                    }
                 }
             }
             .values
