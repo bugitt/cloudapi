@@ -54,9 +54,11 @@ fun Route.authRoute() {
 
     route("/tokenInfo") {
         post {
-            val req = call.receive<GetTokenInfoRequest>()
+            val req = call.receiveParameters()
+            val token = req["token"] ?: throw BadRequestException("token is required")
+            val service = req["service"] ?: throw BadRequestException("service is required")
             call.respond(
-                call.auth.getTokenInfo(req.token, req.service)
+                call.auth.getTokenInfo(token, service)
             )
         }
     }

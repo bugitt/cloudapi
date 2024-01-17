@@ -126,7 +126,7 @@ class AuthService(val call: ApplicationCall) : IService {
             // error
             return TokenInfoResponse(2001, "$service Token错误")
         val user = User.id(userId)
-        return TokenInfoResponse(1003, "$service 验证成功", TokenInfoResponseData(user.id, if (user.isStudent()) "student" else if (user.isTeacher()) "teacher" else "superAdmin", service))
+        return TokenInfoResponse(1003, "$service 验证成功", TokenInfoResponseData(user.id, user.role.level().toString(), service))
     }
 
     suspend fun buaaSSOLogin(ssoToken: String): LoginUserResponse {

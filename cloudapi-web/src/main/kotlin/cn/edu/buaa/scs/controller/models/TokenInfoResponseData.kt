@@ -15,13 +15,13 @@ package cn.edu.buaa.scs.controller.models
 /**
  * 
  * @param id 用户的唯一标识
- * @param role 用户角色
+ * @param role 用户角色编号
  * @param service 第三方服务名称
  */
 data class TokenInfoResponseData(
     /* 用户的唯一标识 */
     val id: kotlin.String,
-    /* 用户角色 */
+    /* 用户角色编号 */
     val role: kotlin.String,
     /* 第三方服务名称 */
     val service: kotlin.String
