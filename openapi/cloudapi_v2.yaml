@@ -1804,6 +1804,36 @@ paths:
             type: boolean
           in: query
           name: listProjects
+  /tokenInfo:
+    post:
+      summary: 向第三方提供认证服务
+      tags:
+        - 鉴权
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 用户的认证令牌
+                service:
+                  type: string
+                  description: 请求的服务名称
+              required:
+                - token
+                - service
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenInfoResponse'
+      operationId: get-tokenInfo
+      description: 第三方通过传入 token，对该用户的信息进行认证
   /buaaSSOLogin:
     post:
       summary: 统一认证登录
@@ -4248,6 +4278,34 @@ components:
         - paasToken
         - adminCourses
         - email
+    TokenInfoResponse:
+      title: TokenInfoResponse
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 用户的唯一标识
+            role:
+              type: string
+              description: 用户角色
+            service:
+              type: string
+              description: 第三方服务名称
+          required:
+            - id
+            - role
+            - service
+      required:
+        - code
+        - msg
     ContainerServiceTemplate:
       title: ContainerServiceTemplate
       x-stoplight:
