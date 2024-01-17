@@ -1,14 +1,14 @@
 package cn.edu.buaa.scs.service
 
 import cn.edu.buaa.scs.application
-import cn.edu.buaa.scs.auth.authAdmin
-import cn.edu.buaa.scs.auth.authRead
-import cn.edu.buaa.scs.auth.authWrite
-import cn.edu.buaa.scs.auth.generateRSAToken
+import cn.edu.buaa.scs.auth.*
 import cn.edu.buaa.scs.cache.authRedis
 import cn.edu.buaa.scs.config.Constant
 import cn.edu.buaa.scs.controller.models.LoginUserResponse
 import cn.edu.buaa.scs.controller.models.SimpleCourse
+import cn.edu.buaa.scs.controller.models.TokenInfoResponse
+import cn.edu.buaa.scs.controller.models.TokenInfoResponseData
+import cn.edu.buaa.scs.error.AuthorizationException
 import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.*
@@ -113,6 +113,20 @@ class AuthService(val call: ApplicationCall) : IService {
             return resp.copy(projects = projectList)
         }
         return resp
+    }
+
+    fun getTokenInfo(token: String, service: String): TokenInfoResponse {
+        val userId =
+            // rsa token
+            RSAEncrypt.decrypt(token).getOrNull()?.let { tokenInfo ->
+                jsonReadValue<TokenInfo>(tokenInfo).userId
+            } ?:
+            // redis uuid token
+            authRedis.checkToken(token) ?:
+            // error
+            return TokenInfoResponse(2001, "$service Token错误")
+        val user = User.id(userId)
+        return TokenInfoResponse(1003, "$service 验证成功", TokenInfoResponseData(user.id, if (user.isStudent()) "student" else if (user.isTeacher()) "teacher" else "superAdmin", service))
     }
 
     suspend fun buaaSSOLogin(ssoToken: String): LoginUserResponse {

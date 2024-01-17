@@ -52,6 +52,15 @@ fun Route.authRoute() {
         }
     }
 
+    route("/tokenInfo") {
+        post {
+            val req = call.receive<GetTokenInfoRequest>()
+            call.respond(
+                call.auth.getTokenInfo(req.token, req.service)
+            )
+        }
+    }
+
     route("/checkPermission") {
         get {
             val entityType = call.parameters["entityType"] ?: throw BadRequestException("entityType is required")
