@@ -113,7 +113,9 @@ class CourseService(val call: ApplicationCall) : IService {
         return if (call.user().isAdmin()) {
             getAllCourses()
         } else if (call.user().isTeacher()) {
-            mysql.courses.filter { it.teacherId.eq(call.userId()) }.toList().sortedByDescending { it.id }
+            val courseIdList = mysql.assistants.filter { it.studentId.eq(call.userId()) }.map { it.courseId.toInt() }
+            if (courseIdList.isEmpty()) mysql.courses.filter { it.teacherId.eq(call.userId()) }.toList().sortedByDescending { it.id }
+            else mysql.courses.filter { it.teacherId.eq(call.userId()) or it.id.inList(courseIdList) }.toList().sortedByDescending { it.id }
         } else {
             val courseIdList = mysql.assistants.filter { it.studentId.eq(call.userId()) }.map { it.courseId.toInt() }
             if (courseIdList.isEmpty()) listOf()

@@ -42,7 +42,7 @@ object VMRoutine : Routine {
     private val updateVMsToDatabase = Routine.alwaysDo("vm-worker-update-db") {
         val vmList = mutableListOf<VirtualMachine>()
         vmList.addAll(vmClient.getAllVMs().getOrThrow())
-        vmList.addAll(sfClient.getAllVMs().getOrThrow())
+//        vmList.addAll(sfClient.getAllVMs().getOrThrow())
         val existedVmUUIDList = mysql.virtualMachines.map { it.uuid }.toSet()
         mysql.useTransaction {
             // update
