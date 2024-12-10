@@ -25,19 +25,8 @@ data class CreateUserRequest(
     /* 所在单位 */
     val departmentId: kotlin.Int,
     /* 1 for student, 2 for teacher, 4 for admin */
-    val role: CreateUserRequest.Role,
+    val role: kotlin.Int,
     /* 姓名 */
     val name: kotlin.String? = null
 ) 
-{
-    /**
-    * 1 for student, 2 for teacher, 4 for admin
-    * Values: _1,_2,_4
-    */
-    enum class Role(val value: kotlin.Int){
-        _1(1),
-        _2(2),
-        _4(4);
-    }
-}
 
