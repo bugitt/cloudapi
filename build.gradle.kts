@@ -18,6 +18,11 @@ application {
 }
 
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/public/")
+    maven(url = "https://maven.aliyun.com/repository/google/")
+    maven(url = "https://maven.aliyun.com/repository/gradle-plugin/")
+    maven(url = "https://maven.aliyun.com/repository/jcenter/")
+    maven(url = "https://maven.aliyun.com/nexus/content/groups/public/")
     mavenCentral()
-    maven(url = "https://jitpack.io")
+    maven(url = "https://www.jitpack.io")
 }
