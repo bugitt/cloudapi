@@ -17,6 +17,9 @@ import kotlinx.coroutines.withContext
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 
 val ApplicationCall.course
@@ -52,12 +55,14 @@ class CourseService(val call: ApplicationCall) : IService {
         }
         val teacher = User.id(teacherId)
         val term = Term.id(termId)
+        val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.systemDefault())
+        val currentTimeFormatted = formatter.format(Instant.now())
         val course = Course {
             this.teacher = teacher
             this.name = courseName
             this.term = term
             this.departmentId = "21"
-            this.createTime = System.currentTimeMillis().toString()
+            this.createTime = currentTimeFormatted
             this.resourceFolder = ""
         }
 

@@ -10,6 +10,7 @@ import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.jsonReadValue
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.newVMClient
+import cn.edu.buaa.scs.utils.logger
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -117,7 +118,7 @@ fun VirtualMachineModel.toCrdStatus(): VirtualMachineStatus {
 }
 
 @ControllerConfiguration(
-    generationAwareEventProcessing = false,
+    generationAwareEventProcessing = true,
 )
 class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<VirtualMachine>, Cleaner<VirtualMachine> {
     companion object {
@@ -145,23 +146,23 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                     }
                 }
                 return if (exist) {
-                    UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
+                    UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
                 } else {
                     UpdateControl.noUpdate()
                 }
             }
 
-
+            logger("vm-reconcile")().info { "Reconciling VirtualMachine: ${vm.spec.name}" }
 
             if (vm.status == null) {
                 val vmModelResult = runBlocking { vmClient.getVMByName(vm.spec.name, vm.spec.getVmExtraInfo().applyId) }
                 if (vmModelResult.isSuccess) {
                     vm.status = vmModelResult.getOrThrow().toCrdStatus()
-                    return UpdateControl.patchStatus(vm).rescheduleAfter(1000L)
+                    return UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
                 } else {
                     val vmApply = VmApply.id(vm.spec.getVmExtraInfo().applyId)
                     if (vmApply == null || !vmApply.isApproved()) {
-                        return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
+                        return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
                     }
                     val vmModel = runBlocking {
                         if (createVmProcessMutex.tryLock(vm)) {
@@ -176,9 +177,9 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                     }
                     return if (vmModel != null) {
                         vm.status = vmModel.toCrdStatus()
-                        UpdateControl.patchStatus(vm).rescheduleAfter(1000L)
+                        UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
                     } else {
-                        UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(1000L)
+                        UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
                     }
                 }
             }
@@ -228,8 +229,9 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                 }
             }
 
-            return UpdateControl.patchStatus(vm).rescheduleAfter(1000L)
+            return UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
         } catch (e: Throwable) {
+            logger("vm-reconcile")().error { "Reconciling virtual machine error: ${e.message}" }
             return UpdateControl.noUpdate()
         }
     }
