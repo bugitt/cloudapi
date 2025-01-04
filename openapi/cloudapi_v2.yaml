@@ -2479,6 +2479,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateUserRequest'
+    delete:
+      summary: 删除用户
+      operationId: delete-admin-user
+      responses:
+        '200':
+          description: OK
+      tags:
+        - 管理员
+      description: 管理员通过用户 ID 列表删除用户
+      security:
+        - Authorization: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 需要删除的用户 ID 列表
+              required:
+                - userIds
   /activeUser:
     post:
       summary: 激活用户
@@ -4710,10 +4734,6 @@ components:
         role:
           type: integer
           format: int32
-          enum:
-            - 1
-            - 2
-            - 4
           description: '1 for student, 2 for teacher, 4 for admin'
       required:
         - id
