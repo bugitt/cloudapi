@@ -232,8 +232,8 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
             return UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
         } catch (e: Throwable) {
             logger("vm-reconcile")().error { "Reconciling virtual machine error:" }
-            logger("vm-reconcile")().error { e }
-            return UpdateControl.noUpdate()
+            e.printStackTrace()
+            return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
         }
     }
 
