@@ -6,13 +6,18 @@ import cn.edu.buaa.scs.controller.models.UserModel
 import cn.edu.buaa.scs.error.BadRequestException
 import cn.edu.buaa.scs.model.Department
 import cn.edu.buaa.scs.model.User
+import cn.edu.buaa.scs.model.UserRole
 import cn.edu.buaa.scs.model.id
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.userService
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.WorkbookFactory
+import java.io.InputStream
 
 fun Route.userRoute() {
     route("/students") {
@@ -54,6 +59,77 @@ fun Route.userRoute() {
             }
         }
 
+    }
+
+    post("/upload") {
+        val multipart = call.receiveMultipart()
+        var excelFile: InputStream? = null
+        var role = UserRole.STUDENT
+        multipart.forEachPart { part ->
+            when (part) {
+                is PartData.FileItem -> {
+                    excelFile = part.streamProvider()
+                }
+                is PartData.FormItem ->
+                    when (part.name) {
+                        "role" -> role = when (part.value) {
+                            "teacher" -> UserRole.TEACHER
+                            else -> UserRole.STUDENT
+                        }
+                    }
+                else -> part.dispose()
+            }
+        }
+        if (excelFile != null) {
+            val workbook = WorkbookFactory.create(excelFile)
+            val sheet = workbook.getSheetAt(0)
+            val users = mutableListOf<User>()
+            for (rowIndex in sheet.firstRowNum..sheet.lastRowNum) {
+                val row = sheet.getRow(rowIndex)
+                if (rowIndex == sheet.firstRowNum) {
+                    continue
+                }
+                var isValid = true
+                val user = User()
+                user.role = role
+                for (cell in row) {
+                    var cellValue = ""
+                    when (cell.cellTypeEnum) {
+                        CellType.STRING -> {
+                            cellValue = cell.stringCellValue
+                            println("String Cell Value: $cellValue")
+                        }
+                        CellType.NUMERIC -> {
+                            cellValue = cell.numericCellValue.toLong().toString()
+                            println("Numeric Cell Value: $cellValue")
+                        }
+                        else -> {
+                            if (cell.columnIndex in 0..3) isValid = false
+                            break
+                        }
+                    }
+                    when (cell.columnIndex) {
+                        0 -> {
+                            user.id = cellValue
+                        }
+                        1 -> {
+                            user.name = cellValue
+                        }
+                        2 -> {
+                            user.email = cellValue
+                        }
+                        3 -> {
+                            user.departmentId = cellValue.toInt()
+                        }
+                    }
+                }
+                if (isValid) {
+                    users.add(user)
+                }
+            }
+            call.userService.batchInsertUser(users)
+        }
+        call.respond("OK")
     }
 
     route("/departments") {
