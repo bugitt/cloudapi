@@ -170,7 +170,7 @@ class UserService(val call: ApplicationCall) : IService {
                     set(it.name, user.name)
                     set(it.nickName, user.name)
                     set(it.email, user.email)
-                    set(it.password, "DB25F2FC14CD2D2B1E7AF307241F548FB03C312A")
+                    set(it.password, "D2D9D39BCFD4DA7D3DCBC2E6E1DCA721052B4EDE")
                     set(it.role, user.role)
                     set(it.departmentID, user.departmentId)
                     set(it.isAccepted, true)
