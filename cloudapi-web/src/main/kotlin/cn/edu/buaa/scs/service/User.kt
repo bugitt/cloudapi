@@ -13,6 +13,7 @@ import cn.edu.buaa.scs.utils.userId
 import io.ktor.server.application.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
+import java.util.*
 
 fun User.Companion.id(id: String): User =
     mysql.users.find { it.id eq id } ?: throw BusinessException("find user($id) from mysql error")
@@ -158,6 +159,24 @@ class UserService(val call: ApplicationCall) : IService {
                 id = department.id,
                 name = department.name,
             )
+        }
+    }
+
+    fun batchInsertUser(users: List<User>) {
+        mysql.batchInsert(Users) {
+            users.forEach{ user ->
+                item {
+                    set(it.id, user.id)
+                    set(it.name, user.name)
+                    set(it.nickName, user.name)
+                    set(it.email, user.email)
+                    set(it.password, "D2D9D39BCFD4DA7D3DCBC2E6E1DCA721052B4EDE")
+                    set(it.role, user.role)
+                    set(it.departmentID, user.departmentId)
+                    set(it.isAccepted, true)
+                    set(it.acceptTime, Date().toString())
+                }
+            }
         }
     }
 }
