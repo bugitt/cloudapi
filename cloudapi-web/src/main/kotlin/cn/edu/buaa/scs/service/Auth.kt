@@ -136,7 +136,7 @@ class AuthService(val call: ApplicationCall) : IService {
 
     private suspend fun afterLogin(token: String, user: User): LoginUserResponse {
         if (user.paasToken.isBlank()) {
-            call.project.createUser(user.id)
+//            call.project.createUser(user.id)
         }
 
         // insert token in redis (just for compatibility with older platforms)
