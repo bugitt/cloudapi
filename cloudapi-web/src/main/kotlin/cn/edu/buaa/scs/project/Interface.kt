@@ -28,8 +28,8 @@ interface IProjectManager {
     suspend fun changePassword(username: String, password: String): Result<Unit>
 }
 
-val managerList = listOf(
-    GitClient,
-    HarborClient,
-    BusinessKubeClient,
+val managerList = listOf<IProjectManager>(
+//    GitClient,
+//    HarborClient,
+//    BusinessKubeClient,
 )
