@@ -10,7 +10,7 @@ fun Connection.getMoRef(): GetMoRef {
 }
 
 fun Connection.getDatacenterRef(): ManagedObjectReference {
-    return vimPort.findByInventoryPath(serviceContent.searchIndex, "datacenter")
+    return vimPort.findByInventoryPath(serviceContent.searchIndex, "Datacenter")
 }
 
 fun Connection.getCreateVmSubFolder(): ManagedObjectReference {
