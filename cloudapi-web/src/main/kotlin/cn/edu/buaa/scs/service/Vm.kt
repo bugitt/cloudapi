@@ -64,7 +64,7 @@ class VmService(val call: ApplicationCall) : IService {
                 val extraInfo = it.spec.getVmExtraInfo()
                 extraInfo.studentId == call.userId() || extraInfo.teacherId == call.userId()
             }.filterNot { it.spec.deleted }
-        }.associateBy { it.status.uuid }
+        }.associateBy { it.status?.uuid ?: "unknown-uuid" }
 
         val otherVms = vmKubeClient.inNamespace("default").list().items.filterNot { it.spec.deleted }.filter {
             it.spec.getVmExtraInfo().studentId == call.userId() || it.spec.getVmExtraInfo().teacherId == call.userId()
