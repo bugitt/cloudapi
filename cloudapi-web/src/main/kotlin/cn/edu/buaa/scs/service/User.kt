@@ -163,20 +163,25 @@ class UserService(val call: ApplicationCall) : IService {
     }
 
     fun batchInsertUser(users: List<User>) {
-        mysql.batchInsert(Users) {
-            users.forEach{ user ->
-                item {
-                    set(it.id, user.id)
-                    set(it.name, user.name)
-                    set(it.nickName, user.name)
-                    set(it.email, user.email)
-                    set(it.password, "D2D9D39BCFD4DA7D3DCBC2E6E1DCA721052B4EDE")
-                    set(it.role, user.role)
-                    set(it.departmentID, user.departmentId)
-                    set(it.isAccepted, true)
-                    set(it.acceptTime, Date().toString())
-                }
+        mysql.useConnection { conn ->
+            val sql = """
+            INSERT IGNORE INTO users (id, name, nickName, email, password, role, departmentID, isAccepted, acceptTime)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+            val stmt = conn.prepareStatement(sql)
+            users.forEach { user ->
+                stmt.setString(1, user.id)
+                stmt.setString(2, user.name)
+                stmt.setString(3, user.nickName)
+                stmt.setString(4, user.email)
+                stmt.setString(5, "D2D9D39BCFD4DA7D3DCBC2E6E1DCA721052B4EDE")
+                stmt.setString(6, user.role.name)
+                stmt.setString(7, user.departmentId.toString())
+                stmt.setBoolean(8, true)
+                stmt.setString(9, Date().toString())
+                stmt.addBatch()
             }
+            stmt.executeBatch()
         }
     }
 }

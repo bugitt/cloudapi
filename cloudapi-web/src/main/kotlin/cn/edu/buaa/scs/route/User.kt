@@ -4,10 +4,7 @@ import cn.edu.buaa.scs.controller.models.ChangePasswordRequest
 import cn.edu.buaa.scs.controller.models.SimpleUser
 import cn.edu.buaa.scs.controller.models.UserModel
 import cn.edu.buaa.scs.error.BadRequestException
-import cn.edu.buaa.scs.model.Department
-import cn.edu.buaa.scs.model.User
-import cn.edu.buaa.scs.model.UserRole
-import cn.edu.buaa.scs.model.id
+import cn.edu.buaa.scs.model.*
 import cn.edu.buaa.scs.service.id
 import cn.edu.buaa.scs.service.userService
 import io.ktor.http.content.*
@@ -119,7 +116,7 @@ fun Route.userRoute() {
                             user.email = cellValue
                         }
                         3 -> {
-                            user.departmentId = cellValue.toInt()
+                            user.departmentId = Department.name(cellValue).id.toInt()
                         }
                     }
                 }
