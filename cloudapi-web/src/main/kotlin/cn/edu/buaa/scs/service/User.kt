@@ -30,6 +30,7 @@ fun User.Companion.createNewUnActiveUser(id: String, name: String?, role: UserRo
         this.name = name ?: "未激活用户"
         this.role = role
         this.departmentId = departmentId
+        this.isAccepted = true
     }
     mysql.users.add(user)
     return user
