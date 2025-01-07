@@ -13,7 +13,9 @@ import cn.edu.buaa.scs.utils.userId
 import io.ktor.server.application.*
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
+import java.text.SimpleDateFormat
 import java.util.*
+
 
 fun User.Companion.id(id: String): User =
     mysql.users.find { it.id eq id } ?: throw BusinessException("find user($id) from mysql error")
@@ -164,6 +166,7 @@ class UserService(val call: ApplicationCall) : IService {
     }
 
     fun batchInsertUser(users: List<User>) {
+        val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
         mysql.useConnection { conn ->
             val sql = """
             INSERT IGNORE INTO user (id, name, nick_name, email, passwd, role, department_id, is_accept, accept_time)
@@ -173,13 +176,13 @@ class UserService(val call: ApplicationCall) : IService {
             users.forEach { user ->
                 stmt.setString(1, user.id)
                 stmt.setString(2, user.name)
-                stmt.setString(3, user.nickName)
+                stmt.setString(3, user.name)
                 stmt.setString(4, user.email)
                 stmt.setString(5, "D2D9D39BCFD4DA7D3DCBC2E6E1DCA721052B4EDE")
-                stmt.setString(6, user.role.name)
+                stmt.setString(6, user.role.level().toString())
                 stmt.setString(7, user.departmentId.toString())
                 stmt.setBoolean(8, true)
-                stmt.setString(9, Date().toString())
+                stmt.setString(9, sdf.format(Date()))
                 stmt.addBatch()
             }
             stmt.executeBatch()
