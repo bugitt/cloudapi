@@ -165,7 +165,7 @@ class UserService(val call: ApplicationCall) : IService {
     fun batchInsertUser(users: List<User>) {
         mysql.useConnection { conn ->
             val sql = """
-            INSERT IGNORE INTO users (id, name, nickName, email, password, role, departmentID, isAccepted, acceptTime)
+            INSERT IGNORE INTO user (id, name, nickName, email, password, role, departmentID, isAccepted, acceptTime)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             val stmt = conn.prepareStatement(sql)
