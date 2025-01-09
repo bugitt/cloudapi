@@ -110,7 +110,7 @@ fun fetchToken(call: ApplicationCall) {
         // redis uuid token
         authRedis.checkToken(token) ?:
         // error
-        throw throw AuthorizationException("incorrect token")
+        throw throw AuthorizationException("登录已过期，请重新登录")
 
     val user = User.id(userId)
     setUser(user)
