@@ -68,15 +68,15 @@ fun fetchToken(call: ApplicationCall) {
         else -> {
             // TODO 后续兼容JWT校验
 
-            // 1. try to get token from cookies
-            possibleTokenKey.firstNotNullOfOrNull { call.request.cookies[it] } ?:
-
-            // 2. try to get token from headers
+            // 1. try to get token from headers
             possibleTokenKey.firstNotNullOfOrNull {
                 call.request.headers[it]?.let { auth ->
                     if (auth.startsWith("Bearer")) auth.split(" ")[1] else auth
                 }
             } ?:
+
+            // 2. try to get token from cookies
+            possibleTokenKey.firstNotNullOfOrNull { call.request.cookies[it] } ?:
 
             // 3. try to get token from query parameters
             possibleTokenKey.firstNotNullOfOrNull { call.request.queryParameters[it] }
