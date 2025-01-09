@@ -39,7 +39,7 @@ fun Route.authRoute() {
 
     route("buaaSSOLogin") {
         post {
-            val ssoToken = call.request.queryParameters["ssoToken"] ?: throw BadRequestException("ssoToken is required")
+            val ssoToken = call.request.queryParameters["ssoToken"] ?: throw BadRequestException("请传入统一认证 token")
             call.respond(
                 call.auth.buaaSSOLogin(ssoToken)
             )
@@ -55,8 +55,8 @@ fun Route.authRoute() {
     route("/tokenInfo") {
         post {
             val req = call.receiveParameters()
-            val token = req["token"] ?: throw BadRequestException("token is required")
-            val service = req["service"] ?: throw BadRequestException("service is required")
+            val token = req["token"] ?: throw BadRequestException("请传入统一认证 token")
+            val service = req["service"] ?: throw BadRequestException("请传入统一认证服务名")
             call.respond(
                 call.auth.getTokenInfo(token, service)
             )
@@ -65,9 +65,9 @@ fun Route.authRoute() {
 
     route("/checkPermission") {
         get {
-            val entityType = call.parameters["entityType"] ?: throw BadRequestException("entityType is required")
-            val entityId = call.parameters["entityId"] ?: throw BadRequestException("entityId is required")
-            val action = call.parameters["action"] ?: throw BadRequestException("action is required")
+            val entityType = call.parameters["entityType"] ?: throw BadRequestException("请传入对象类型")
+            val entityId = call.parameters["entityId"] ?: throw BadRequestException("请传入对象Id")
+            val action = call.parameters["action"] ?: throw BadRequestException("请传入动作")
             call.respond(call.auth.checkPermission(entityType, entityId, action))
         }
     }

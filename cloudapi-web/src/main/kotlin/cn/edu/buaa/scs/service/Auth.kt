@@ -73,11 +73,11 @@ class AuthService(val call: ApplicationCall) : IService {
     ): LoginUserResponse {
         // check useId
         if (!mysql.users.exists { it.id.eq(userId) }) {
-            throw BadRequestException("")
+            throw BadRequestException("用户名或密码错误")
         }
         // check password
         val user = mysql.users.find { it.id.eq(userId) and it.password.eq(passwordHash) }
-            ?: throw BadRequestException("")
+            ?: throw BadRequestException("用户名或密码错误")
         // check active
         if (!user.isAccepted) {
             throw BadRequestException("账号未激活，或信息不完整，请重新激活账户")
@@ -194,7 +194,7 @@ class AuthService(val call: ApplicationCall) : IService {
     fun sendActiveEmail(id: String, name: String, email: String) {
         val user = User.id(id)
         if (user.isAccepted) {
-            throw cn.edu.buaa.scs.error.BadRequestException("the user is already active")
+            throw cn.edu.buaa.scs.error.BadRequestException("用户已经激活")
         }
         val token = "${user.id}${user.password}${System.currentTimeMillis()}".md5() + UlidCreator.getUlid().toString()
 
