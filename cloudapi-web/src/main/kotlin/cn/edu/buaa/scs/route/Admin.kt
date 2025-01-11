@@ -16,8 +16,9 @@ fun Route.adminRoute() {
                 val req = call.receive<CreateUserRequest>()
                 val role = UserRole.fromLevel(req.role)
                 val name = req.name
+                val email = req.email
                 val departmentId = req.departmentId
-                call.respond(convertUserModel(call.admin.addUser(req.id, name, role, departmentId)))
+                call.respond(convertUserModel(call.admin.addUser(req.id, name, role, email, departmentId)))
             }
 
             delete {
