@@ -55,6 +55,12 @@ fun Route.experimentRoute() {
                 call.respond(call.convertExperimentResponse(experiment))
             }
 
+            delete {
+                val experimentId = call.getExpIdFromPath()
+                call.experiment.deleteById(experimentId)
+                call.respond("OK")
+            }
+
             route("/assignments") {
                 get {
                     call.respond(

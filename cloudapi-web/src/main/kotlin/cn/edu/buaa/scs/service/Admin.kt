@@ -17,12 +17,12 @@ val ApplicationCall.admin: AdminService
 class AdminService(val call: ApplicationCall) : IService {
     companion object : IService.Caller<AdminService>()
 
-    fun addUser(id: String, name: String?, role: UserRole, departmentId: Int): User {
+    fun addUser(id: String, name: String?, role: UserRole, email: String?, departmentId: Int): User {
         if (!call.user().isAdmin()) {
             throw AuthorizationException("only admin can add user")
         }
 
-        return User.createNewUnActiveUser(id, name, role, departmentId)
+        return User.createNewUnActiveUser(id, name, role, email, departmentId)
     }
 
     fun deleteUsers(userIds: List<String>) {
