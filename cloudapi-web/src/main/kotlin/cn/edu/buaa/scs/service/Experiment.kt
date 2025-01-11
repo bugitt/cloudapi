@@ -69,6 +69,10 @@ class ExperimentService(val call: ApplicationCall) : IService, FileService.FileD
         return experiment
     }
 
+    fun deleteById(expId: Int) {
+        mysql.delete(Experiments) { it.id eq expId }
+    }
+
     private fun patchExperimentPeerInfo(
         experiment: Experiment,
         peerDescription: String?,

@@ -4,6 +4,8 @@ import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.Host
 import cn.edu.buaa.scs.model.VirtualMachine
+import cn.edu.buaa.scs.model.virtualMachines
+import cn.edu.buaa.scs.storage.mysql
 import cn.edu.buaa.scs.utils.HttpClientWrapper
 import cn.edu.buaa.scs.utils.schedule.waitForDone
 import cn.edu.buaa.scs.vm.*
@@ -14,6 +16,9 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
+import org.ktorm.dsl.and
+import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import org.ktorm.jackson.KtormModule
 
 object VCenterClient : IVMClient {
@@ -52,9 +57,7 @@ object VCenterClient : IVMClient {
     }
 
     override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> = runCatching {
-        getAllVMs().getOrElse { listOf() }.find { vm ->
-            vm.name == name && vm.applyId == applyId
-        } ?: throw vmNotFound(name)
+        mysql.virtualMachines.find { (it.name eq name) and (it.applyId eq applyId) }?: throw vmNotFound(name)
     }
 
     override suspend fun powerOnSync(uuid: String): Result<Unit> = runCatching {

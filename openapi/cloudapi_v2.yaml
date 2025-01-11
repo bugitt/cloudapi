@@ -90,6 +90,22 @@ paths:
               $ref: '#/components/schemas/PutExperimentRequest'
       security:
         - Authorization: []
+    delete:
+      summary: 删除一项实验（作业）
+      tags:
+        - 作业
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentResponse'
+      operationId: delete-experiment-experimentId
+      description: 删除一项实验（作业）
+      security:
+        - Authorization: [ ]
+      parameters: [ ]
   '/experiment/{experimentId}/assignment':
     parameters:
       - schema:
@@ -4731,6 +4747,9 @@ components:
           type: integer
           format: int32
           description: '所在单位'
+        email:
+          type: string
+          description: '邮箱'
         role:
           type: integer
           format: int32
@@ -4806,6 +4825,9 @@ components:
           type: string
         nickname:
           type: string
+        departmentId:
+          type: integer
+          format: int32
     ChangePasswordRequest:
       title: ChangePasswordRequest
       x-stoplight:

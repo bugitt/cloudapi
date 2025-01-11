@@ -17,10 +17,12 @@ package cn.edu.buaa.scs.controller.models
  * @param name 
  * @param email 
  * @param nickname 
+ * @param departmentId 
  */
 data class PatchUserRequest(
     val name: kotlin.String? = null,
     val email: kotlin.String? = null,
-    val nickname: kotlin.String? = null
+    val nickname: kotlin.String? = null,
+    val departmentId: kotlin.Int? = null
 ) 
 

@@ -24,11 +24,12 @@ fun User.Companion.getUerListByIdList(idList: List<String>): List<User> {
     else mysql.users.filter { it.id.inList(idList) }.toList()
 }
 
-fun User.Companion.createNewUnActiveUser(id: String, name: String?, role: UserRole, departmentId: Int): User {
+fun User.Companion.createNewUnActiveUser(id: String, name: String?, role: UserRole, email: String?, departmentId: Int): User {
     val user = User {
         this.id = id
         this.name = name ?: "未激活用户"
         this.role = role
+        this.email = email ?: ""
         this.departmentId = departmentId
     }
     mysql.users.add(user)
@@ -101,6 +102,9 @@ class UserService(val call: ApplicationCall) : IService {
         }
         if (req.nickname != null) {
             user.nickName = req.nickname
+        }
+        if (req.departmentId != null) {
+            user.departmentId = req.departmentId
         }
 
         user.flushChanges()
