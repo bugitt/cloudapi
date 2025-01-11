@@ -187,7 +187,7 @@ class CourseService(val call: ApplicationCall) : IService {
         // make sure students exist
         studentIdList.forEachAsync { studentId ->
             if (!mysql.users.exists { it.id.inList(studentId.lowerUpperNormal()) }) {
-                User.createNewUnActiveUser(studentId, null, UserRole.STUDENT, 0)
+                User.createNewUnActiveUser(studentId, null, UserRole.STUDENT, "", 0)
             }
         }
 
