@@ -2725,6 +2725,41 @@ paths:
       description: 教师获取自己的全部助教
       security:
         - Authorization: []
+  /chat/history:
+    get:
+      summary: 按用户 id 获取历史聊天
+      responses:
+        '200':
+          description: 聊天历史获取成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatHistoryItem'
+    post:
+      summary: 新增一条聊天记录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatHistoryItem'
+      responses:
+        '200':
+          description: 成功保存历史记录
+  /chat/records:
+    post:
+      summary: 获取某个聊天的聊天记录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetChatRecordsRequest"
+      responses:
+        "200":
+          description: 成功获取到聊天记录
 components:
   schemas:
     AssignmentResponse:
@@ -4913,6 +4948,35 @@ components:
           type: string
       required:
         - studentId
+    ChatHistoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        chatId:
+          type: string
+        updateTime:
+          type: integer
+          format: int64
+        title:
+          type: string
+        top:
+          type: boolean
+    GetChatRecordsRequest:
+      type: object
+      required:
+        - chatId
+      properties:
+        appId:
+          type: string
+        chatId:
+          type: string
+        offset:
+          type: integer
+        pageSize:
+          type: integer
+        loadCustomFeedbacks:
+          type: boolean
   securitySchemes:
     Authorization:
       type: apiKey
