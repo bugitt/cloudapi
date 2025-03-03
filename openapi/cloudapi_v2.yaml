@@ -1022,6 +1022,27 @@ paths:
           in: query
           name: sync
           description: 表示该请求是否同步返回，默认为false，即默认异步。client需要在后续查询具体的执行情况
+  '/vm/{vmId}/ticket':
+    parameters:
+      - schema:
+          type: string
+        name: vmId
+        in: path
+        required: true
+        description: vm uuid
+    post:
+      summary: 创建 Web 访问凭证
+      tags:
+        - 虚拟机
+      description: 创建虚拟机的 Web 访问凭证，返回 ticket 和 host。
+      operationId: post-vm-vmId-ticket
+      responses:
+        '200':
+          description: 成功创建访问凭证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
   /vms:
     get:
       summary: get Virtual Machine list
@@ -4977,6 +4998,15 @@ components:
           type: integer
         loadCustomFeedbacks:
           type: boolean
+    TicketResponse:
+      type: object
+      properties:
+        ticket:
+          type: string
+          description: 访问凭证
+        host:
+          type: string
+          description: 服务器主机地址
   securitySchemes:
     Authorization:
       type: apiKey
