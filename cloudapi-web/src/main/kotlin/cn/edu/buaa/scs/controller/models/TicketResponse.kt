@@ -14,11 +14,13 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param role 
- * @param content 
+ * @param ticket 访问凭证
+ * @param host 服务器主机地址
  */
-data class ChatCompletionRequestMessagesInner(
-    val role: kotlin.String,
-    val content: kotlin.String
+data class TicketResponse(
+    /* 访问凭证 */
+    val ticket: kotlin.String? = null,
+    /* 服务器主机地址 */
+    val host: kotlin.String? = null
 ) 
 
