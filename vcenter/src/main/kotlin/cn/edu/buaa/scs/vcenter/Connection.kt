@@ -4,7 +4,6 @@ import com.vmware.photon.controller.model.adapters.vsphere.util.connection.Conne
 import com.vmware.photon.controller.model.adapters.vsphere.util.connection.GetMoRef
 import com.vmware.vim25.ManagedObjectReference
 import com.vmware.vim25.RetrieveOptions
-import com.vmware.vim25.VirtualMachineTicket
 
 fun Connection.getMoRef(): GetMoRef {
     return GetMoRef(this)
