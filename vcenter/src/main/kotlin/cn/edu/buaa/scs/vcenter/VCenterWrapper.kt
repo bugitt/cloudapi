@@ -70,11 +70,16 @@ object VCenterWrapper {
                         connectionPool[channelNum] = vcenterConnect()
                         launch {
                             for (taskFunc in taskChannel) {
-                                val connection = connectionPool[channelNum] ?: vcenterConnect()
+                                var connection = connectionPool[channelNum] ?: vcenterConnect()
                                 try {
                                     taskFunc(connection)
                                 } catch (e: Throwable) {
-                                    logger("vm-worker-$channelNum")().error { e.stackTraceToString() }
+                                    try {
+                                        connection = vcenterConnect()
+                                        taskFunc(connection)
+                                    } catch (e: Throwable) {
+                                        logger("vm-worker-$channelNum")().error { e.stackTraceToString() }
+                                    }
                                 } finally {
                                     connectionPool[channelNum] = connection
                                 }
