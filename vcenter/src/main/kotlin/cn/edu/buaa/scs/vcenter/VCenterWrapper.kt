@@ -366,15 +366,14 @@ object VCenterWrapper {
         }.getOrThrow()
     }
 
-    suspend fun getWebTicket(uuid: String): TicketResponse {
-        return baseSyncTask { connection ->
-            val vmRef = connection.getVmRefByUuid(uuid)
-            val vmTicket = connection.vimPort.acquireTicket(vmRef, "webmks")
-            TicketResponse(
-                ticket = vmTicket.ticket,
-                host = vmTicket.host
-            )
-        }.getOrThrow()
+    fun getWebTicket(uuid: String): TicketResponse {
+        val connection = vcenterConnect()
+        val vmRef = connection.getVmRefByUuid(uuid)
+        val vmTicket = connection.vimPort.acquireTicket(vmRef, "webmks")
+        return TicketResponse(
+            ticket = vmTicket.ticket,
+            host = vmTicket.host
+        )
     }
 
     suspend fun convertVMToTemplate(uuid: String): Result<Unit> {
