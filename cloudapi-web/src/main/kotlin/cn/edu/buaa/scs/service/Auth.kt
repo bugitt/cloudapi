@@ -136,7 +136,7 @@ class AuthService(val call: ApplicationCall) : IService {
 
     private suspend fun afterLogin(token: String, user: User): LoginUserResponse {
         if (user.paasToken.isBlank()) {
-            call.project.createUser(user.id)
+//            call.project.createUser(user.id)
         }
 
         // insert token in redis (just for compatibility with older platforms)
@@ -291,7 +291,7 @@ class AuthService(val call: ApplicationCall) : IService {
         user.acceptTime = System.currentTimeMillis().toString()
         user.flushChanges()
 
-        call.project.createUser(user)
+//        call.project.createUser(user)
 
         return afterLogin(generateRSAToken(user.id), user)
     }
