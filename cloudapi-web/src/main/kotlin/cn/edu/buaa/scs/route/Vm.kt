@@ -43,6 +43,11 @@ fun Route.vmRoute() {
                 }
             }
 
+            post("/ticket") {
+                val vmId = call.getVmIdFromPath()
+                val ticketResponse = call.vm.getWebTicket(vmId)
+                call.respond(ticketResponse)
+            }
         }
 
         route("/template") {
