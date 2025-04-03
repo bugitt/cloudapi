@@ -68,7 +68,7 @@ class ProjectService(val call: ApplicationCall) : IService, FileService.FileDeco
     }
 
     suspend fun createUser(userID: String) {
-//        createUser(User.id(userID))
+        createUser(User.id(userID))
     }
 
     suspend fun createUser(user: User) {

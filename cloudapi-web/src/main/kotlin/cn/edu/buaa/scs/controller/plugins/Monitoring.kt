@@ -41,7 +41,7 @@ fun Application.configureMonitoring() {
                 pathDescription = "",
                 headers = call.request.headers.toMap(),
                 version = version,
-                realIp = call.request.headers["X-Custom-Remote-Addr"] ?: call.request.origin.localHost,
+                realIp = call.request.headers["X-Custom-Remote-Addr"] ?: call.request.origin.host,
                 userAgent = userAgent,
             )
             val logRecordResp = LogRecordResp(

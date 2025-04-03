@@ -19,11 +19,9 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
-.kotlin
 *.iws
 *.iml
 *.ipr
-*.log
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/

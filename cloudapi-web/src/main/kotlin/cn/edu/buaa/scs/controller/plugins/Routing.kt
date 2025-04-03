@@ -11,7 +11,6 @@ fun Application.configureRouting() {
         route("/api/v2") {
             authRoute()
             userRoute()
-            chatRoute()
             courseRoute()
             experimentRoute()
             fileRoute()

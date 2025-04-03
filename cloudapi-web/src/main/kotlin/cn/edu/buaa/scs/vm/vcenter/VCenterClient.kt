@@ -3,7 +3,6 @@ package cn.edu.buaa.scs.vm.vcenter
 import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.error.NotFoundException
 import cn.edu.buaa.scs.model.Host
-import cn.edu.buaa.scs.model.TicketResponse
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.virtualMachines
 import cn.edu.buaa.scs.storage.mysql
@@ -55,10 +54,6 @@ object VCenterClient : IVMClient {
 
     override suspend fun getVM(uuid: String): Result<VirtualMachine> = runCatching {
         client.get<VirtualMachine>("/vm/$uuid").getOrThrow()
-    }
-
-    suspend fun getWebTicket(uuid: String): Result<TicketResponse> = runCatching {
-        client.post<TicketResponse>("/vm/$uuid/ticket").getOrThrow()
     }
 
     override suspend fun getVMByName(name: String, applyId: String): Result<VirtualMachine> = runCatching {
