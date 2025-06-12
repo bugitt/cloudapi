@@ -14,6 +14,6 @@ val vmKubeClient by lazy {
 
 fun registerVirtualMachineOperator() {
     val operator = Operator(kubeClient)
-    operator.register(VirtualMachineReconciler(kubeClient))
-    operator.start()
+//    operator.register(VirtualMachineReconciler(kubeClient))
+//    operator.start()
 }
