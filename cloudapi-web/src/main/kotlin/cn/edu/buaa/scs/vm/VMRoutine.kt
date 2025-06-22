@@ -126,10 +126,10 @@ object VMRoutine : Routine {
     }
 
     override val routineList: List<RoutineTask> = listOf(
-//        updateVmCrd,
-//        updateVMsToDatabase,
-//        createVm,
-//        deleteVm,
+        updateVmCrd,
+        updateVMsToDatabase,
+        createVm,
+        deleteVm,
         // add more routines if needed
     )
 }
