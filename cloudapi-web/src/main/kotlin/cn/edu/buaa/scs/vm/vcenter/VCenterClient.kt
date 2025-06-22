@@ -21,6 +21,8 @@ import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
 import org.ktorm.jackson.KtormModule
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
 
 object VCenterClient : IVMClient {
 
@@ -37,6 +39,15 @@ object VCenterClient : IVMClient {
                 }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10000L
+                }
+                engine {
+                    https {
+                        trustManager = object : X509TrustManager {
+                            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+                            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+                            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+                        }
+                    }
                 }
             },
             basePath = globalConfig.vcenter.serviceUrl
