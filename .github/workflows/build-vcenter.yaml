@@ -20,7 +20,7 @@ jobs:
 
       - name: Build and Push Docker Image
         env:
-          image: ${{ secrets.ALIYUN_DOCKER_NAMESPACE }}/vcenter
+          image: ${{ secrets.ALIYUN_DOCKER_REGISTRY }}/${{ secrets.ALIYUN_DOCKER_NAMESPACE }}/vcenter
           tags: ${{ github.sha }}
           registry: ${{ secrets.ALIYUN_DOCKER_REGISTRY }}
           username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
