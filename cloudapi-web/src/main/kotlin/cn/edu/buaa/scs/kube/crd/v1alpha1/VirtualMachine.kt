@@ -171,7 +171,7 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                                 logger("vm-reconcile")().info { "Start creating VirtualMachine: ${vm.spec.name}" }
                                 vmClient.createVM(vm.spec.toCreateVmOptions()).getOrThrow()
                             } catch (e: Throwable) {
-                                logger("vm-reconcile")().error { "Creat VirtualMachine ${vm.spec.name} failed: ${e.localizedMessage}" }
+                                logger("vm-reconcile")().error(e) { "Creat VirtualMachine ${vm.spec.name} failed" }
                                 null
                             } finally {
                                 createVmProcessMutex.unlock(vm)
@@ -238,7 +238,7 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
 
             return UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
         } catch (e: Throwable) {
-            logger("vm-reconcile")().error { "Reconciling virtual machine error: ${e.localizedMessage}" }
+            logger("vm-reconcile")().error(e) { "Reconciling virtual machine error" }
             return UpdateControl.noUpdate()
         }
     }
