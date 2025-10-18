@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val kotlin_version: String by project
 
 plugins {
@@ -81,6 +83,7 @@ dependencies {
 
     // test
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {
@@ -98,4 +101,12 @@ tasks {
     "test"(Test::class) {
         useJUnitPlatform()
     }
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }
