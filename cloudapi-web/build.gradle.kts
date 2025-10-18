@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val kotlin_version: String by project
 
 plugins {
@@ -43,6 +45,8 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktor_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.7.3")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
 
     // Redis
     implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
@@ -79,6 +83,7 @@ dependencies {
 
     // test
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {
@@ -96,4 +101,12 @@ tasks {
     "test"(Test::class) {
         useJUnitPlatform()
     }
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }

@@ -14,15 +14,17 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param name 
- * @param email 
- * @param nickname 
- * @param departmentId 
+ * @param chatId 
+ * @param appId 
+ * @param offset 
+ * @param pageSize 
+ * @param loadCustomFeedbacks 
  */
-data class PatchUserRequest(
-    val name: kotlin.String? = null,
-    val email: kotlin.String? = null,
-    val nickname: kotlin.String? = null,
-    val departmentId: kotlin.Int? = null
+data class GetChatRecordsRequest(
+    val chatId: kotlin.String,
+    val appId: kotlin.String? = null,
+    val offset: kotlin.Int? = null,
+    val pageSize: kotlin.Int? = null,
+    val loadCustomFeedbacks: kotlin.Boolean? = null
 ) 
 

@@ -4,6 +4,7 @@ import cn.edu.buaa.scs.config.globalConfig
 import cn.edu.buaa.scs.model.VirtualMachine
 import cn.edu.buaa.scs.model.VirtualMachineExtraInfo
 import cn.edu.buaa.scs.model.applyExtraInfo
+import cn.edu.buaa.scs.model.TicketResponse
 import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.logger
 import cn.edu.buaa.scs.vm.ConfigVmOptions
@@ -357,6 +358,17 @@ object VCenterWrapper {
             val hostProps = connection.getMoRef().entityProps(hostRef, "name")
             val hostName = hostProps["name"]!! as String
             convertVMModel(hostName, vmProps) ?: throw Exception("can not found vm $uuid")
+        }.getOrThrow()
+    }
+
+    suspend fun getWebTicket(uuid: String): TicketResponse {
+        return baseSyncTask { connection ->
+            val vmRef = connection.getVmRefByUuid(uuid)
+            val vmTicket = connection.vimPort.acquireTicket(vmRef, "webmks")
+            TicketResponse(
+                ticket = vmTicket.ticket,
+                host = vmTicket.host
+            )
         }.getOrThrow()
     }
 

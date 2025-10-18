@@ -18,6 +18,7 @@ package cn.edu.buaa.scs.controller.models
  * @param departmentId 所在单位
  * @param role 1 for student, 2 for teacher, 4 for admin
  * @param name 姓名
+ * @param email 邮箱
  */
 data class CreateUserRequest(
     /* 学工号 */
@@ -27,6 +28,8 @@ data class CreateUserRequest(
     /* 1 for student, 2 for teacher, 4 for admin */
     val role: kotlin.Int,
     /* 姓名 */
-    val name: kotlin.String? = null
+    val name: kotlin.String? = null,
+    /* 邮箱 */
+    val email: kotlin.String? = null
 ) 
 

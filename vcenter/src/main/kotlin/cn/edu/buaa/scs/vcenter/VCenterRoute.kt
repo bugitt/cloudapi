@@ -59,6 +59,11 @@ fun Application.vcenterRouting() {
                     VCenterWrapper.convertVMToTemplate(call.getVmUuid()).getOrThrow()
                     call.respond("OK")
                 }
+
+                post("/ticket") {
+                    val ticketResponse = VCenterWrapper.getWebTicket(call.getVmUuid())
+                    call.respond(ticketResponse)
+                }
             }
 
             route("/health") {

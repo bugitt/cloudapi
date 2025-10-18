@@ -14,15 +14,13 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param name 
- * @param email 
- * @param nickname 
- * @param departmentId 
+ * @param ticket 访问凭证
+ * @param host 服务器主机地址
  */
-data class PatchUserRequest(
-    val name: kotlin.String? = null,
-    val email: kotlin.String? = null,
-    val nickname: kotlin.String? = null,
-    val departmentId: kotlin.Int? = null
+data class TicketResponse(
+    /* 访问凭证 */
+    val ticket: kotlin.String? = null,
+    /* 服务器主机地址 */
+    val host: kotlin.String? = null
 ) 
 

@@ -91,7 +91,7 @@ spec:
 apiVersion: cloudapi.scs.buaa.edu.cn/v1alpha1
 kind: ResourcePool
 metadata:
-  name: personal-$userId
+  name: personal-${userId.lowercase()}
   labels:
     owner: $userId
 spec:

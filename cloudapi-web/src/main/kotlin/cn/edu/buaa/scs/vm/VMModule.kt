@@ -5,7 +5,7 @@ import cn.edu.buaa.scs.vm.sangfor.SangforClient
 import cn.edu.buaa.scs.vm.vcenter.VCenterClient
 import io.ktor.server.application.*
 
-lateinit var vmClient: IVMClient
+lateinit var vmClient: VCenterClient
 lateinit var sfClient: SangforClient
 
 @Suppress("unused")

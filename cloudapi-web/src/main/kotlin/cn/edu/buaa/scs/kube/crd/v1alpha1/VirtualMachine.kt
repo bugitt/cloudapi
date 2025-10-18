@@ -168,6 +168,8 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                         if (createVmProcessMutex.tryLock(vm)) {
                             try {
                                 vmClient.createVM(vm.spec.toCreateVmOptions()).getOrThrow()
+                            } catch (e: Throwable) {
+                                null
                             } finally {
                                 createVmProcessMutex.unlock(vm)
                             }

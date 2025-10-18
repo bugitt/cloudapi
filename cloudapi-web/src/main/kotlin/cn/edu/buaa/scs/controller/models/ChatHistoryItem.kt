@@ -14,15 +14,17 @@ package cn.edu.buaa.scs.controller.models
 
 /**
  * 
- * @param name 
- * @param email 
- * @param nickname 
- * @param departmentId 
+ * @param id 
+ * @param chatId 
+ * @param updateTime 
+ * @param title 
+ * @param top 
  */
-data class PatchUserRequest(
-    val name: kotlin.String? = null,
-    val email: kotlin.String? = null,
-    val nickname: kotlin.String? = null,
-    val departmentId: kotlin.Int? = null
+data class ChatHistoryItem(
+    val id: kotlin.Int? = null,
+    val chatId: kotlin.String? = null,
+    val updateTime: kotlin.Long? = null,
+    val title: kotlin.String? = null,
+    val top: kotlin.Boolean? = null
 ) 
 
