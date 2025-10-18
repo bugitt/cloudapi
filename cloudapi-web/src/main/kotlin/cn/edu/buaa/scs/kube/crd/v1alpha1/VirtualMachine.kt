@@ -162,13 +162,16 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                 } else {
                     val vmApply = VmApply.id(vm.spec.getVmExtraInfo().applyId)
                     if (vmApply == null || !vmApply.isApproved()) {
+                        logger("vm-reconcile")().info { "VirtualMachine hasn't be approved: ${vm.spec.name}" }
                         return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
                     }
                     val vmModel = runBlocking {
                         if (createVmProcessMutex.tryLock(vm)) {
                             try {
+                                logger("vm-reconcile")().info { "Start creating VirtualMachine: ${vm.spec.name}" }
                                 vmClient.createVM(vm.spec.toCreateVmOptions()).getOrThrow()
                             } catch (e: Throwable) {
+                                logger("vm-reconcile")().error(e) { "Creat VirtualMachine ${vm.spec.name} failed" }
                                 null
                             } finally {
                                 createVmProcessMutex.unlock(vm)
@@ -219,12 +222,14 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
             // check the power
             if (vm.spec.powerState == VirtualMachineModel.PowerState.PoweredOn) {
                 if (vm.status.powerState != VirtualMachineModel.PowerState.PoweredOn) {
+                    logger("vm-reconcile")().info { "Turn on VirtualMachine: ${vm.spec.name}" }
                     runBlocking {
                         vmClient.powerOnSync(vmUuid)
                     }
                 }
             } else if (vm.spec.powerState == VirtualMachineModel.PowerState.PoweredOff) {
                 if (vm.status.powerState != VirtualMachineModel.PowerState.PoweredOff) {
+                    logger("vm-reconcile")().info { "Turn off VirtualMachine: ${vm.spec.name}" }
                     runBlocking {
                         vmClient.powerOffSync(vmUuid)
                     }
@@ -233,7 +238,7 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
 
             return UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
         } catch (e: Throwable) {
-            logger("vm-reconcile")().error { "Reconciling virtual machine error: ${e.localizedMessage}" }
+            logger("vm-reconcile")().error(e) { "Reconciling virtual machine error" }
             return UpdateControl.noUpdate()
         }
     }
