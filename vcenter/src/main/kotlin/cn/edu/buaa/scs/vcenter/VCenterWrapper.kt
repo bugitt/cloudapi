@@ -290,9 +290,6 @@ object VCenterWrapper {
                 for (ds in dataStores) {
                     val datastoreSummary = getMoRef.entityProps(ds, "summary")["summary"]!! as DatastoreSummary
                     println(datastoreSummary.name)
-                    if (datastoreSummary.name == "Dell SCV101") {
-                        continue
-                    }
                     if (datastoreSummary.isAccessible && datastoreSummary.freeSpace / (1024 * 1024) > 1024 * 1024 && datastoreSummary.freeSpace > diskRequired) {
                         host = hostRef
                         datastore = datastoreSummary.datastore
