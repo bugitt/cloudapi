@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM eclipse-temurin:8-jre-jammy
 
 COPY ./build/libs/vcenter-0.0.1-all.jar /usr/src/myapp/vcenter.jar
 

@@ -37,5 +37,6 @@ jobs:
         run: |
           cd vcenter
           printf '%s' "$password" | docker login "$registry" --username "$username" --password-stdin
-          docker build -t "$image:$tags" .
+          docker build --pull -t "$image:$tags" .
+          docker run --rm --entrypoint java "$image:$tags" -version
           docker push "$image:$tags"
