@@ -10,6 +10,8 @@ import cn.edu.buaa.scs.utils.jsonMapper
 import cn.edu.buaa.scs.utils.jsonReadValue
 import cn.edu.buaa.scs.vm.CreateVmOptions
 import cn.edu.buaa.scs.vm.newVMClient
+import cn.edu.buaa.scs.vm.DEFAULT_VM_CREATION_RETRY_DELAY_MILLIS
+import cn.edu.buaa.scs.vm.VmCreationRetryPolicy
 import cn.edu.buaa.scs.utils.logger
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -125,14 +127,18 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
         val createVmProcessMutex = Mutex()
     }
 
+    private val creationRetryPolicy = VmCreationRetryPolicy()
+
     override fun reconcile(
         resource: VirtualMachine?,
         context: Context<VirtualMachine>?
     ): UpdateControl<VirtualMachine> {
         try {
             val vm = resource ?: return UpdateControl.noUpdate()
+            val retryKey = vm.metadata.uid ?: "${vm.metadata.namespace}/${vm.metadata.name}"
             val vmClient = newVMClient(vm.spec.platform)
             if (vm.spec.deleted) {
+                creationRetryPolicy.clear(retryKey)
                 val exist = runBlocking {
                     try {
                         if (vmClient.getVM(vm.status.uuid).isSuccess) {
@@ -157,21 +163,31 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
             if (vm.status == null) {
                 val vmModelResult = runBlocking { vmClient.getVMByName(vm.spec.name, vm.spec.getVmExtraInfo().applyId) }
                 if (vmModelResult.isSuccess) {
+                    creationRetryPolicy.clear(retryKey)
                     vm.status = vmModelResult.getOrThrow().toCrdStatus()
                     return UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
                 } else {
                     val vmApply = VmApply.id(vm.spec.getVmExtraInfo().applyId)
                     if (vmApply == null || !vmApply.isApproved()) {
+                        creationRetryPolicy.clear(retryKey)
                         logger("vm-reconcile")().info { "VirtualMachine hasn't be approved: ${vm.spec.name}" }
                         return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
                     }
+                    val remainingDelayMillis = creationRetryPolicy.remainingDelayMillis(retryKey)
+                    if (remainingDelayMillis > 0L) {
+                        return UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(remainingDelayMillis)
+                    }
+                    var retryDelayMillis = DEFAULT_VM_CREATION_RETRY_DELAY_MILLIS
                     val vmModel = runBlocking {
                         if (createVmProcessMutex.tryLock(vm)) {
                             try {
                                 logger("vm-reconcile")().info { "Start creating VirtualMachine: ${vm.spec.name}" }
                                 vmClient.createVM(vm.spec.toCreateVmOptions()).getOrThrow()
                             } catch (e: Throwable) {
-                                logger("vm-reconcile")().error(e) { "Creat VirtualMachine ${vm.spec.name} failed" }
+                                retryDelayMillis = creationRetryPolicy.recordFailure(retryKey, vm.spec.platform, e)
+                                logger("vm-reconcile")().error(e) {
+                                    "Create VirtualMachine ${vm.spec.name} failed; retry in ${retryDelayMillis / 1000} seconds"
+                                }
                                 null
                             } finally {
                                 createVmProcessMutex.unlock(vm)
@@ -181,14 +197,16 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
                         }
                     }
                     return if (vmModel != null) {
+                        creationRetryPolicy.clear(retryKey)
                         vm.status = vmModel.toCrdStatus()
                         UpdateControl.patchStatus(vm).rescheduleAfter(10000L)
                     } else {
-                        UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(10000L)
+                        UpdateControl.noUpdate<VirtualMachine>().rescheduleAfter(retryDelayMillis)
                     }
                 }
             }
 
+            creationRetryPolicy.clear(retryKey)
             assert(vm.status != null)
 
             // check if all done
@@ -245,6 +263,7 @@ class VirtualMachineReconciler(val client: KubernetesClient) : Reconciler<Virtua
 
     override fun cleanup(resource: VirtualMachine?, context: Context<VirtualMachine>?): DeleteControl {
         val vm = resource ?: return DeleteControl.defaultDelete()
+        creationRetryPolicy.clear(vm.metadata.uid ?: "${vm.metadata.namespace}/${vm.metadata.name}")
         if (vm.status == null) return DeleteControl.defaultDelete()
 
         val vmClient = newVMClient(vm.spec.platform)

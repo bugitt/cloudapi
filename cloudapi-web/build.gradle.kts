@@ -82,6 +82,8 @@ dependencies {
     implementation("com.hierynomus:sshj:0.33.0")
 
     // test
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
     implementation(kotlin("stdlib-jdk8"))
 }

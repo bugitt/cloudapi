@@ -401,10 +401,7 @@ object VCenterWrapper {
         return if (result[0] == TaskInfoState.SUCCESS) {
             return Result.success(Unit)
         } else {
-            when (val fault = result[1]) {
-                is LocalizedMethodFault -> Result.failure(RuntimeException(fault.localizedMessage))
-                else -> Result.failure(RuntimeException("unknown error"))
-            }
+            Result.failure(vmTaskFailure(result[1]))
         }
     }
 }
